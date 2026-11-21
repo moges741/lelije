@@ -1,8 +1,10 @@
 # Lelije backend
 
-The API for Lelije: families, children, daily missions, mission completion, the Catch the Stars result, and progress reports. NestJS, Prisma, and a local Postgres in Docker.
+The API for Lelije: families, children, daily missions, mission completion with parent approval, the Catch the Stars result, and progress reports. NestJS, Prisma, and a local Postgres in Docker.
 
 There is no login. A family is identified by its family code (for example `LJ-82SRVP`), which the phone stores. Anyone who has the code can see that family's children, so treat it like a password.
+
+Parent-only actions (approving a mission, changing the PIN) also need the family's 4-digit parent PIN. The server stores only a hash of it. Five wrong PINs lock parent actions for that family for 15 minutes.
 
 ## Run it
 
@@ -41,11 +43,14 @@ Every route starts with `/api`. Bodies are JSON. Errors look like `{ "message": 
 | Route | What it does |
 |---|---|
 | `GET /health` | Confirms the server is up |
-| `POST /families` | Creates a family and returns its code |
+| `POST /families` | Creates a family with a parent PIN and returns its code |
 | `GET /families/:code` | Returns a family and its children |
+| `POST /families/:code/pin` | Sets or changes the parent PIN |
 | `POST /children` | Adds a child to a family |
 | `POST /missions` | Returns the child's missions for today |
-| `POST /missions/complete` | Marks a mission done and awards its points |
+| `POST /missions/complete` | Marks a mission done: camera missions pay at once, tap-to-confirm ones wait for a parent |
+| `GET /families/:code/reviews` | Lists missions waiting for a parent |
+| `POST /completions/:id/review` | A parent approves or rejects a waiting mission (needs the PIN) |
 | `POST /games/result` | Records a Catch the Stars result and awards points |
 | `GET /progress?childId=` | One child's points, today's work, and streak |
 | `GET /families/:code/progress` | That progress for every child in a family |
@@ -60,16 +65,18 @@ JSON='Content-Type: application/json'
 ### Create a family
 
 ```bash
-FAMILY=$(curl -s -X POST $API/families -H "$JSON" -d '{"name":"Abebe family"}')
+FAMILY=$(curl -s -X POST $API/families -H "$JSON" -d '{"name":"Abebe family","pin":"0123"}')
 echo $FAMILY
 CODE=$(echo $FAMILY | jq -r .code)
+PIN=0123
 ```
 
 ```json
-{ "id": "0fab1a60-...", "name": "Abebe family", "code": "LJ-82SRVP", "createdAt": "2026-11-21T12:51:46.100Z" }
+{ "id": "0fab1a60-...", "name": "Abebe family", "code": "LJ-82SRVP", "createdAt": "2026-11-21T12:51:46.100Z", "hasPin": true }
 ```
 
-`name` is required and is cut to 40 characters.
+- `name` is required and is cut to 40 characters.
+- `pin` is required: exactly 4 digits, sent as a string (`"0123"`, not `123`).
 
 ### Get a family back by its code
 
@@ -77,7 +84,18 @@ CODE=$(echo $FAMILY | jq -r .code)
 curl -s $API/families/$CODE
 ```
 
-Returns the family with a `children` array. The code is not case-sensitive. An unknown code returns `404`.
+Returns the family with a `children` array and `hasPin`. The code is not case-sensitive. An unknown code returns `404`.
+
+### Set or change the parent PIN
+
+```bash
+curl -s -X POST $API/families/$CODE/pin -H "$JSON" -d '{"pin":"4567","currentPin":"0123"}'
+```
+
+Returns `{ "hasPin": true }`.
+
+- To change a PIN, send the current one as `currentPin`. A wrong `currentPin` returns `403` and counts toward the lock.
+- Families created before PINs existed have `hasPin: false`. They can set a first PIN once by sending only `pin`.
 
 ### Add a child
 
@@ -141,15 +159,62 @@ curl -s -X POST $API/missions/complete -H "$JSON" \
 ```
 
 ```json
-{ "missionId": "m_20261121_0", "verifiedBy": "pose", "alreadyCompleted": false, "pointsAwarded": 15, "pointsToday": 15, "dailyCap": 100 }
+{ "completionId": "8fd1dac1-...", "missionId": "m_20261121_0", "verifiedBy": "pose", "status": "approved", "alreadyCompleted": false, "pointsAwarded": 15, "pointsToday": 15, "dailyCap": 100 }
+```
+
+A mission confirmed by tapping waits for a parent:
+
+```bash
+curl -s -X POST $API/missions/complete -H "$JSON" \
+  -d "{\"childId\":\"$CHILD_ID\",\"missionId\":\"$(echo $MISSIONS | jq -r '.missions[1].id')\",\"verifiedBy\":\"self\"}"
+```
+
+```json
+{ "completionId": "3f2cef75-...", "missionId": "m_20261121_1", "verifiedBy": "self", "status": "pending", "alreadyCompleted": false, "pointsAwarded": 0, "pointsToday": 15, "dailyCap": 100 }
 ```
 
 - `verifiedBy` is `pose` or `self`. A camera mission may be confirmed with `self` (the fallback when the camera fails); a `self` mission cannot be claimed as `pose`.
+- `verifiedBy: "pose"` is saved as `approved` and pays at once.
+- `verifiedBy: "self"` is saved as `pending` with `pointsAwarded: 0`. The points arrive when a parent approves it.
 - Points come from the saved mission. A `points` field in the body is ignored.
-- Completing the same mission again that day returns `alreadyCompleted: true` and awards nothing.
+- Completing the same mission again that day returns `alreadyCompleted: true` and the existing `status`, and awards nothing.
+- If a parent rejected it, completing it again is a redo: it is saved again as new, with `alreadyCompleted: false`.
 - A mission that is not in the child's list for today returns `404`.
 - `result` and `completedAt` are optional. The server's clock decides the day.
 - At the daily cap, the mission is recorded with `pointsAwarded: 0`.
+
+### List missions waiting for a parent
+
+```bash
+curl -s $API/families/$CODE/reviews
+COMPLETION_ID=$(curl -s $API/families/$CODE/reviews | jq -r '.[0].id')
+```
+
+```json
+[
+  { "id": "3f2cef75-...", "childId": "7329551c-...", "nickname": "Liya", "missionId": "m_20261121_1", "title": "Touch the Sky", "points": 10, "verifiedBy": "self", "status": "pending", "day": "2026-11-21", "completedAt": "2026-11-21T14:09:07.210Z" }
+]
+```
+
+Every pending completion of every child in the family, oldest first. `points` is what the mission pays if approved.
+
+### Approve or reject a mission
+
+```bash
+curl -s -X POST $API/completions/$COMPLETION_ID/review -H "$JSON" \
+  -d "{\"familyCode\":\"$CODE\",\"pin\":\"$PIN\",\"decision\":\"approve\"}"
+```
+
+```json
+{ "id": "3f2cef75-...", "childId": "7329551c-...", "missionId": "m_20261121_1", "day": "2026-11-21", "dailyCap": 100, "status": "approved", "alreadyReviewed": false, "pointsAwarded": 10, "pointsForDay": 25 }
+```
+
+- `decision` is `approve` or `reject`. `familyCode` and `pin` are required.
+- Approving awards the mission's points, limited by the daily cap of the day the mission was done. `pointsForDay` is that day's total.
+- Rejecting ("ask to redo") awards nothing, and the child can complete the mission again.
+- Reviewing a completion that is no longer pending returns `alreadyReviewed: true` and changes nothing.
+- A wrong PIN returns `403`. After five wrong PINs, parent actions return `429` for 15 minutes.
+- A completion that belongs to another family returns `404`.
 
 ### Record a game result
 
@@ -159,7 +224,7 @@ curl -s -X POST $API/games/result -H "$JSON" \
 ```
 
 ```json
-{ "game": "catch-the-stars", "score": 42, "alreadyRecorded": false, "pointsAwarded": 21, "pointsToday": 36, "dailyCap": 100 }
+{ "game": "catch-the-stars", "score": 42, "alreadyRecorded": false, "pointsAwarded": 21, "pointsToday": 46, "dailyCap": 100 }
 ```
 
 - All six `result` fields are required and must be non-negative numbers.
@@ -176,22 +241,29 @@ curl -s "$API/progress?childId=$CHILD_ID"
 {
   "childId": "7329551c-...",
   "nickname": "Liya",
-  "totalPoints": 36,
-  "pointsToday": 36,
+  "totalPoints": 46,
+  "pointsToday": 46,
   "dailyCap": 100,
   "streak": 1,
   "today": {
     "day": "2026-11-21",
     "missionsTotal": 3,
     "missionsCompleted": [
-      { "missionId": "m_20261121_0", "title": "Star Jumps", "points": 15, "verifiedBy": "pose", "completedAt": "2026-11-21T12:51:46.202Z" }
+      { "missionId": "m_20261121_0", "title": "Star Jumps", "points": 15, "verifiedBy": "pose", "completedAt": "2026-11-21T12:51:46.202Z" },
+      { "missionId": "m_20261121_1", "title": "Touch the Sky", "points": 10, "verifiedBy": "self", "completedAt": "2026-11-21T14:09:07.210Z" }
     ],
+    "missionsPending": [],
+    "missionsToRedo": [],
     "game": { "game": "catch-the-stars", "score": 42, "points": 21 }
   }
 }
 ```
 
-`streak` counts consecutive days with a completed mission or a game. If nothing is done yet today, it counts up to yesterday.
+- `missionsCompleted` holds approved missions only.
+- `missionsPending` holds missions waiting for a parent, as `{ missionId, title, points, completedAt }`, where `points` is what approval will pay.
+- `missionsToRedo` holds rejected missions, as `{ missionId, title }`.
+- Points and the streak count approved missions and games only.
+- `streak` counts consecutive days with an approved mission or a game. If nothing is done yet today, it counts up to yesterday.
 
 ### Get the family report
 

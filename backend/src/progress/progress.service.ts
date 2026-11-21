@@ -72,29 +72,43 @@ export class ProgressService {
     ]);
 
     const todaysMissions = (daily?.missions ?? []) as unknown as Mission[];
-    const titles = new Map(
-      todaysMissions.map((mission) => [mission.id, mission.title]),
+    const missionsById = new Map(
+      todaysMissions.map((mission) => [mission.id, mission]),
     );
-    const completedToday = completions.filter((row) => row.day === today);
+    // Only approved completions carry points and count toward the streak.
+    const approved = completions.filter((row) => row.status === 'approved');
+    const todayWith = (status: string) =>
+      completions.filter((row) => row.day === today && row.status === status);
     const gameToday = games.find((row) => row.day === today);
-    const activeDays = new Set([...completions, ...games].map((row) => row.day));
+    const activeDays = new Set([...approved, ...games].map((row) => row.day));
 
     return {
       childId: child.id,
       nickname: child.nickname,
-      totalPoints: sumPoints(completions) + sumPoints(games),
-      pointsToday: sumPoints(completedToday) + (gameToday?.points ?? 0),
+      totalPoints: sumPoints(approved) + sumPoints(games),
+      pointsToday:
+        sumPoints(todayWith('approved')) + (gameToday?.points ?? 0),
       dailyCap: this.points.dailyCap(),
       streak: countStreak(activeDays, today),
       today: {
         day: today,
         missionsTotal: todaysMissions.length,
-        missionsCompleted: completedToday.map((row) => ({
+        missionsCompleted: todayWith('approved').map((row) => ({
           missionId: row.missionId,
-          title: titles.get(row.missionId) ?? null,
+          title: missionsById.get(row.missionId)?.title ?? null,
           points: row.points,
           verifiedBy: row.verifiedBy,
           completedAt: row.completedAt,
+        })),
+        missionsPending: todayWith('pending').map((row) => ({
+          missionId: row.missionId,
+          title: missionsById.get(row.missionId)?.title ?? null,
+          points: missionsById.get(row.missionId)?.points ?? 0,
+          completedAt: row.completedAt,
+        })),
+        missionsToRedo: todayWith('rejected').map((row) => ({
+          missionId: row.missionId,
+          title: missionsById.get(row.missionId)?.title ?? null,
         })),
         game: gameToday
           ? { game: gameToday.game, score: gameToday.score, points: gameToday.points }

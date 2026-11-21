@@ -94,6 +94,16 @@ export class MissionsService {
     return result;
   }
 
+  /** One mission from a child's saved list for a day. */
+  async findMission(
+    childId: string,
+    day: string,
+    missionId: string,
+  ): Promise<Mission | undefined> {
+    const saved = await this.findSaved(childId, day);
+    return saved?.missions.find((mission) => mission.id === missionId);
+  }
+
   private async findSaved(
     childId: string,
     day: string,

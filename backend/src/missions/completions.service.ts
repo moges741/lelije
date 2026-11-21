@@ -3,10 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { addisDay } from '../common/day';
 import { PointsService } from '../points/points.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { Mission } from './missions.types';
+import { MissionsService } from './missions.service';
 
 function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
@@ -35,9 +36,14 @@ export class CompletionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly points: PointsService,
+    private readonly missions: MissionsService,
   ) {}
 
-  /** Awards a mission's stored points once per day; a repeat changes nothing. */
+  /**
+   * Records a mission as done, once per day. Camera-verified completions are
+   * approved and paid at once; tap-to-confirm ones wait for a parent. A
+   * rejected completion can be redone; any other repeat changes nothing.
+   */
   async complete(body: unknown) {
     const input = (body ?? {}) as Record<string, unknown>;
 
@@ -67,12 +73,7 @@ export class CompletionsService {
     if (!child) throw new NotFoundException('child not found');
 
     const day = addisDay();
-    const daily = await this.prisma.dailyMission.findUnique({
-      where: { childId_day: { childId, day } },
-    });
-    const mission = (daily?.missions as unknown as Mission[] | undefined)?.find(
-      (candidate) => candidate.id === missionId,
-    );
+    const mission = await this.missions.findMission(childId, day, missionId);
     if (!mission) {
       throw new NotFoundException("mission not found in today's missions");
     }
@@ -81,6 +82,7 @@ export class CompletionsService {
         'this mission cannot be verified by pose',
       );
     }
+    const status = verifiedBy === 'pose' ? 'approved' : 'pending';
 
     return this.prisma.$transaction(async (tx) => {
       await this.points.lockChild(tx, childId);
@@ -89,10 +91,12 @@ export class CompletionsService {
       const existing = await tx.completion.findUnique({
         where: { childId_missionId_day: { childId, missionId, day } },
       });
-      if (existing) {
+      if (existing && existing.status !== 'rejected') {
         return {
+          completionId: existing.id,
           missionId,
           verifiedBy: existing.verifiedBy,
+          status: existing.status,
           alreadyCompleted: true,
           pointsAwarded: 0,
           pointsToday: awardedBefore,
@@ -100,13 +104,29 @@ export class CompletionsService {
         };
       }
 
-      const pointsAwarded = this.points.withinCap(mission.points, awardedBefore);
-      await tx.completion.create({
-        data: { childId, missionId, day, points: pointsAwarded, verifiedBy, result },
-      });
+      const pointsAwarded =
+        status === 'approved'
+          ? this.points.withinCap(mission.points, awardedBefore)
+          : 0;
+      const data = {
+        status,
+        points: pointsAwarded,
+        verifiedBy,
+        result: result ?? Prisma.DbNull,
+        completedAt: new Date(),
+        reviewedAt: null,
+      };
+      const saved = existing
+        ? await tx.completion.update({ where: { id: existing.id }, data })
+        : await tx.completion.create({
+            data: { childId, missionId, day, ...data },
+          });
+
       return {
+        completionId: saved.id,
         missionId,
         verifiedBy,
+        status,
         alreadyCompleted: false,
         pointsAwarded,
         pointsToday: awardedBefore + pointsAwarded,

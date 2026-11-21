@@ -7,6 +7,7 @@ import { MissionsModule } from './missions/missions.module';
 import { PointsModule } from './points/points.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProgressModule } from './progress/progress.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ProgressModule } from './progress/progress.module';
     MissionsModule,
     GamesModule,
     ProgressModule,
+    ReviewsModule,
   ],
   controllers: [HealthController],
 })
