@@ -60,7 +60,7 @@ export class ProgressService {
 
   private async forChild(child: Child) {
     const today = addisDay();
-    const [completions, games, daily] = await Promise.all([
+    const [completions, games, daily, play] = await Promise.all([
       this.prisma.completion.findMany({
         where: { childId: child.id },
         orderBy: { completedAt: 'asc' },
@@ -68,6 +68,14 @@ export class ProgressService {
       this.prisma.gameResult.findMany({ where: { childId: child.id } }),
       this.prisma.dailyMission.findUnique({
         where: { childId_day: { childId: child.id, day: today } },
+      }),
+      // The latest request still waiting for an answer, or else today's latest answer.
+      this.prisma.playRequest.findFirst({
+        where: {
+          childId: child.id,
+          OR: [{ status: 'sent' }, { day: today }],
+        },
+        orderBy: { requestedAt: 'desc' },
       }),
     ]);
 
@@ -112,6 +120,14 @@ export class ProgressService {
         })),
         game: gameToday
           ? { game: gameToday.game, score: gameToday.score, points: gameToday.points }
+          : null,
+        playRequest: play
+          ? {
+              id: play.id,
+              status: play.status,
+              requestedAt: play.requestedAt,
+              answeredAt: play.answeredAt,
+            }
           : null,
       },
     };
