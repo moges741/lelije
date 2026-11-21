@@ -7,9 +7,14 @@
  * Live endpoints used:
  *   POST /api/families            { name }
  *   GET  /api/families/:code
+ *   GET  /api/families/:code/progress
  *   POST /api/children            { familyCode, age, language, nickname? }
  *   POST /api/missions            { childId, count?, cameraAvailable?, space? }
  *   POST /api/missions/complete   { childId, missionId, verifiedBy, result?, completedAt? }
+ *   POST /api/games/result        { childId, game: 'catch-the-stars', result }
+ *   GET  /api/progress?childId=   totals and streak
+ *
+ * The grown-up PIN is never sent: see ./pin.ts.
  */
 import { pickMissions, scoreToPoints } from '../mocks/fallbackMissions'
 import type { AccountFailure, AccountResult, ChildRecord, FamilyRecord } from '../types/account'
@@ -32,6 +37,7 @@ import {
   type DemoNote,
 } from './demoStore'
 import { request } from './http'
+import { isValidPin, savePin } from './pin'
 
 export type { DemoCompletion, DemoNote, DemoPlay } from './demoStore'
 
@@ -46,9 +52,14 @@ export interface CompletionOutcome {
 
 export interface GameOutcome {
   awarded: number
-  status: 'not_saved' | 'demo_only' | 'save_failed'
+  status: 'server_awarded' | 'already' | 'not_saved' | 'demo_only' | 'save_failed'
   origin: 'server' | 'demo'
   pointsToday: number
+}
+
+export interface FamilyChildProgress extends Progress {
+  childId: string
+  nickname: string | null
 }
 
 interface ServerCache {
@@ -121,9 +132,11 @@ function note(dbNotes: DemoNote[], item: Omit<DemoNote, 'id' | 'at' | 'read'>) {
 
 export async function createFamily(
   name: string,
+  pin: string,
 ): Promise<AccountResult<{ family: FamilyRecord; children: ChildRecord[] }> | AccountFailure> {
   const trimmed = name.trim()
-  if (!trimmed) return { ok: false, error: 'invalid' }
+  if (!trimmed || !isValidPin(pin)) return { ok: false, error: 'invalid' }
+  // The PIN stays on this device; the server only receives the family name.
   const res = await request('/api/families', {
     method: 'POST',
     body: JSON.stringify({ name: trimmed.slice(0, 40) }),
@@ -131,9 +144,12 @@ export async function createFamily(
   if (res.ok) {
     const parsed = asFamily(res.body)
     if (!parsed) return { ok: false, error: 'unavailable' }
+    await savePin(parsed.family.code, pin)
     return { ok: true, origin: 'server', data: parsed }
   }
-  if (res.kind === 'http') return { ok: false, error: res.status === 400 ? 'invalid' : 'unavailable' }
+  if (!res.ok && res.kind === 'http' && res.status < 500) {
+    return { ok: false, error: res.status === 400 ? 'invalid' : 'unavailable' }
+  }
 
   const family: FamilyRecord = {
     id: `demo_${Date.now()}`,
@@ -143,6 +159,7 @@ export async function createFamily(
   updateDemo((db) => {
     db.families.push({ ...family, children: [] })
   })
+  await savePin(family.code, pin)
   return { ok: true, origin: 'demo', data: { family, children: [] } }
 }
 
@@ -160,8 +177,23 @@ export async function lookupFamily(
     if (!parsed) return { ok: false, error: 'unavailable' }
     return { ok: true, origin: 'server', data: parsed }
   }
-  if (res.kind === 'http' && res.status === 404) return { ok: false, error: 'not_found' }
-  if (res.kind === 'http') return { ok: false, error: 'unavailable' }
+  if (!res.ok && res.status === 404) {
+    const saved = findDemoFamily(normalized)
+    if (saved) {
+      return {
+        ok: true,
+        origin: 'demo',
+        data: {
+          family: { id: saved.id, name: saved.name, code: saved.code },
+          children: saved.children,
+        },
+      }
+    }
+    return { ok: false, error: 'not_found' }
+  }
+  if (!res.ok && res.kind === 'http' && res.status < 500) {
+    return { ok: false, error: 'unavailable' }
+  }
 
   const demo = findDemoFamily(normalized)
   if (!demo) return { ok: false, error: 'network' }
@@ -170,6 +202,29 @@ export async function lookupFamily(
     origin: 'demo',
     data: { family: { id: demo.id, name: demo.name, code: demo.code }, children: demo.children },
   }
+}
+
+/** On-device family for the pitch. Never calls the server. */
+export function startDemoFamily(language: AppLanguage): {
+  family: FamilyRecord
+  child: ChildRecord
+} {
+  const family: FamilyRecord = {
+    id: `demo_${Date.now()}`,
+    name: 'Demo family',
+    code: newDemoCode(),
+  }
+  const child: ChildRecord = {
+    id: `demo_c_${Date.now()}`,
+    familyId: family.id,
+    age: 8,
+    language,
+    nickname: null,
+  }
+  updateDemo((db) => {
+    db.families.push({ ...family, children: [{ ...child, familyCode: family.code }] })
+  })
+  return { family, child }
 }
 
 export async function addChild(input: {
@@ -226,8 +281,10 @@ export function progressFor(childId: string, origin: 'server' | 'demo'): Progres
     const done = readDemo().completions.filter(
       (item) => item.childId === childId && item.day === day && item.status === 'approved',
     )
+    const pointsToday = done.reduce((sum, item) => sum + item.points, 0)
     return {
-      pointsToday: done.reduce((sum, item) => sum + item.points, 0),
+      totalPoints: pointsToday,
+      pointsToday,
       todayCompleted: done.map((item) => item.missionId),
       pendingIds: readDemo()
         .completions.filter(
@@ -242,6 +299,7 @@ export function progressFor(childId: string, origin: 'server' | 'demo'): Progres
   const cached = readCache()[childId]
   if (!cached || cached.day !== day) {
     return {
+      totalPoints: 0,
       pointsToday: 0,
       todayCompleted: [],
       pendingIds: [],
@@ -251,6 +309,7 @@ export function progressFor(childId: string, origin: 'server' | 'demo'): Progres
     }
   }
   return {
+    totalPoints: cached.pointsToday,
     pointsToday: cached.pointsToday,
     todayCompleted: cached.completed,
     pendingIds: [],
@@ -258,6 +317,51 @@ export function progressFor(childId: string, origin: 'server' | 'demo'): Progres
     dailyCap: cached.dailyCap,
     origin: 'server',
   }
+}
+
+function parseServerProgress(body: unknown): Progress | null {
+  if (!isRecord(body) || typeof body.pointsToday !== 'number') return null
+  const today = isRecord(body.today) ? body.today : null
+  const completed = Array.isArray(today?.missionsCompleted) ? today.missionsCompleted : []
+  return {
+    totalPoints: typeof body.totalPoints === 'number' ? body.totalPoints : body.pointsToday,
+    pointsToday: body.pointsToday,
+    todayCompleted: completed.flatMap((row) =>
+      isRecord(row) && typeof row.missionId === 'string' ? [row.missionId] : [],
+    ),
+    pendingIds: [],
+    streak: typeof body.streak === 'number' ? body.streak : null,
+    dailyCap: typeof body.dailyCap === 'number' ? body.dailyCap : null,
+    origin: 'server',
+  }
+}
+
+/** GET /api/progress?childId= — server totals. Demo stays on this device. */
+export async function loadProgress(childId: string, origin: 'server' | 'demo'): Promise<Progress> {
+  if (origin === 'demo') return progressFor(childId, 'demo')
+  const res = await request(`/api/progress?childId=${encodeURIComponent(childId)}`)
+  if (res.ok) {
+    const parsed = parseServerProgress(res.body)
+    if (parsed) return parsed
+  }
+  return progressFor(childId, 'server')
+}
+
+/** GET /api/families/:code/progress */
+export async function loadFamilyProgress(code: string): Promise<FamilyChildProgress[] | null> {
+  const res = await request(`/api/families/${encodeURIComponent(code)}/progress`)
+  if (!res.ok || !isRecord(res.body) || !Array.isArray(res.body.children)) return null
+  return res.body.children.flatMap((row) => {
+    const parsed = parseServerProgress(row)
+    if (!parsed || !isRecord(row) || typeof row.childId !== 'string') return []
+    return [
+      {
+        ...parsed,
+        childId: row.childId,
+        nickname: typeof row.nickname === 'string' ? row.nickname : null,
+      },
+    ]
+  })
 }
 
 export async function fetchTodaysMissions(input: {
@@ -417,10 +521,18 @@ export async function postGameResult(input: {
       result: input.result,
     }),
   })
-  if (res.kind === 'network') {
+  if (res.ok && isRecord(res.body) && typeof res.body.pointsAwarded === 'number') {
+    const already = res.body.alreadyRecorded === true
+    return {
+      awarded: already ? 0 : res.body.pointsAwarded,
+      status: already ? 'already' : 'server_awarded',
+      origin: 'server',
+      pointsToday: typeof res.body.pointsToday === 'number' ? res.body.pointsToday : res.body.pointsAwarded,
+    }
+  }
+  if (!res.ok && res.kind === 'network') {
     return { awarded: 0, status: 'save_failed', origin: 'server', pointsToday: 0 }
   }
-  // The live API has no game-result route, so a 404 is expected.
   return { awarded: 0, status: 'not_saved', origin: 'server', pointsToday: 0 }
 }
 
@@ -462,7 +574,7 @@ export function sendPlayRequest(input: { familyCode: string; childId: string; ch
       status: 'sent',
       at: new Date().toISOString(),
     })
-    note(db.notes, { familyCode: input.familyCode, audience: 'parent', kind: 'play_sent' })
+    note(db.notes, { familyCode: input.familyCode, audience: 'child', kind: 'play_sent' })
   })
 }
 

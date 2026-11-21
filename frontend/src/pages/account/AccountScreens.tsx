@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import * as api from '../../api/client'
+import { isValidPin, PIN_LENGTH } from '../../api/pin'
 import { ChoiceCard, Panel, TextField } from '../../components/TextField'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
 import { TopBar } from '../../components/TopBar'
@@ -23,10 +24,16 @@ function errorText(
 }
 
 export function Start() {
-  const { t, session } = useApp()
+  const { t, session, language, setSession } = useApp()
   const navigate = useNavigate()
   if (session?.role === 'child' && session.child) return <Navigate to="/missions" replace />
   if (session?.role === 'parent') return <Navigate to="/parent" replace />
+
+  const practice = () => {
+    const { family } = api.startDemoFamily(language)
+    setSession({ role: 'parent', origin: 'demo', family, child: null })
+    navigate('/parent')
+  }
 
   return (
     <main className="screen">
@@ -39,6 +46,10 @@ export function Start() {
       </div>
       <ChoiceCard title={t('pathFamily')} body={t('pathFamilyLead')} onClick={() => navigate('/register/family')} />
       <ChoiceCard title={t('pathChild')} body={t('pathChildLead')} onClick={() => navigate('/register/child')} />
+      <button type="button" className="btn btn-plain btn-block" onClick={practice}>
+        {t('tryDemoFamily')}
+      </button>
+      <p className="hint">{t('tryDemoLead')}</p>
       <p className="hint">
         <Link to="/login">{t('haveAccount')}</Link>
       </p>
@@ -50,13 +61,21 @@ export function FamilyRegister() {
   const { t, setSession } = useApp()
   const navigate = useNavigate()
   const [name, setName] = useState('')
+  const [pin, setPin] = useState('')
+  const [pinError, setPinError] = useState(false)
   const [ack, setAck] = useState(false)
   const [error, setError] = useState<AccountError | 'ack' | null>(null)
   const [busy, setBusy] = useState(false)
 
   const submit = async () => {
+    const pinOk = isValidPin(pin)
+    setPinError(!pinOk)
     if (!name.trim()) {
       setError('invalid')
+      return
+    }
+    if (!pinOk) {
+      setError(null)
       return
     }
     if (!ack) {
@@ -65,7 +84,7 @@ export function FamilyRegister() {
     }
     setBusy(true)
     setError(null)
-    const result = await api.createFamily(name)
+    const result = await api.createFamily(name, pin)
     setBusy(false)
     if (!result.ok) {
       setError(result.error)
@@ -98,6 +117,19 @@ export function FamilyRegister() {
         autoComplete="organization"
         onChange={(event) => setName(event.target.value)}
         error={error === 'invalid' ? t('fieldRequired') : undefined}
+      />
+      <TextField
+        name="parentPin"
+        type="password"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        label={t('pinLabel')}
+        hint={t('pinHint')}
+        value={pin}
+        maxLength={PIN_LENGTH}
+        autoComplete="new-password"
+        onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))}
+        error={pinError ? t('pinInvalid') : undefined}
       />
       <label className="check">
         <input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} />

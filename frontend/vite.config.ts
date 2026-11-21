@@ -18,8 +18,13 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       fs: { allow: ['..'] },
-      // Point VITE_API_PROXY at the Backend dev server to use real endpoints.
-      proxy: env.VITE_API_PROXY ? { '/api': env.VITE_API_PROXY } : undefined,
+      // Same-origin /api calls go to the Nest server (global prefix is already /api).
+      proxy: {
+        '/api': {
+          target: env.VITE_API_PROXY || 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

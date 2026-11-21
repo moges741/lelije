@@ -17,6 +17,7 @@ export type SuccessState =
       missionId: string
       status: SaveStatus
       origin: 'server' | 'demo'
+      verifiedBy?: 'pose' | 'self'
     }
   | {
       kind: 'game'

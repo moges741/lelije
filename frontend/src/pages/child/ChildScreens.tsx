@@ -34,20 +34,15 @@ export function ChildSettings() {
 export function ChildPlay() {
   const { t, session } = useApp()
   const [rows, setRows] = useState<DemoPlay[]>([])
-  const [sent, setSent] = useState(false)
   useEffect(() => {
     if (session) setRows(api.playRequests(session.family.code).filter((row) => row.childId === session.child?.id))
   }, [session])
-  if (!session || session.role !== 'child' || !session.child) return <Navigate to="/login" replace />
+  const child = session?.role === 'child' ? session.child : null
+  if (!session || !child) return <Navigate to="/login" replace />
 
-  const ask = () => {
-    api.sendPlayRequest({
-      familyCode: session.family.code,
-      childId: session.child!.id,
-      childName: session.child.nickname || '—',
-    })
-    setSent(true)
-    setRows(api.playRequests(session.family.code).filter((row) => row.childId === session.child?.id))
+  const reply = (id: string, status: 'allowed' | 'declined') => {
+    api.answerPlay(id, status)
+    setRows(api.playRequests(session.family.code).filter((row) => row.childId === child.id))
   }
 
   const latest = rows[0]
@@ -56,10 +51,29 @@ export function ChildPlay() {
       <TopBar backTo="/missions" />
       <h1 className="title">{t('playTime')}</h1>
       <p className="banner banner-demo">{t('demoBanner')}</p>
-      {latest ? <p className="lead">{t(latest.status === 'sent' ? 'playSent' : latest.status === 'allowed' ? 'playAllowed' : latest.status === 'later' ? 'playLater' : 'playDeclined')}</p> : null}
-      <button type="button" className="btn btn-sun btn-block" onClick={ask}>
-        {sent ? t('playSent') : t('requestPlay')}
-      </button>
+      {!latest ? (
+        <p className="lead">{t('noPlay')}</p>
+      ) : latest.status === 'sent' ? (
+        <>
+          <p className="lead">{t('playInvite')}</p>
+          <button type="button" className="btn btn-sun btn-block" onClick={() => reply(latest.id, 'allowed')}>
+            {t('acceptPlay')}
+          </button>
+          <button type="button" className="btn btn-plain btn-block" onClick={() => reply(latest.id, 'declined')}>
+            {t('notNow')}
+          </button>
+        </>
+      ) : (
+        <p className="lead">
+          {t(
+            latest.status === 'allowed'
+              ? 'playAllowed'
+              : latest.status === 'later'
+                ? 'playLater'
+                : 'playDeclined',
+          )}
+        </p>
+      )}
     </main>
   )
 }

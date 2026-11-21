@@ -47,12 +47,12 @@ export interface GenerateMissionsResult {
 }
 
 export interface Progress {
-  /** Points the server (or the demo) has confirmed for today. Not a lifetime total. */
+  totalPoints: number
+  /** Points the server (or the demo) has confirmed for today. */
   pointsToday: number
   todayCompleted: string[]
   /** Demo-only ids waiting for a grown-up. The live API awards points immediately. */
   pendingIds: string[]
-  /** The live API does not return a streak. */
   streak: number | null
   dailyCap: number | null
   origin: 'server' | 'demo' | 'unknown'

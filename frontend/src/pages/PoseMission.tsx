@@ -42,6 +42,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
       progress.todayCompleted.includes(mission.id) || progress.pendingIds.includes(mission.id),
   )
   const [count, setCount] = useState(0)
+  const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
   const tally = useRef({ count: 0, startedAt: 0 })
 
@@ -58,6 +59,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
       missionId: mission.id,
       status: outcome.status,
       origin: outcome.origin,
+      verifiedBy,
     }
     navigate('/success', { replace: true, state })
   }
@@ -70,7 +72,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
     },
     onAction(event, engine) {
       const current = tally.current
-      if (event.type !== goal.detector || current.count >= goal.count) return
+      if (paused || event.type !== goal.detector || current.count >= goal.count) return
       current.count += 1
       setCount(current.count)
       if (current.count === goal.count) {
@@ -124,8 +126,10 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   const goalLabel = t(goal.detector === 'jump' ? 'goalJump' : 'goalArmsUp')
   const message = saving
     ? t('saving')
-    : (stageMessage(t, phase, session.personVisible) ??
-      (count > 0 ? t('keepGoing') : null))
+    : paused
+      ? t('paused')
+      : (stageMessage(t, phase, session.personVisible) ??
+        (count > 0 ? t('keepGoing') : null))
 
   return (
     <main className="screen screen-camera">
@@ -154,7 +158,15 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
             </span>
           </p>
           <StarProgress count={count} goal={goal.count} />
-          {POSE_MOCK && phase === 'running' && !saving && (
+          <button
+            type="button"
+            className="btn btn-plain btn-block"
+            disabled={saving || phase !== 'running'}
+            onClick={() => setPaused((value) => !value)}
+          >
+            {t(paused ? 'resume' : 'pause')}
+          </button>
+          {POSE_MOCK && phase === 'running' && !saving && !paused && (
             <MockControls actions={[goal.detector]} />
           )}
         </>
