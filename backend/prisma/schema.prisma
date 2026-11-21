@@ -9,13 +9,16 @@ datasource db {
 
 // `day` is always the Africa/Addis_Ababa calendar date as "YYYY-MM-DD".
 
-// `code` is what the phone stores to get back to the family. It is the only
-// credential, so treat it like a password: never log it.
+// `code` is what the phone stores to get back to the family; anyone with it can
+// read the family's data. `pinHash` guards parent-only actions. Never log either.
 model Family {
-  id        String   @id @default(uuid())
-  name      String
-  code      String   @unique
-  createdAt DateTime @default(now())
+  id             String    @id @default(uuid())
+  name           String
+  code           String    @unique
+  pinHash        String?
+  pinFailures    Int       @default(0)
+  pinLockedUntil DateTime?
+  createdAt      DateTime  @default(now())
 
   children Child[]
 }
@@ -47,15 +50,19 @@ model DailyMission {
   @@unique([childId, day])
 }
 
+// `status` is "approved" (points awarded), "pending" (waiting for a parent) or
+// "rejected" (the child may redo it). Only approved rows carry points.
 model Completion {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   childId     String
   missionId   String
   day         String
+  status      String
   points      Int
   verifiedBy  String
   result      Json?
-  completedAt DateTime @default(now())
+  completedAt DateTime  @default(now())
+  reviewedAt  DateTime?
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
