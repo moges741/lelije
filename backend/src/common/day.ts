@@ -18,3 +18,24 @@ export function previousDay(day: string): string {
     .toISOString()
     .slice(0, 10);
 }
+
+/** The calendar date `count` days before a "YYYY-MM-DD" day. */
+export function daysAgo(day: string, count: number): string {
+  let current = day;
+  for (let i = 0; i < count; i++) current = previousDay(current);
+  return current;
+}
+
+/**
+ * Consecutive active days ending today. A day with nothing yet today does not
+ * break the streak, so it still shows in the morning: counting then starts yesterday.
+ */
+export function countStreak(activeDays: Set<string>, today: string): number {
+  let day = activeDays.has(today) ? today : previousDay(today);
+  let streak = 0;
+  while (activeDays.has(day)) {
+    streak++;
+    day = previousDay(day);
+  }
+  return streak;
+}
