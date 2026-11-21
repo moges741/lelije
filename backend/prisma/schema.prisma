@@ -9,13 +9,26 @@ datasource db {
 
 // `day` is always the Africa/Addis_Ababa calendar date as "YYYY-MM-DD".
 
+// `code` is what the phone stores to get back to the family. It is the only
+// credential, so treat it like a password: never log it.
+model Family {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  children Child[]
+}
+
 model Child {
   id        String   @id @default(uuid())
+  familyId  String
   age       Int
   language  String
   nickname  String?
   createdAt DateTime @default(now())
 
+  family        Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
   dailyMissions DailyMission[]
   completions   Completion[]
   gameResults   GameResult[]
