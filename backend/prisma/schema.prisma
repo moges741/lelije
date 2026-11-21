@@ -35,6 +35,7 @@ model Child {
   dailyMissions DailyMission[]
   completions   Completion[]
   gameResults   GameResult[]
+  playRequests  PlayRequest[]
 }
 
 model DailyMission {
@@ -83,4 +84,19 @@ model GameResult {
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   @@unique([childId, day, game])
+}
+
+// A child's request for play time. `status` is "sent" until a parent answers
+// "allowed", "later" or "declined". A child has at most one "sent" request.
+model PlayRequest {
+  id          String    @id @default(uuid())
+  childId     String
+  day         String
+  status      String
+  requestedAt DateTime  @default(now())
+  answeredAt  DateTime?
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, status])
 }

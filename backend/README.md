@@ -4,7 +4,7 @@ The API for Lelije: families, children, daily missions, mission completion with 
 
 There is no login. A family is identified by its family code (for example `LJ-82SRVP`), which the phone stores. Anyone who has the code can see that family's children, so treat it like a password.
 
-Parent-only actions (approving a mission, changing the PIN) also need the family's 4-digit parent PIN. The server stores only a hash of it. Five wrong PINs lock parent actions for that family for 15 minutes.
+Parent-only actions (approving a mission, answering a play-time request, changing the PIN) also need the family's 4-digit parent PIN. The server stores only a hash of it. Five wrong PINs lock parent actions for that family for 15 minutes.
 
 ## Run it
 
@@ -52,6 +52,9 @@ Every route starts with `/api`. Bodies are JSON. Errors look like `{ "message": 
 | `GET /families/:code/reviews` | Lists missions waiting for a parent |
 | `POST /completions/:id/review` | A parent approves or rejects a waiting mission (needs the PIN) |
 | `POST /games/result` | Records a Catch the Stars result and awards points |
+| `POST /play-requests` | A child asks for play time |
+| `GET /families/:code/play-requests` | Lists the family's play-time requests |
+| `POST /play-requests/:id/answer` | A parent allows, postpones, or declines a request (needs the PIN) |
 | `GET /progress?childId=` | One child's points, today's work, and streak |
 | `GET /families/:code/progress` | That progress for every child in a family |
 
@@ -231,6 +234,45 @@ curl -s -X POST $API/games/result -H "$JSON" \
 - Points are 1 per 2 score, at most 30, and count toward the daily cap.
 - Only a child's first result of the day counts. A later one returns `alreadyRecorded: true`.
 
+### Ask for play time
+
+```bash
+PLAY=$(curl -s -X POST $API/play-requests -H "$JSON" -d "{\"childId\":\"$CHILD_ID\"}")
+echo $PLAY
+PLAY_ID=$(echo $PLAY | jq -r .id)
+```
+
+```json
+{ "id": "bf506dc8-...", "childId": "7329551c-...", "nickname": "Liya", "status": "sent", "requestedAt": "2026-11-21T14:24:24.662Z", "answeredAt": null, "alreadyAsked": false }
+```
+
+- A child has at most one unanswered request. Asking again while one is waiting returns the same request with a fresh `requestedAt` and `alreadyAsked: true`.
+- After a parent answers, asking again creates a new request.
+
+### List the family's play-time requests
+
+```bash
+curl -s $API/families/$CODE/play-requests
+```
+
+Returns the family's requests, newest first, at most 50. Each item has the same fields as above, without `alreadyAsked`.
+
+### Answer a play-time request
+
+```bash
+curl -s -X POST $API/play-requests/$PLAY_ID/answer -H "$JSON" \
+  -d "{\"familyCode\":\"$CODE\",\"pin\":\"$PIN\",\"answer\":\"allowed\"}"
+```
+
+```json
+{ "id": "bf506dc8-...", "childId": "7329551c-...", "nickname": "Liya", "status": "allowed", "requestedAt": "2026-11-21T14:24:24.662Z", "answeredAt": "2026-11-21T14:24:26.695Z", "alreadyAnswered": false }
+```
+
+- `answer` is `allowed`, `later`, or `declined`. `familyCode` and `pin` are required.
+- Each answer closes the request, `later` included. The child can then ask again.
+- Answering a request that is already answered returns `alreadyAnswered: true` and changes nothing.
+- A request that belongs to another family returns `404`.
+
 ### Get a child's progress
 
 ```bash
@@ -254,7 +296,8 @@ curl -s "$API/progress?childId=$CHILD_ID"
     ],
     "missionsPending": [],
     "missionsToRedo": [],
-    "game": { "game": "catch-the-stars", "score": 42, "points": 21 }
+    "game": { "game": "catch-the-stars", "score": 42, "points": 21 },
+    "playRequest": { "id": "bf506dc8-...", "status": "allowed", "requestedAt": "2026-11-21T14:24:24.662Z", "answeredAt": "2026-11-21T14:24:26.695Z" }
   }
 }
 ```
@@ -262,6 +305,7 @@ curl -s "$API/progress?childId=$CHILD_ID"
 - `missionsCompleted` holds approved missions only.
 - `missionsPending` holds missions waiting for a parent, as `{ missionId, title, points, completedAt }`, where `points` is what approval will pay.
 - `missionsToRedo` holds rejected missions, as `{ missionId, title }`.
+- `playRequest` is the child's request that is still waiting, or else today's latest answered one. It is `null` when there is neither.
 - Points and the streak count approved missions and games only.
 - `streak` counts consecutive days with an approved mission or a game. If nothing is done yet today, it counts up to yesterday.
 
