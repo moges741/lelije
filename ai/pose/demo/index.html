@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>LeLije pose demo</title>
     <!--
-      Standalone test page for ai/pose. No app needed.
+      Standalone test page for ai/pose. No app needed. It uses only the public
+      API (ai/pose/index.js), exactly like the real frontend will.
 
       Recommended:  from the ai/ folder run  npm run demo
       Plain static server started at the repo root:
@@ -13,7 +14,9 @@
         (the import map below resolves the MediaPipe package for that case;
          Vite ignores it because it rewrites the import itself)
 
-      Add ?debug=1 to show the debug overlay.
+      URL options:
+        ?debug=1       skeleton, standing-height line, live numbers and an event log
+        ?duration=20   game length in seconds (default 60)
     -->
     <script type="importmap">
       {
@@ -60,9 +63,19 @@
         color: #14213d;
         cursor: pointer;
       }
-      button:disabled {
-        opacity: 0.6;
-        cursor: default;
+      label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      input[type="number"] {
+        font: inherit;
+        width: 4.5em;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid #44527a;
+        background: #0b1326;
+        color: inherit;
       }
       #status {
         min-height: 1.4em;
@@ -70,26 +83,6 @@
       }
       #status.error {
         color: #ffb4a2;
-      }
-      progress {
-        width: min(100%, 320px);
-        height: 14px;
-        accent-color: #fca311;
-      }
-      progress[hidden] {
-        display: none;
-      }
-      #counters {
-        font-size: 1.1rem;
-      }
-      #counters b {
-        display: inline-block;
-        min-width: 1.5em;
-        color: #fca311;
-        font-size: 1.4rem;
-      }
-      #counters[hidden] {
-        display: none;
       }
       .stage {
         position: relative;
@@ -120,23 +113,31 @@
         background: rgba(0, 0, 0, 0.6);
         font: 12px/1.4 ui-monospace, Consolas, monospace;
         white-space: pre;
+        pointer-events: none;
       }
-      #debug[hidden] {
-        display: none;
+      #result {
+        width: min(100%, 640px);
+        box-sizing: border-box;
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: #0b1326;
+        font: 13px/1.5 ui-monospace, Consolas, monospace;
+        white-space: pre-wrap;
+      }
+      [hidden] {
+        display: none !important;
       }
     </style>
   </head>
   <body>
-    <h1>LeLije pose demo</h1>
+    <h1>LeLije pose demo: Catch the Stars</h1>
 
     <div class="controls">
       <button id="startBtn" type="button">Start</button>
+      <label>Seconds <input id="duration" type="number" min="10" max="300" step="5" value="60" /></label>
     </div>
-    <div id="status" role="status">Press Start and allow the camera.</div>
-    <progress id="progress" max="1" value="0" hidden></progress>
-    <div id="counters" hidden>
-      Jumps <b id="jumpCount">0</b> &middot; Arms up <b id="armsCount">0</b>
-    </div>
+    <div id="status" role="status">Press Start and allow the camera. Star = jump, cloud = both arms up.</div>
 
     <div class="stage">
       <video id="video" playsinline muted></video>
@@ -144,10 +145,10 @@
       <pre id="debug" hidden></pre>
     </div>
 
+    <pre id="result" hidden></pre>
+
     <script type="module">
-      import { createPoseEngine } from "../poseEngine.js";
-      import { bodyInFrame, CALIBRATION_HINTS, createCalibrator } from "../calibration.js";
-      import { createArmsUpDetector, createJumpDetector } from "../detectors.js";
+      import { startCatchTheStars } from "../index.js";
 
       const params = new URLSearchParams(location.search);
       const debugOn = params.get("debug") === "1";
@@ -157,234 +158,101 @@
       const videoEl = /** @type {HTMLVideoElement} */ (document.getElementById("video"));
       const canvasEl = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
       const startBtn = /** @type {HTMLButtonElement} */ (document.getElementById("startBtn"));
+      const durationEl = /** @type {HTMLInputElement} */ (document.getElementById("duration"));
       const statusEl = /** @type {HTMLElement} */ (document.getElementById("status"));
       const debugEl = /** @type {HTMLElement} */ (document.getElementById("debug"));
-      const progressEl = /** @type {HTMLProgressElement} */ (document.getElementById("progress"));
-      const countersEl = /** @type {HTMLElement} */ (document.getElementById("counters"));
-      const jumpCountEl = /** @type {HTMLElement} */ (document.getElementById("jumpCount"));
-      const armsCountEl = /** @type {HTMLElement} */ (document.getElementById("armsCount"));
-      const ctx = /** @type {CanvasRenderingContext2D} */ (canvasEl.getContext("2d"));
+      const resultEl = /** @type {HTMLElement} */ (document.getElementById("result"));
 
-      debugEl.hidden = !debugOn;
+      const durationParam = Number(params.get("duration"));
+      if (durationParam > 0) durationEl.value = String(durationParam);
 
-      // Nose plus body joints (no face mesh / fingers): shoulders, elbows, wrists, hips, knees, ankles.
-      const JOINTS = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
-      const BONES = [
-        [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
-        [11, 23], [12, 24], [23, 24],
-        [23, 25], [25, 27], [24, 26], [26, 28],
-      ];
-      const MIN_VISIBILITY = 0.5;
+      /** The game that is running now (null when idle). @type {{ stop: () => void } | null} */
+      let game = null;
+      /** The last game, kept so its end screen can be cleared before the next one starts. @type {{ stop: () => void } | null} */
+      let previous = null;
 
-      let running = false;
-      let lastStatusText = "";
-      const calibrator = createCalibrator();
-      const jumpDetector = createJumpDetector();
-      const armsUpDetector = createArmsUpDetector();
-
-      // Event log: counters for everyone, the last few events in the debug overlay.
+      // Debug only: the last few events, shown in the overlay. Nothing is stored or sent.
       const MAX_LOG_LINES = 6;
-      const FLASH_MS = 600;
       /** @type {string[]} */
       const eventLog = [];
-      let jumps = 0;
-      let armRaises = 0;
-      let firstFrameAt = 0;
-      let flashText = "";
-      let flashUntil = 0;
 
-      /**
-       * @param {"jump" | "arms up"} kind
-       * @param {number} timestampMs
-       */
-      function recordEvent(kind, timestampMs) {
-        if (kind === "jump") {
-          jumps += 1;
-          jumpCountEl.textContent = String(jumps);
-        } else {
-          armRaises += 1;
-          armsCountEl.textContent = String(armRaises);
-        }
-        eventLog.push(`${((timestampMs - firstFrameAt) / 1000).toFixed(1).padStart(5)}s  ${kind}`);
-        if (eventLog.length > MAX_LOG_LINES) eventLog.shift();
-        flashText = kind === "jump" ? "JUMP!" : "ARMS UP!";
-        flashUntil = timestampMs + FLASH_MS;
+      function setIdle() {
+        game = null;
+        startBtn.textContent = "Start";
+        durationEl.disabled = false;
       }
-
-      function resetEvents() {
-        jumpDetector.reset();
-        armsUpDetector.reset();
-        eventLog.length = 0;
-        jumps = 0;
-        armRaises = 0;
-        firstFrameAt = 0;
-        flashUntil = 0;
-        jumpCountEl.textContent = "0";
-        armsCountEl.textContent = "0";
-        countersEl.hidden = true;
-      }
-
-      /**
-       * @param {string} text
-       * @param {boolean} [isError]
-       */
-      function setStatus(text, isError = false) {
-        // Called every frame, so only touch the DOM when the text really changes.
-        if (text === lastStatusText) return;
-        lastStatusText = text;
-        statusEl.textContent = text;
-        statusEl.classList.toggle("error", isError);
-      }
-
-      /**
-       * @param {import("../poseEngine.js").Landmark[] | null} landmarks
-       * @param {number | null} baselineHipY  Standing hip height to mark in debug mode.
-       * @param {number} timestampMs
-       */
-      function draw(landmarks, baselineHipY, timestampMs) {
-        const width = videoEl.videoWidth;
-        const height = videoEl.videoHeight;
-        if (width === 0 || height === 0) return;
-        if (canvasEl.width !== width || canvasEl.height !== height) {
-          canvasEl.width = width;
-          canvasEl.height = height;
-        }
-
-        // Mirror everything so the child sees themselves like in a mirror.
-        ctx.save();
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(videoEl, 0, 0, width, height);
-
-        if (landmarks) {
-          ctx.lineWidth = 5;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = "#fca311";
-          ctx.beginPath();
-          for (const [a, b] of BONES) {
-            const p = landmarks[a];
-            const q = landmarks[b];
-            if (p.visibility < MIN_VISIBILITY || q.visibility < MIN_VISIBILITY) continue;
-            ctx.moveTo(p.x * width, p.y * height);
-            ctx.lineTo(q.x * width, q.y * height);
-          }
-          ctx.stroke();
-
-          ctx.fillStyle = "#ffffff";
-          for (const index of JOINTS) {
-            const p = landmarks[index];
-            if (p.visibility < MIN_VISIBILITY) continue;
-            ctx.beginPath();
-            ctx.arc(p.x * width, p.y * height, 6, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        if (debugOn && baselineHipY !== null) {
-          // Dashed line at the standing hip height the jump detector is using right now.
-          ctx.setLineDash([12, 10]);
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = "#7bdff2";
-          ctx.beginPath();
-          ctx.moveTo(0, baselineHipY * height);
-          ctx.lineTo(width, baselineHipY * height);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        ctx.restore();
-
-        // Big flash for each detected event, readable from across the room (not mirrored).
-        if (timestampMs < flashUntil) {
-          ctx.font = `bold ${Math.round(height * 0.14)}px system-ui, sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.lineWidth = 8;
-          ctx.strokeStyle = "#14213d";
-          ctx.fillStyle = "#fca311";
-          ctx.strokeText(flashText, width / 2, height * 0.16);
-          ctx.fillText(flashText, width / 2, height * 0.16);
-        }
-      }
-
-      const engine = createPoseEngine({
-        videoEl,
-        modelPath: `${assets}/models/pose_landmarker_lite.task`,
-        wasmPath: `${assets}/wasm`,
-        onFrame(landmarks, timestampMs) {
-          if (firstFrameAt === 0) firstFrameAt = timestampMs;
-          const update = calibrator.update(landmarks, timestampMs);
-          const calibration = update.calibration;
-
-          if (calibration) {
-            countersEl.hidden = false;
-            if (jumpDetector.update(landmarks, timestampMs, calibration)) recordEvent("jump", timestampMs);
-            if (armsUpDetector.update(landmarks, timestampMs, calibration)) recordEvent("arms up", timestampMs);
-          }
-          draw(landmarks, calibration ? jumpDetector.state.baselineHipY : null, timestampMs);
-
-          const inFrame = bodyInFrame(landmarks);
-          if (update.status === "ready" && !inFrame) {
-            // Calibrated, but the child walked out of view.
-            setStatus(CALIBRATION_HINTS.no_body);
-          } else {
-            setStatus(update.hint);
-          }
-          progressEl.hidden = update.status !== "calibrating";
-          progressEl.value = update.progress;
-
-          if (debugOn) {
-            let text = `fps      ${engine.getFps().toFixed(1)}\nstatus   ${update.status}\nprogress ${(update.progress * 100).toFixed(0)}%`;
-            if (calibration) {
-              const jump = jumpDetector.state;
-              const arms = armsUpDetector.state;
-              // "hip up": positive = hips ABOVE the standing height, in torso lengths (a jump needs +0.18).
-              const offset = jump.offsetFraction;
-              text +=
-                `\nbaseline ${(jump.baselineHipY ?? calibration.baselineHipY).toFixed(3)}` +
-                `\ntorso    ${calibration.torsoLength.toFixed(3)}` +
-                `\nhip up   ${offset >= 0.005 ? "+" : offset <= -0.005 ? "-" : " "}${Math.abs(offset).toFixed(2)} torso` +
-                `${jump.jumping ? "  IN AIR" : ""}` +
-                `\narms     ${arms.raised ? `up ${arms.heldMs.toFixed(0)} ms` : "down"}` +
-                `\nevents   jumps ${jumps}, arms up ${armRaises}`;
-              if (eventLog.length > 0) text += `\n${eventLog.join("\n")}`;
-            }
-            debugEl.textContent = text;
-          }
-        },
-        onError(error) {
-          running = false;
-          startBtn.textContent = "Start";
-          startBtn.disabled = false;
-          progressEl.hidden = true;
-          setStatus(`${error.message} (${error.code})`, true);
-        },
-      });
 
       startBtn.addEventListener("click", async () => {
-        if (running) {
-          engine.stop();
-          running = false;
-          calibrator.reset();
-          resetEvents();
-          startBtn.textContent = "Start";
-          progressEl.hidden = true;
-          ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-          debugEl.textContent = "";
-          setStatus("Stopped. The camera is off.");
+        if (game) {
+          game.stop();
+          setIdle();
+          statusEl.classList.remove("error");
+          statusEl.textContent = "Stopped. The camera is off.";
+          debugEl.hidden = true;
           return;
         }
 
-        startBtn.disabled = true;
-        calibrator.reset();
-        resetEvents();
-        setStatus("Loading the camera and the pose model...");
-        const ok = await engine.start();
-        startBtn.disabled = false;
-        if (!ok) return; // onError already showed the reason.
-
-        running = true;
+        if (previous) previous.stop();
+        eventLog.length = 0;
+        resultEl.hidden = true;
+        debugEl.hidden = !debugOn;
+        debugEl.textContent = "";
+        statusEl.classList.remove("error");
         startBtn.textContent = "Stop";
-        setStatus(CALIBRATION_HINTS.no_body);
+        durationEl.disabled = true;
+
+        let ended = false;
+        const handle = await startCatchTheStars({
+          videoEl,
+          canvasEl,
+          durationSec: Number(durationEl.value) || 60,
+          modelPath: `${assets}/models/pose_landmarker_lite.task`,
+          wasmPath: `${assets}/wasm`,
+          debug: debugOn,
+          onStatus(status) {
+            statusEl.classList.toggle("error", status.state === "error");
+            statusEl.textContent = status.errorCode ? `${status.hint} (${status.errorCode})` : status.hint;
+            if (status.state === "error") {
+              // The game already switched the camera off; just reset the button.
+              ended = true;
+              setIdle();
+            }
+          },
+          onEvent: debugOn
+            ? (event) => {
+                const kind = event.kind ? ` ${event.kind}` : "";
+                eventLog.push(`${(event.timeMs / 1000).toFixed(1).padStart(5)}s  ${event.type}${kind} ${event.value}`);
+                if (eventLog.length > MAX_LOG_LINES) eventLog.shift();
+              }
+            : undefined,
+          onDebug: debugOn
+            ? (info) => {
+                // "hip up": positive = hips ABOVE the standing height, in torso lengths (a jump needs +0.18).
+                const offset = info.hipOffset;
+                let text =
+                  `fps      ${info.fps.toFixed(1)}` +
+                  `\nstate    ${info.state}` +
+                  `\nbaseline ${info.baselineHipY === null ? "-" : info.baselineHipY.toFixed(3)}` +
+                  `\ntorso    ${info.torsoLength.toFixed(3)}` +
+                  `\nhip up   ${offset >= 0.005 ? "+" : offset <= -0.005 ? "-" : " "}${Math.abs(offset).toFixed(2)} torso` +
+                  `${info.jumping ? "  IN AIR" : ""}` +
+                  `\narms     ${info.armsRaised ? `up ${info.armsHeldMs.toFixed(0)} ms` : "down"}`;
+                if (eventLog.length > 0) text += `\n${eventLog.join("\n")}`;
+                debugEl.textContent = text;
+              }
+            : undefined,
+          onFinish(result) {
+            // This object is what the frontend sends to the backend.
+            resultEl.textContent = `onFinish payload:\n${JSON.stringify(result, null, 2)}`;
+            resultEl.hidden = false;
+            debugEl.hidden = true;
+            ended = true;
+            setIdle();
+          },
+        });
+        previous = handle;
+        // If it failed straight away, the button is already back to "Start".
+        if (!ended) game = handle;
       });
     </script>
   </body>
