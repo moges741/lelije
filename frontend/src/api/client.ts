@@ -1,6 +1,10 @@
 /**
  * Every call the app makes to the Nest API. The routes and their rules are in
  * backend/README.md; the response shapes are in ../types/api.ts.
+ *
+ * When VITE_API=off, calls are directed to demoStore on this device so all screens
+ * can be opened without running Postgres. In live API mode (the default), all errors
+ * are surfaced cleanly without falling back to demo.
  */
 import { addisDay } from '../lib/time'
 import type { ChildRecord, FamilyRecord, FamilyWithChildren } from '../types/account'
@@ -20,6 +24,7 @@ import type {
   Verified,
 } from '../types/api'
 import type { AppLanguage, CatchStarsResult, Mission } from '../types/mission'
+import * as demo from './demoStore'
 import { get, mapResult, post, type Result } from './http'
 
 const path = encodeURIComponent
@@ -36,19 +41,23 @@ function toFamily(body: FamilyRecord & { children?: ChildRecord[] }): FamilyWith
 /* ---------- family and PIN ---------- */
 
 export async function createFamily(name: string, pin: string): Promise<Result<FamilyWithChildren>> {
+  if (demo.IS_API_OFF) return demo.demoCreateFamily(name, pin)
   return mapResult(await post<FamilyRecord>('/api/families', { name, pin }), toFamily)
 }
 
 export async function findFamily(code: string): Promise<Result<FamilyWithChildren>> {
+  if (demo.IS_API_OFF) return demo.demoFindFamily(code)
   return mapResult(await get<FamilyRecord>(`/api/families/${path(code)}`), toFamily)
 }
 
 /** Sets the first PIN, or changes it when the current PIN is sent too. */
-export function setFamilyPin(code: string, pin: string, currentPin?: string) {
+export async function setFamilyPin(code: string, pin: string, currentPin?: string) {
+  if (demo.IS_API_OFF) return demo.demoSetFamilyPin(code, pin, currentPin)
   return post<{ hasPin: true }>(`/api/families/${path(code)}/pin`, { pin, currentPin })
 }
 
-export function checkFamilyPin(code: string, pin: string) {
+export async function checkFamilyPin(code: string, pin: string) {
+  if (demo.IS_API_OFF) return demo.demoCheckFamilyPin(code, pin)
   return post<{ ok: true }>(`/api/families/${path(code)}/pin/check`, { pin })
 }
 
@@ -58,6 +67,7 @@ export async function addChild(input: {
   language: AppLanguage
   nickname: string
 }): Promise<Result<ChildRecord>> {
+  if (demo.IS_API_OFF) return demo.demoAddChild(input)
   const nickname = input.nickname.trim() || null
   return mapResult(await post<ChildRecord>('/api/children', { ...input, nickname }), toChild)
 }
@@ -116,6 +126,7 @@ export interface TodaysMissions {
 }
 
 export async function todaysMissions(childId: string, cameraAvailable: boolean): Promise<Result<TodaysMissions>> {
+  if (demo.IS_API_OFF) return demo.demoTodaysMissions(childId, cameraAvailable)
   const res = await post<{ missions?: unknown[] }>('/api/missions', {
     childId,
     count: 3,
@@ -135,75 +146,88 @@ export async function todaysMissions(childId: string, cameraAvailable: boolean):
   return res
 }
 
-export function completeMission(input: {
+export async function completeMission(input: {
   childId: string
   missionId: string
   verifiedBy: Verified
   result?: PoseResult
 }) {
+  if (demo.IS_API_OFF) return demo.demoCompleteMission(input)
   return post<CompletionSaved>('/api/missions/complete', {
     ...input,
     completedAt: new Date().toISOString(),
   })
 }
 
-export function childProgress(childId: string) {
+export async function childProgress(childId: string) {
+  if (demo.IS_API_OFF) return demo.demoChildProgress(childId)
   return get<Progress>(`/api/progress?childId=${path(childId)}`)
 }
 
 export async function familyProgress(code: string): Promise<Result<Progress[]>> {
+  if (demo.IS_API_OFF) return demo.demoFamilyProgress(code)
   const res = await get<{ children: Progress[] }>(`/api/families/${path(code)}/progress`)
   return mapResult(res, (body) => body.children)
 }
 
-export function saveGame(childId: string, result: CatchStarsResult) {
+export async function saveGame(childId: string, result: CatchStarsResult) {
+  if (demo.IS_API_OFF) return demo.demoSaveGame(childId, result)
   return post<GameSaved>('/api/games/result', { childId, game: 'catch-the-stars', result })
 }
 
 /* ---------- parent approval and play time ---------- */
 
-export function pendingReviews(code: string) {
+export async function pendingReviews(code: string) {
+  if (demo.IS_API_OFF) return demo.demoPendingReviews(code)
   return get<Review[]>(`/api/families/${path(code)}/reviews`)
 }
 
-export function reviewMission(
+export async function reviewMission(
   id: string,
   input: { familyCode: string; pin: string; decision: 'approve' | 'reject' },
 ) {
+  if (demo.IS_API_OFF) return demo.demoReviewMission(id, input)
   return post<ReviewSaved>(`/api/completions/${path(id)}/review`, input)
 }
 
-export function askForPlay(childId: string) {
+export async function askForPlay(childId: string) {
+  if (demo.IS_API_OFF) return demo.demoAskForPlay(childId)
   return post<PlayRequest & { alreadyAsked: boolean }>('/api/play-requests', { childId })
 }
 
-export function playRequests(code: string) {
+export async function playRequests(code: string) {
+  if (demo.IS_API_OFF) return demo.demoPlayRequests(code)
   return get<PlayRequest[]>(`/api/families/${path(code)}/play-requests`)
 }
 
-export function answerPlay(id: string, input: { familyCode: string; pin: string; answer: PlayAnswer }) {
+export async function answerPlay(id: string, input: { familyCode: string; pin: string; answer: PlayAnswer }) {
+  if (demo.IS_API_OFF) return demo.demoAnswerPlay(id, input)
   return post<PlayRequest & { alreadyAnswered: boolean }>(`/api/play-requests/${path(id)}/answer`, input)
 }
 
 /* ---------- notifications and reports ---------- */
 
-export function notifications(code: string, who: Audience) {
+export async function notifications(code: string, who: Audience) {
+  if (demo.IS_API_OFF) return demo.demoNotifications(code, who)
   const query = new URLSearchParams(who).toString()
   return get<{ unread: number; notifications: NotificationItem[] }>(
     `/api/families/${path(code)}/notifications?${query}`,
   )
 }
 
-export function markNotificationsRead(code: string, who: Audience) {
+export async function markNotificationsRead(code: string, who: Audience) {
+  if (demo.IS_API_OFF) return demo.demoMarkNotificationsRead(code, who)
   return post<{ marked: number }>(`/api/families/${path(code)}/notifications/read`, who)
 }
 
 export async function activity(code: string, days = 7): Promise<Result<ActivityItem[]>> {
+  if (demo.IS_API_OFF) return demo.demoActivity(code, days)
   const res = await get<{ items: ActivityItem[] }>(`/api/families/${path(code)}/activity?days=${days}`)
   return mapResult(res, (body) => body.items)
 }
 
 export async function report(code: string, days = 7): Promise<Result<ChildReport[]>> {
+  if (demo.IS_API_OFF) return demo.demoReport(code, days)
   const res = await get<{ children: ChildReport[] }>(`/api/families/${path(code)}/report?days=${days}`)
   return mapResult(res, (body) => body.children)
 }
