@@ -21,9 +21,12 @@
  * @typedef {object} CalibrationUpdate
  * @property {CalibrationStatus} status
  * @property {number} progress  0..1, how much of the calibration time has passed.
- * @property {string} hint  Short English message for the child (translate by `status` in the app).
+ * @property {CalibrationHintKey} hintKey  Which hint applies; use this key to show translated text.
+ * @property {string} hint  The same hint as default English text.
  * @property {Calibration | null} calibration  Set once status is "ready".
  */
+
+/** @typedef {"no_body" | "too_far" | "calibrating" | "ready"} CalibrationHintKey */
 
 /** MediaPipe pose landmark indices used by LeLije. */
 export const LANDMARK = Object.freeze({
@@ -69,7 +72,7 @@ export const CALIBRATION_CONFIG = {
   minTorsoLength: 0.08,
 };
 
-/** Default English hints. The app should translate by status, not by this text. */
+/** Default English hints, keyed by hintKey. The app should translate by key, not by this text. */
 export const CALIBRATION_HINTS = {
   no_body: "Step back until I see your whole body",
   too_far: "Come a little closer so I can see you better",
@@ -168,9 +171,16 @@ export function createCalibrator(options = {}) {
   const result = {
     status: "no_body",
     progress: 0,
+    hintKey: "no_body",
     hint: CALIBRATION_HINTS.no_body,
     calibration: null,
   };
+
+  /** @param {CalibrationHintKey} key */
+  function setHint(key) {
+    result.hintKey = key;
+    result.hint = CALIBRATION_HINTS[key];
+  }
 
   function restart() {
     hipSamples.length = 0;
@@ -183,7 +193,7 @@ export function createCalibrator(options = {}) {
     calibration = null;
     result.status = "no_body";
     result.progress = 0;
-    result.hint = CALIBRATION_HINTS.no_body;
+    setHint("no_body");
     result.calibration = null;
   }
 
@@ -208,7 +218,7 @@ export function createCalibrator(options = {}) {
       restart();
       result.status = "no_body";
       result.progress = 0;
-      result.hint = inFrame ? CALIBRATION_HINTS.too_far : CALIBRATION_HINTS.no_body;
+      setHint(inFrame ? "too_far" : "no_body");
       return result;
     }
 
@@ -230,14 +240,14 @@ export function createCalibrator(options = {}) {
       torsoSamples.length = 0;
       result.status = "ready";
       result.progress = 1;
-      result.hint = CALIBRATION_HINTS.ready;
+      setHint("ready");
       result.calibration = calibration;
       return result;
     }
 
     result.status = "calibrating";
     result.progress = Math.min(elapsed / config.durationMs, 1);
-    result.hint = CALIBRATION_HINTS.calibrating;
+    setHint("calibrating");
     return result;
   }
 
