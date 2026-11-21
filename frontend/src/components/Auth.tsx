@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/app-context'
 import { BRAND, BRAND_AM } from '../i18n'
+import { EditorialMedia } from './EditorialMedia'
 import { Icon } from './Icon'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { TopBar } from './TopBar'
@@ -9,8 +10,8 @@ import { TopBar } from './TopBar'
 export type AuthRole = 'parent' | 'child'
 
 /**
- * Shared frame for every account screen (choose, register, sign in), so they
- * read as one product and match the landing page: same sky, sun and brand.
+ * Shared frame for every account screen: 2-column studio split on desktop with
+ * editorial artwork and calm copy on the left, elevated form surface on the right.
  */
 export function AuthShell({
   backTo,
@@ -27,22 +28,40 @@ export function AuthShell({
   tabs?: ReactNode
   children: ReactNode
 }) {
+  const { t } = useApp()
   return (
-    <main className="screen auth">
+    <main className="screen screen-auth">
       <TopBar backTo={backTo}>
         <LanguageSwitcher />
       </TopBar>
-      <section className="auth-hero">
-        <p className="auth-brand">
-          <span>{BRAND}</span>
-          <span lang="am">{BRAND_AM}</span>
-        </p>
-        {badge && <span className="auth-badge">{badge}</span>}
-        <h1 className="auth-title">{title}</h1>
-        {lead && <p className="auth-lead">{lead}</p>}
-      </section>
-      {tabs}
-      <div className="auth-body">{children}</div>
+
+      <div className="auth-layout">
+        <section className="auth-story">
+          <div className="auth-story-copy">
+            <p className="auth-brand">
+              <span>{BRAND}</span>
+              <span lang="am">{BRAND_AM}</span>
+            </p>
+            {badge && <p className="kicker">{badge}</p>}
+            <h1 className="auth-title">{title}</h1>
+            {lead && <p className="auth-lead">{lead}</p>}
+          </div>
+          <div className="auth-media-frame">
+            <EditorialMedia
+              src="/images/family_auth_art.jpg"
+              alt={t('heroArtAlt')}
+              className="auth-media-img"
+              fallbackIcon="family"
+              fallbackTone="teal"
+            />
+          </div>
+        </section>
+
+        <section className="auth-card-col">
+          {tabs}
+          <div className="auth-body">{children}</div>
+        </section>
+      </div>
     </main>
   )
 }
@@ -51,7 +70,7 @@ export function AuthShell({
 export function AuthTabs({ role, active }: { role: AuthRole; active: 'register' | 'login' }) {
   const { t } = useApp()
   return (
-    <nav className="auth-tabs">
+    <nav className="auth-tabs" aria-label={t('signIn')}>
       <Link
         className="auth-tab"
         aria-current={active === 'register' ? 'page' : undefined}
@@ -76,7 +95,7 @@ export function Steps({ current }: { current: 1 | 2 }) {
   return (
     <ol className="steps">
       <li className={current === 1 ? 'is-on' : 'is-done'} aria-current={current === 1 ? 'step' : undefined}>
-        <span>{current === 1 ? '1' : <Icon name="check" size={16} />}</span>
+        <span>{current === 1 ? '1' : <Icon name="check" size={15} />}</span>
         {t('stepAccount')}
       </li>
       <li className={current === 2 ? 'is-on' : undefined} aria-current={current === 2 ? 'step' : undefined}>

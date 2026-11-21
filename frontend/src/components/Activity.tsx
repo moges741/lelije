@@ -8,22 +8,27 @@ import { SafetyBanner } from './SafetyBanner'
  * same place in both: stage on top, stats and pause under it, then progress.
  */
 
-/** Before camera access: say why the camera is needed, and offer to skip it. */
+/** Before camera access: say why the camera is needed, and offer to switch between camera and buttons. */
 export function CameraIntro({
   mock,
+  canUseCamera = false,
   onStart,
   onFallback,
+  onUseCamera,
 }: {
-  /** True in the demo build or once buttons were chosen: no camera is used. */
+  /** True in keyboard/button mode; false in live webcam pose mode. */
   mock: boolean
+  /** True when the browser supports live webcam access. */
+  canUseCamera?: boolean
   onStart: () => void
   onFallback: () => void
+  onUseCamera?: () => void
 }) {
   const { t } = useApp()
   return (
     <>
       {mock ? (
-        <p className="demo-note">{t('demoMode')}</p>
+        <p className="demo-note">{t('buttonsMode')}</p>
       ) : (
         <section className="camera-intro">
           <h2 className="how-title">{t('cameraWhyTitle')}</h2>
@@ -49,6 +54,12 @@ export function CameraIntro({
           <Icon name={mock ? 'play' : 'camera'} />
           {t(mock ? 'startDemo' : 'allowCamera')}
         </button>
+        {mock && canUseCamera && onUseCamera && (
+          <button type="button" className="btn btn-plain btn-block" onClick={onUseCamera}>
+            <Icon name="camera" />
+            {t('allowCamera')}
+          </button>
+        )}
         {!mock && (
           <button type="button" className="btn btn-plain btn-block" onClick={onFallback}>
             {t('playWithButtons')}

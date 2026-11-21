@@ -23,6 +23,25 @@ const PoseMission = lazy(() =>
 const CatchStars = lazy(() =>
   import('./pages/CatchStars').then((m) => ({ default: m.CatchStars })),
 )
+const ActivitiesHub = lazy(() =>
+  import('./pages/BodyActivities').then((m) => ({ default: m.ActivitiesHub })),
+)
+const ActivityRunner = lazy(() =>
+  import('./pages/BodyActivities').then((m) => ({ default: m.ActivityRunner })),
+)
+const Storyteller = lazy(() =>
+  import('./pages/Storyteller').then((m) => ({ default: m.Storyteller })),
+)
+const BrainGames = lazy(() =>
+  import('./pages/BrainGames').then((m) => ({ default: m.BrainGames })),
+)
+
+function RequireGuest() {
+  const { session } = useApp()
+  if (session?.role === 'parent') return <Navigate to="/parent" replace />
+  if (session?.role === 'child' && session.child) return <Navigate to="/missions" replace />
+  return <Outlet />
+}
 
 function RequireChild() {
   const { session } = useApp()
@@ -54,10 +73,14 @@ export default function App() {
         <Suspense fallback={<ScreenFallback />}>
           <Routes>
             <Route path="/" element={<Welcome />} />
-            <Route path="/register/family" element={<FamilyRegister />} />
-            <Route path="/register/child" element={<ChildJoin />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/help/code" element={<CodeHelp />} />
+
+            <Route element={<RequireGuest />}>
+              <Route path="/register/family" element={<FamilyRegister />} />
+              <Route path="/register/child" element={<ChildJoin />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/help/code" element={<CodeHelp />} />
+            </Route>
+
             <Route path="/parents" element={<Navigate to="/parent" replace />} />
 
             <Route element={<RequireParent />}>
@@ -74,8 +97,12 @@ export default function App() {
               <Route path="/missions" element={<Missions />} />
               <Route path="/missions/:id" element={<MissionDetail />} />
               <Route path="/missions/:id/play" element={<PoseMission />} />
+              <Route path="/activities" element={<ActivitiesHub />} />
+              <Route path="/activities/:id" element={<ActivityRunner />} />
               <Route path="/stars" element={<CatchStars />} />
               <Route path="/success" element={<Success />} />
+              <Route path="/child/brain" element={<BrainGames />} />
+              <Route path="/child/story" element={<Storyteller />} />
               <Route path="/child/settings" element={<ChildSettings />} />
               <Route path="/child/play" element={<ChildPlay />} />
               <Route path="/child/notifications" element={<ChildNotifications />} />

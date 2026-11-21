@@ -1,10 +1,23 @@
 const API_BASE: string = import.meta.env.VITE_API_BASE ?? ''
 
+/** Kept strictly in JS memory — never persisted to localStorage or sessionStorage. */
+let authToken: string | null = null
+
+export function setAuthToken(token: string | null): void {
+  authToken = token && token.trim().length > 0 ? token.trim() : null
+}
+
+export function getAuthToken(): string | null {
+  return authToken
+}
+
 /** Why a request failed, in the terms the screens care about. */
 export type Failure =
   /** No answer: offline, the API is down, or it took too long. */
   | 'network'
   | 'invalid'
+  /** Missing, expired, or signed-out session token. */
+  | 'unauthorized'
   /** A parent action with a wrong PIN, or a family with no PIN yet. */
   | 'forbidden'
   | 'not_found'
@@ -17,6 +30,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: Failure }
 
 function failureFor(status: number): Failure {
   if (status === 400) return 'invalid'
+  if (status === 401) return 'unauthorized'
   if (status === 403) return 'forbidden'
   if (status === 404) return 'not_found'
   if (status === 409) return 'conflict'
@@ -27,10 +41,15 @@ function failureFor(status: number): Failure {
 async function request<T>(path: string, body?: unknown, timeoutMs = 10_000): Promise<Result<T>> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
+  const headers: Record<string, string> = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (authToken) headers.Authorization = `Bearer ${authToken}`
+  const hasHeaders = Object.keys(headers).length > 0
+
   try {
     const res = await fetch(API_BASE + path, {
       method: body === undefined ? 'GET' : 'POST',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: hasHeaders ? headers : undefined,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     })

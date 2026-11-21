@@ -1,13 +1,19 @@
 import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { AuthService } from '../auth/auth.service';
 import { FamiliesService } from './families.service';
 
 @Controller('families')
 export class FamiliesController {
-  constructor(private readonly families: FamiliesService) {}
+  constructor(
+    private readonly families: FamiliesService,
+    private readonly auth: AuthService,
+  ) {}
 
   @Post()
-  create(@Body() body: unknown) {
-    return this.families.create(body);
+  async create(@Body() body: unknown) {
+    const family = await this.families.create(body);
+    const token = this.auth.issueParentToken({ id: family.id, code: family.code });
+    return { ...family, token };
   }
 
   @Get(':code')

@@ -1,12 +1,13 @@
 import type { PoseModule } from './types'
 
 /**
- * `mock: true` until CP2 (Build Contract 8.3.1).
- * Set VITE_POSE_MOCK=false to use the real camera engine.
+ * Uses the real on-device MediaPipe PoseLandmarker camera engine by default
+ * (/models/pose_landmarker_lite.task + /wasm from /public).
+ * Set VITE_POSE_MOCK=true only when explicitly rehearsing without a webcam.
  */
-export const POSE_MOCK = import.meta.env.VITE_POSE_MOCK !== 'false'
+export const POSE_MOCK = import.meta.env.VITE_POSE_MOCK === 'true'
 
-/** Asset paths from Contract A 5.1, served from public/. */
+/** Asset paths from Contract A 5.1, served from root /public by the NestJS server. */
 export const POSE_ASSETS = {
   modelUrl: '/models/pose_landmarker_lite.task',
   wasmUrl: '/wasm',
@@ -15,13 +16,11 @@ export const POSE_ASSETS = {
 let cached: Promise<PoseModule> | undefined
 
 /**
- * Lazy-loads the pose module, only ever called from camera screens.
- * `lelije-pose` is a Vite alias for ../ai/pose/index.js, or for the local
- * stand-in (./mock.ts) while that file does not exist yet.
+ * Lazy-loads the real ai/pose/index.js module via the Vite `lelije-pose` alias.
  */
 export function loadPoseModule(): Promise<PoseModule> {
   cached ??= import('lelije-pose').then(
-    (mod): PoseModule => mod,
+    (mod): PoseModule => mod as unknown as PoseModule,
     (err: unknown) => {
       cached = undefined
       throw err
@@ -31,5 +30,5 @@ export function loadPoseModule(): Promise<PoseModule> {
 }
 
 export function hasCamera(): boolean {
-  return POSE_MOCK || Boolean(navigator.mediaDevices?.getUserMedia)
+  return POSE_MOCK || Boolean(typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia)
 }

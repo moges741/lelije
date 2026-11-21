@@ -8,13 +8,17 @@ export function TopBar({ backTo, children }: { backTo?: string; children?: React
   const { t } = useApp()
   return (
     <header className="topbar">
-      {backTo ? (
-        <Link className="icon-btn" to={backTo} aria-label={t('back')}>
-          <Icon name="back" />
-        </Link>
-      ) : (
-        <span className="wordmark">{BRAND}</span>
-      )}
+      <div className="topbar-start">
+        {backTo ? (
+          <Link className="icon-btn" to={backTo} aria-label={t('back')}>
+            <Icon name="back" size={20} />
+          </Link>
+        ) : (
+          <Link className="wordmark" to="/">
+            {BRAND}
+          </Link>
+        )}
+      </div>
       <div className="topbar-end">{children}</div>
     </header>
   )

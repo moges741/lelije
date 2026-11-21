@@ -8,12 +8,64 @@ import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
 import { missionSuccess } from '../lib/outcome'
 import { POSE_MOCK } from '../lib/pose/load'
+import type { Landmark } from '../lib/pose/types'
 import { stageMessage, usePoseSession } from '../lib/pose/usePoseSession'
 import { missionState } from '../lib/progress'
 import type { PoseResult, Verified } from '../types/api'
 import type { Mission, MissionGoal } from '../types/mission'
 
-/** Screens 4 and 5: camera setup, then the mission in progress (Build Contract 8.2). */
+const SKELETON_JOINTS = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28]
+const SKELETON_BONES: [number, number][] = [
+  [11, 12],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [11, 23],
+  [12, 24],
+  [23, 24],
+  [23, 25],
+  [25, 27],
+  [24, 26],
+  [26, 28],
+]
+
+function drawMirroredSkeleton(canvas: HTMLCanvasElement, landmarks: Landmark[]) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const width = canvas.clientWidth || 640
+  const height = canvas.clientHeight || 480
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
+  ctx.clearRect(0, 0, width, height)
+  ctx.save()
+  ctx.lineWidth = 4
+  ctx.lineCap = 'round'
+  ctx.strokeStyle = '#F59E0B'
+  ctx.beginPath()
+  for (const [a, b] of SKELETON_BONES) {
+    const p = landmarks[a]
+    const q = landmarks[b]
+    if (!p || !q || p.visibility < 0.45 || q.visibility < 0.45) continue
+    ctx.moveTo((1 - p.x) * width, p.y * height)
+    ctx.lineTo((1 - q.x) * width, q.y * height)
+  }
+  ctx.stroke()
+
+  ctx.fillStyle = '#FFFFFF'
+  for (const idx of SKELETON_JOINTS) {
+    const p = landmarks[idx]
+    if (!p || p.visibility < 0.45) continue
+    ctx.beginPath()
+    ctx.arc((1 - p.x) * width, p.y * height, 5, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
+/** Screens 4 and 5: real on-device MediaPipe camera pose mission with live skeleton feedback. */
 export function PoseMission() {
   const { id } = useParams()
   const { t, missions, missionsStatus } = useApp()
@@ -45,10 +97,11 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   const [count, setCount] = useState(0)
   const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
-  // The child chose to tap or use the keyboard instead of the camera.
-  const [withButtons, setWithButtons] = useState(false)
-  const mock = POSE_MOCK || withButtons
+  // Defaults to REAL MediaPipe camera pose detection; switches to buttons only on request or camera failure.
+  const [mock, setMock] = useState(POSE_MOCK)
+  const canUseCamera = Boolean(typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia)
   const tally = useRef({ count: 0, startedAt: 0 })
+  const overlayRef = useRef<HTMLCanvasElement>(null)
 
   const finish = async (verifiedBy: Verified, result?: PoseResult) => {
     setSaving(true)
@@ -58,9 +111,21 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
 
   const session = usePoseSession({
     mock,
-    onReady() {
+    onReady({ engine }) {
       tally.current = { count: 0, startedAt: performance.now() }
       setCount(0)
+      const offLandmarks = engine.on('landmarks', ({ landmarks }) => {
+        if (overlayRef.current && landmarks.length > 0) {
+          drawMirroredSkeleton(overlayRef.current, landmarks)
+        }
+      })
+      return () => {
+        offLandmarks()
+        const ctx = overlayRef.current?.getContext('2d')
+        if (ctx && overlayRef.current) {
+          ctx.clearRect(0, 0, overlayRef.current.width, overlayRef.current.height)
+        }
+      }
     },
     onAction(event, engine) {
       const current = tally.current
@@ -69,8 +134,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
       setCount(current.count)
       if (current.count === goal.count) {
         engine.stop()
-        // Counted by button taps, not the camera, so it is not recorded as camera-verified.
-        void finish(withButtons && !POSE_MOCK ? 'self' : 'pose', {
+        void finish(mock ? 'self' : 'pose', {
           count: current.count,
           durationMs: Math.round(performance.now() - current.startedAt),
         })
@@ -83,7 +147,11 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
 
   const { phase } = session
   const useButtons = () => {
-    setWithButtons(true)
+    setMock(true)
+    session.begin()
+  }
+  const useCamera = () => {
+    setMock(false)
     session.begin()
   }
 
@@ -93,7 +161,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
         <TopBar backTo={backTo} />
         <CameraProblem
           saving={saving}
-          onRetry={session.begin}
+          onRetry={useCamera}
           onButtons={useButtons}
           onGrownUp={() => void finish('self')}
         />
@@ -122,10 +190,18 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
         instruction={`${goal.count} × ${goalLabel}`}
         instructionIcon={goal.detector === 'jump' ? 'jump' : 'arms'}
         compact={phase === 'setup'}
-      />
+      >
+        {!mock && <canvas ref={overlayRef} className="stage-canvas" />}
+      </CameraStage>
 
       {phase === 'setup' ? (
-        <CameraIntro mock={mock} onStart={session.begin} onFallback={useButtons} />
+        <CameraIntro
+          mock={mock}
+          canUseCamera={canUseCamera}
+          onStart={session.begin}
+          onFallback={useButtons}
+          onUseCamera={useCamera}
+        />
       ) : (
         <>
           <ActivityHud

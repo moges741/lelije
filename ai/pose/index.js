@@ -99,6 +99,9 @@ function createContractAPoseEngine(options) {
   let armsUp = false;
   let personVisible = false;
   let destroyed = false;
+  let calibrated = false;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let armsTimer = null;
   /** @type {ReturnType<typeof createLowLevelPoseEngine> | null} */
   let inner = null;
   const calibrator = createCalibrator();
@@ -118,7 +121,15 @@ function createContractAPoseEngine(options) {
     emit("status", { state: next, message });
   }
 
+  function clearArmsTimer() {
+    if (armsTimer !== null) {
+      clearTimeout(armsTimer);
+      armsTimer = null;
+    }
+  }
+
   function removeKeys() {
+    clearArmsTimer();
     if (!keyHandler || typeof window === "undefined") return;
     window.removeEventListener("keydown", keyHandler);
     keyHandler = null;
@@ -134,6 +145,7 @@ function createContractAPoseEngine(options) {
       if (destroyed) return;
       if (options.mock) {
         personVisible = true;
+        calibrated = true;
         removeKeys();
         keyHandler = (e) => {
           if (state !== STATES.RUNNING || e.repeat) return;
@@ -142,8 +154,10 @@ function createContractAPoseEngine(options) {
           if (k === "a") {
             armsUp = true;
             emit("action", { type: ACTIONS.ARMS_UP, t: performance.now(), confidence: 0.95 });
-            setTimeout(() => {
+            clearArmsTimer();
+            armsTimer = setTimeout(() => {
               armsUp = false;
+              armsTimer = null;
             }, 350);
           }
         };
@@ -152,17 +166,32 @@ function createContractAPoseEngine(options) {
         return;
       }
 
+      calibrated = false;
       inner = createLowLevelPoseEngine({
         videoEl: options.video,
         modelPath: options.modelUrl ?? "/models/pose_landmarker_lite.task",
         wasmPath: options.wasmUrl ?? "/wasm",
         onFrame(landmarks, ts) {
-          personVisible = Boolean(landmarks);
+          if (destroyed) return;
+          const visible = Boolean(landmarks);
+          personVisible = visible;
           if (landmarks) emit("landmarks", { t: ts, landmarks });
+
+          if (!visible) {
+            armsUp = false;
+            if (calibrated && state === STATES.RUNNING) {
+              setState(STATES.NO_PERSON, "no person in frame");
+            }
+            return;
+          }
+
           const upd = calibrator.update(landmarks, ts);
           if (upd.calibration) {
-            if (state !== STATES.RUNNING) {
+            if (!calibrated) {
+              calibrated = true;
               emit("calibrated", { torso: upd.calibration.torsoLength, baselineHipY: upd.calibration.baselineHipY });
+            }
+            if (state !== STATES.RUNNING) {
               setState(STATES.RUNNING);
             }
             if (jump.update(landmarks, ts, upd.calibration)) {
@@ -189,8 +218,10 @@ function createContractAPoseEngine(options) {
     },
     calibrate() {
       if (options.mock) {
+        calibrated = true;
         emit("calibrated", { torso: 0.3, baselineHipY: 0.58 });
       } else {
+        calibrated = false;
         calibrator.reset();
       }
     },
@@ -202,6 +233,7 @@ function createContractAPoseEngine(options) {
       inner?.stop();
       personVisible = false;
       armsUp = false;
+      calibrated = false;
       if (!destroyed) setState(STATES.READY, "stopped");
     },
     destroy() {
@@ -209,6 +241,7 @@ function createContractAPoseEngine(options) {
       inner?.stop();
       inner = null;
       destroyed = true;
+      calibrated = false;
       state = STATES.IDLE;
       listeners.clear();
     },

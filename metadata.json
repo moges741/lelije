@@ -1,0 +1,6 @@
+{
+  "name": "LeLije",
+  "description": "Short daily movement missions, on-device pose games, and parent approval for children in English, Amharic, and Afaan Oromoo.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

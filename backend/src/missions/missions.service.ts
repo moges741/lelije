@@ -9,7 +9,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { addisDay } from '../common/day';
 import { PrismaService } from '../prisma/prisma.service';
-import { generateMissions } from './generate-missions.stub';
+import { generateContractBMissions } from './ai-missions.adapter';
 import { GenerationLimiter } from './generation-limiter';
 import { Mission, MissionsResult } from './missions.types';
 
@@ -53,7 +53,7 @@ export class MissionsService {
         ? Math.min(MAX_COUNT, Math.max(MIN_COUNT, Math.round(input.count)))
         : DEFAULT_COUNT;
 
-    const result = await generateMissions({
+    const result = await generateContractBMissions({
       age: child.age,
       language: child.language,
       count,

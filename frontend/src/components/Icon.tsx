@@ -76,6 +76,18 @@ const ICONS = {
       <path d="M9 10v.5M15 10v.5M8.8 14.2c.8 1.2 1.9 1.8 3.2 1.8s2.4-.6 3.2-1.8" />
     </>
   ),
+  volume: (
+    <>
+      <path d="M5 9.5h3.6L13 5.5v13l-4.4-4H5z" />
+      <path d="M16.5 8.8a4.5 4.5 0 010 6.4M19.2 6.2a8 8 0 010 11.6" />
+    </>
+  ),
+  volumeOff: (
+    <>
+      <path d="M5 9.5h3.6L13 5.5v13l-4.4-4H5z" />
+      <path d="M16.5 9.5l4.5 5M21 9.5l-4.5 5" />
+    </>
+  ),
 } as const
 
 export type IconName = keyof typeof ICONS

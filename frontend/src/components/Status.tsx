@@ -11,12 +11,12 @@ const ICON: Record<StatusTone, IconName> = {
   problem: 'alert',
 }
 
-/** A status is always an icon plus a word, never colour alone. */
+/** Clean unboxed semantic status indicator: icon + text label, never color-only or pill clutter. */
 export function StatusPill({ tone, children }: { tone: StatusTone; children: ReactNode }) {
   return (
     <span className={`status status-${tone}`}>
-      <Icon name={ICON[tone]} size={16} />
-      {children}
+      <Icon name={ICON[tone]} size={15} />
+      <span>{children}</span>
     </span>
   )
 }

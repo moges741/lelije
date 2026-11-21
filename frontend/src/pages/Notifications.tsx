@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import * as api from '../api/client'
 import { LoadState } from '../components/LoadState'
+import { ParentShell } from '../components/ParentShell'
 import { StatusPill } from '../components/Status'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
@@ -37,37 +38,47 @@ export function Notifications({ audience }: { audience: Audience['audience'] }) 
     return result
   })
 
+  const body = !notes.data ? (
+    <LoadState error={notes.error} onRetry={notes.reload} />
+  ) : notes.data.notifications.length === 0 ? (
+    <div className="panel">
+      <p className="lead">{t('noNotifications')}</p>
+    </div>
+  ) : (
+    groupByDay(notes.data.notifications, (note) => note.at).map((group) => (
+      <section key={group.key} className="stack">
+        <h2 className="feed-day">{t(group.key)}</h2>
+        <ul className="feed">
+          {group.items.map((note) => (
+            <li key={note.id}>
+              <Link className={`feed-item ${!note.read ? 'is-unread' : ''}`} to={NOTE_LINK[note.kind]}>
+                <span className="feed-text">
+                  {audience === 'parent' && <strong>{note.nickname || t('childProfile')}</strong>}
+                  <span>{t(NOTE_TEXT[note.kind])}</span>
+                </span>
+                <span className="feed-meta">
+                  {!note.read && <StatusPill tone="info">{t('newLabel')}</StatusPill>}
+                  <span>{whenText(note.at, language)}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  )
+
+  if (audience === 'parent') {
+    return <ParentShell title={t('notifications')}>{body}</ParentShell>
+  }
+
   return (
-    <main className="screen">
-      <TopBar backTo={audience === 'parent' ? '/parent' : '/missions'} />
-      <h1 className="title">{t('notifications')}</h1>
-      {!notes.data ? (
-        <LoadState error={notes.error} onRetry={notes.reload} />
-      ) : notes.data.notifications.length === 0 ? (
-        <p className="lead">{t('noNotifications')}</p>
-      ) : (
-        groupByDay(notes.data.notifications, (note) => note.at).map((group) => (
-          <section key={group.key} className="stack">
-            <h2 className="feed-day">{t(group.key)}</h2>
-            <ul className="feed">
-              {group.items.map((note) => (
-                <li key={note.id}>
-                  <Link className="feed-item" to={NOTE_LINK[note.kind]}>
-                    <span className="feed-text">
-                      {audience === 'parent' && <strong>{note.nickname || t('childProfile')}</strong>}
-                      <span>{t(NOTE_TEXT[note.kind])}</span>
-                    </span>
-                    <span className="feed-meta">
-                      {!note.read && <StatusPill tone="info">{t('newLabel')}</StatusPill>}
-                      <span>{whenText(note.at, language)}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
-    </main>
+    <div className="theme-child">
+      <main className="screen screen-narrow">
+        <TopBar backTo="/missions" />
+        <h1 className="title">{t('notifications')}</h1>
+        {body}
+      </main>
+    </div>
   )
 }

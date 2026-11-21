@@ -4,10 +4,9 @@ import * as api from '../../api/client'
 import type { Failure } from '../../api/http'
 import { AuthShell, AuthTabs, Steps, type AuthRole } from '../../components/Auth'
 import { Icon } from '../../components/Icon'
-import { LanguageSwitcher } from '../../components/LanguageSwitcher'
+import { ParentShell } from '../../components/ParentShell'
 import { PinPrompt } from '../../components/PinPrompt'
 import { Panel, SecretField, TextField } from '../../components/TextField'
-import { TopBar } from '../../components/TopBar'
 import { useApp } from '../../context/app-context'
 import { LANGUAGES, type TranslationKey } from '../../i18n'
 import { failureKey } from '../../lib/failure'
@@ -18,6 +17,8 @@ import { CHILD_AGES, type ChildRecord, type FamilyRecord, type FamilyWithChildre
 
 function accountErrorKey(error: Failure): TranslationKey {
   if (error === 'not_found') return 'invalidCode'
+  if (error === 'forbidden') return 'pinWrong'
+  if (error === 'too_many') return 'pinLocked'
   if (error === 'invalid') return 'fieldRequired'
   return failureKey(error)
 }
@@ -35,14 +36,28 @@ function useFamilyCode() {
   return { code, setCode, normalized, error, touched, setTouched }
 }
 
-function ProfileList({ profiles, onPick }: { profiles: ChildRecord[]; onPick: (child: ChildRecord) => void }) {
+function ProfileList({
+  profiles,
+  busyId,
+  onPick,
+}: {
+  profiles: ChildRecord[]
+  busyId?: string | null
+  onPick: (child: ChildRecord) => void
+}) {
   const { t } = useApp()
   if (profiles.length === 0) return <p className="lead">{t('noChildrenYet')}</p>
   return (
     <ul className="mission-list">
       {profiles.map((child) => (
         <li key={child.id}>
-          <button type="button" className="mission-card" onClick={() => onPick(child)}>
+          <button
+            type="button"
+            className="mission-card"
+            disabled={Boolean(busyId)}
+            aria-busy={busyId === child.id}
+            onClick={() => onPick(child)}
+          >
             <span className="mission-icon">
               <Icon name="child" size={28} />
             </span>
@@ -189,26 +204,57 @@ export function CodeHelp() {
   )
 }
 
-/** Grown-ups sign in with the code and the PIN; children with the code and their profile. */
+/** Grown-ups sign in directly with family code + 4-digit PIN; children pick their profile. */
 export function Login() {
   const { t, setSession } = useApp()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [role, setRole] = useState<AuthRole>(params.get('role') === 'child' ? 'child' : 'parent')
   const code = useFamilyCode()
+  const [pin, setPin] = useState('')
+  const [pinTouched, setPinTouched] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [pickingId, setPickingId] = useState<string | null>(null)
   const [error, setError] = useState<Failure | null>(null)
   const [found, setFound] = useState<FamilyWithChildren | null>(null)
+  const [needsPinSetup, setNeedsPinSetup] = useState<FamilyRecord | null>(null)
+
+  const pinError = !isValidPin(pin) ? t('pinInvalid') : undefined
 
   const chooseRole = (next: AuthRole) => {
     setRole(next)
     setFound(null)
+    setNeedsPinSetup(null)
     setError(null)
+    setPinTouched(false)
   }
 
-  const lookup = async (event: FormEvent) => {
+  const submitForm = async (event: FormEvent) => {
     event.preventDefault()
     code.setTouched(true)
+    if (role === 'parent') {
+      setPinTouched(true)
+      if (code.error || pinError) return
+      setBusy(true)
+      setError(null)
+      const res = await api.parentLogin(code.normalized, pin)
+      setBusy(false)
+      if (res.ok) {
+        setSession({ role: 'parent', family: res.data.family, child: null })
+        navigate('/parent', { replace: true })
+        return
+      }
+      if (res.error === 'forbidden') {
+        const lookup = await api.findFamily(code.normalized)
+        if (lookup.ok && !lookup.data.family.hasPin) {
+          setNeedsPinSetup(lookup.data.family)
+          return
+        }
+      }
+      setError(res.error)
+      return
+    }
+
     if (code.error) return
     setBusy(true)
     setError(null)
@@ -221,8 +267,16 @@ export function Login() {
     setFound(result.data)
   }
 
-  const pick = (family: FamilyRecord, child: ChildRecord) => {
-    setSession({ role: 'child', family, child })
+  const pick = async (family: FamilyRecord, child: ChildRecord) => {
+    setPickingId(child.id)
+    setError(null)
+    const auth = await api.childLogin(family.code, child.id)
+    setPickingId(null)
+    if (!auth.ok) {
+      setError(auth.error)
+      return
+    }
+    setSession({ role: 'child', family: auth.data.family, child: auth.data.child })
     navigate('/missions', { replace: true })
   }
 
@@ -251,7 +305,7 @@ export function Login() {
           {t('roleChild')}
         </button>
       </div>
-      <form className="auth-form" noValidate onSubmit={(event) => void lookup(event)}>
+      <form className="auth-form" noValidate onSubmit={(event) => void submitForm(event)}>
         <TextField
           name="familyCode"
           label={t('familyCode')}
@@ -263,10 +317,28 @@ export function Login() {
           onChange={(event) => {
             code.setCode(event.target.value.toUpperCase())
             setFound(null)
+            setError(null)
           }}
           onBlur={() => code.setTouched(true)}
           error={code.touched ? code.error : undefined}
         />
+        {role === 'parent' && (
+          <SecretField
+            name="parentPin"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            label={t('pinLabel')}
+            value={pin}
+            maxLength={PIN_LENGTH}
+            autoComplete="current-password"
+            onChange={(event) => {
+              setPin(pinDigits(event.target.value))
+              setError(null)
+            }}
+            onBlur={() => setPinTouched(true)}
+            error={pinTouched ? pinError : undefined}
+          />
+        )}
         {error && (
           <p className="banner banner-warn" role="alert">
             {t(accountErrorKey(error))}
@@ -283,24 +355,28 @@ export function Login() {
       {found && role === 'child' && (
         <section className="auth-profiles">
           <h2 className="panel-title">{t('pickChild')}</h2>
-          <ProfileList profiles={found.children} onPick={(child) => pick(found.family, child)} />
+          <ProfileList
+            profiles={found.children}
+            busyId={pickingId}
+            onPick={(child) => void pick(found.family, child)}
+          />
           <Link className="btn btn-plain btn-block" to="/register/child" state={{ found }}>
             {t('newProfile')}
           </Link>
         </section>
       )}
-      {found && role === 'parent' && (
+      {needsPinSetup && (
         <PinPrompt
-          family={found.family}
-          action={(pin) => api.checkFamilyPin(found.family.code, pin)}
-          onCancel={() => setFound(null)}
+          family={needsPinSetup}
+          action={(newPin) => api.parentLogin(needsPinSetup.code, newPin)}
+          onCancel={() => setNeedsPinSetup(null)}
           onDone={(result) => {
+            setNeedsPinSetup(null)
             if (!result.ok) {
-              setFound(null)
               setError(result.error)
               return
             }
-            setSession({ role: 'parent', family: { ...found.family, hasPin: true }, child: null })
+            setSession({ role: 'parent', family: result.data.family, child: null })
             navigate('/parent', { replace: true })
           }}
         />
@@ -327,6 +403,7 @@ export function ChildJoin() {
   const [nickname, setNickname] = useState('')
   const [age, setAge] = useState(8)
   const [busy, setBusy] = useState(false)
+  const [pickingId, setPickingId] = useState<string | null>(null)
   const [error, setError] = useState<Failure | null>(null)
 
   const lookup = async (event: FormEvent) => {
@@ -344,8 +421,16 @@ export function ChildJoin() {
     setFound(result.data)
   }
 
-  const enter = (family: FamilyRecord, child: ChildRecord) => {
-    setSession({ role: 'child', family, child })
+  const enter = async (family: FamilyRecord, child: ChildRecord) => {
+    setPickingId(child.id)
+    setError(null)
+    const auth = await api.childLogin(family.code, child.id)
+    setPickingId(null)
+    if (!auth.ok) {
+      setError(auth.error)
+      return
+    }
+    setSession({ role: 'child', family: auth.data.family, child: auth.data.child })
     navigate('/missions', { replace: true })
   }
 
@@ -360,7 +445,7 @@ export function ChildJoin() {
       setError(result.error)
       return
     }
-    enter(found.family, result.data)
+    await enter(found.family, result.data)
   }
 
   return (
@@ -418,7 +503,11 @@ export function ChildJoin() {
           {found.children.length > 0 && (
             <section className="auth-profiles">
               <h2 className="panel-title">{t('pickChild')}</h2>
-              <ProfileList profiles={found.children} onPick={(child) => enter(found.family, child)} />
+              <ProfileList
+                profiles={found.children}
+                busyId={pickingId}
+                onPick={(child) => void enter(found.family, child)}
+              />
             </section>
           )}
           <form className="auth-form" onSubmit={(event) => void create(event)}>
@@ -483,79 +572,92 @@ export function FamilySetup() {
   }
 
   return (
-    <main className="screen screen-wide">
-      <TopBar backTo="/parent">
-        <LanguageSwitcher />
-      </TopBar>
-      <Steps current={2} />
-      <div>
-        <h1 className="title">{t('familyCodeTitle')}</h1>
-        <p className="lead">{t('familyCodeLead')}</p>
-      </div>
-      <p className="code-chip">{code}</p>
-      <button
-        type="button"
-        className="btn btn-plain"
-        onClick={() => {
-          void navigator.clipboard?.writeText(code).then(() => setCopied(true))
-        }}
-      >
-        {copied ? t('codeCopied') : t('copyCode')}
-      </button>
-      <Panel>
-        <form className="auth-form" onSubmit={(event) => void add(event)}>
-          <h2 className="panel-title">{t('addChildTitle')}</h2>
-          <TextField
-            name="nickname"
-            label={t('nicknameOptional')}
-            hint={t('nicknameHint')}
-            value={nickname}
-            maxLength={20}
-            autoComplete="off"
-            onChange={(event) => setNickname(event.target.value)}
-          />
-          <fieldset className="field">
-            <legend>{t('language')}</legend>
-            <div className="choices">
-              {LANGUAGES.map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  className={item.code === childLanguage ? 'choice is-on' : 'choice'}
-                  aria-pressed={item.code === childLanguage}
-                  onClick={() => setChildLanguage(item.code)}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <AgeChoices age={age} onChange={setAge} />
-          {error && (
-            <p className="banner banner-warn" role="alert">
-              {t(accountErrorKey(error))}
-            </p>
-          )}
-          <button type="submit" className="btn btn-sun" disabled={busy} aria-busy={busy}>
-            {busy ? t('saving') : t('saveChild')}
-          </button>
-        </form>
-        {children.length > 0 && (
-          <ul className="facts">
-            {children.map((child) => (
-              <li key={child.id}>
-                <Icon name="child" />
-                {child.nickname || t('childProfile')} · {t('age')} {child.age}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-      <div className="actions">
-        <button type="button" className="btn btn-sun btn-block" onClick={() => navigate('/parent')}>
+    <ParentShell
+      title={t('addChildTitle')}
+      subtitle={t('familyCodeLead')}
+      action={
+        <button type="button" className="btn btn-plain btn-sm" onClick={() => navigate('/parent')}>
           {t('parentHome')}
         </button>
+      }
+    >
+      <div className="exec-grid">
+        <Panel>
+          <form className="auth-form" onSubmit={(event) => void add(event)}>
+            <h2 className="panel-title">{t('addChildTitle')}</h2>
+            <TextField
+              name="nickname"
+              label={t('nicknameOptional')}
+              hint={t('nicknameHint')}
+              value={nickname}
+              maxLength={20}
+              autoComplete="off"
+              onChange={(event) => setNickname(event.target.value)}
+            />
+            <fieldset className="field">
+              <legend>{t('language')}</legend>
+              <div className="choices">
+                {LANGUAGES.map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    className={item.code === childLanguage ? 'choice is-on' : 'choice'}
+                    aria-pressed={item.code === childLanguage}
+                    onClick={() => setChildLanguage(item.code)}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <AgeChoices age={age} onChange={setAge} />
+            {error && (
+              <p className="banner banner-warn" role="alert">
+                {t(accountErrorKey(error))}
+              </p>
+            )}
+            <button type="submit" className="btn btn-primary" disabled={busy} aria-busy={busy}>
+              {busy ? t('saving') : t('saveChild')}
+            </button>
+          </form>
+        </Panel>
+
+        <div className="stack">
+          <Panel>
+            <h2 className="panel-title">{t('familyCodeTitle')}</h2>
+            <p className="meta">{t('familyCodeLead')}</p>
+            <p className="code-chip">{code}</p>
+            <button
+              type="button"
+              className="btn btn-plain btn-block"
+              onClick={() => {
+                void navigator.clipboard?.writeText(code).then(() => setCopied(true))
+              }}
+            >
+              {copied ? t('codeCopied') : t('copyCode')}
+            </button>
+          </Panel>
+
+          <Panel>
+            <h2 className="panel-title">{t('children')}</h2>
+            {children.length === 0 ? (
+              <p className="lead">{t('noChildrenYet')}</p>
+            ) : (
+              <ul className="facts">
+                {children.map((child) => (
+                  <li key={child.id}>
+                    <Icon name="child" />
+                    <span>
+                      {child.nickname || t('childProfile')} · {t('age')} {child.age} ·{' '}
+                      {child.language.toUpperCase()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
       </div>
-    </main>
+    </ParentShell>
   )
 }

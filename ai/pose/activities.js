@@ -1472,21 +1472,28 @@ function startContractACatchTheStars({ canvas, engine, durationMs = 60_000 }) {
     }
   });
 
-  function stop() {
+  function teardown(emitEnd) {
     if (stopped) return;
     stopped = true;
     cancelAnimationFrame(raf);
+    raf = 0;
     offAction();
     juice.dispose();
-    const snap = game.getSnapshot();
-    emit("end", {
-      score: snap.score,
-      starsCaught: snap.starsCaught,
-      goldenCaught: snap.cloudsCaught,
-      jumps: snap.jumps,
-      armsUp: snap.armRaises,
-      durationMs: Math.round(snap.elapsedMs),
-    });
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    if (emitEnd) {
+      const snap = game.getSnapshot();
+      emit("end", {
+        score: snap.score,
+        starsCaught: snap.starsCaught,
+        goldenCaught: snap.cloudsCaught,
+        jumps: snap.jumps,
+        armsUp: snap.armRaises,
+        durationMs: Math.round(snap.elapsedMs),
+      });
+    }
+    listeners.clear();
   }
 
   let last = performance.now();
@@ -1498,22 +1505,28 @@ function startContractACatchTheStars({ canvas, engine, durationMs = 60_000 }) {
     for (const evt of evts) {
       juice.emit(evt, { x: evt.x, y: evt.y });
       if (evt.type === "finish") {
-        stop();
+        teardown(true);
         return;
       }
     }
     juice.update(dt);
     if (ctx) {
       const parent = canvas.parentElement;
-      const w = parent?.clientWidth || canvas.width || 640;
-      const h = parent?.clientHeight || canvas.height || 480;
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w;
-        canvas.height = h;
+      const cssW = parent?.clientWidth || canvas.clientWidth || 640;
+      const cssH = parent?.clientHeight || canvas.clientHeight || 480;
+      const dpr = Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1);
+      const targetW = Math.round(cssW * dpr);
+      const targetH = Math.round(cssH * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
       }
-      ctx.clearRect(0, 0, w, h);
-      drawCatchTheStarsOverlay(ctx, w, h, game.getSnapshot());
-      juice.draw(ctx, w, h);
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cssW, cssH);
+      drawCatchTheStarsOverlay(ctx, cssW, cssH, game.getSnapshot());
+      juice.draw(ctx, cssW, cssH);
+      ctx.restore();
     }
     raf = requestAnimationFrame(loop);
   }
@@ -1527,6 +1540,6 @@ function startContractACatchTheStars({ canvas, engine, durationMs = 60_000 }) {
     },
     pause: () => game.pause(),
     resume: () => game.resume(performance.now()),
-    stop,
+    stop: () => teardown(false),
   };
 }

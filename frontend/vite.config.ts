@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
       alias: { 'lelije-pose': realPoseReady ? realPose : localPose },
     },
     server: {
+      host: '0.0.0.0',
+      port: 3000,
+      allowedHosts: true,
       fs: { allow: ['..'] },
       // Same-origin /api calls go to the Nest server (global prefix is already /api).
       proxy: {

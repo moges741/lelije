@@ -24,19 +24,21 @@ export function CatchStars() {
   const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<CatchTheStarsGame | null>(null)
-  const [withButtons, setWithButtons] = useState(false)
+  const [mock, setMock] = useState(POSE_MOCK)
+  const canUseCamera = Boolean(typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia)
   const [score, setScore] = useState(0)
   const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
   const [timeLeft, setTimeLeft] = useState(GAME_MS)
   const remain = useRef(GAME_MS)
-  const mock = POSE_MOCK || withButtons
 
   const session = usePoseSession({
     mock,
     onReady({ engine, pose }) {
       const canvas = canvasRef.current
       if (!canvas) return
+      remain.current = GAME_MS
+      setTimeLeft(GAME_MS)
       const game = pose.startCatchTheStars({ canvas, engine, durationMs: GAME_MS })
       gameRef.current = game
       setScore(0)
@@ -74,7 +76,11 @@ export function CatchStars() {
   }, [phase, paused, saving])
 
   const useButtons = () => {
-    setWithButtons(true)
+    setMock(true)
+    session.begin()
+  }
+  const useCamera = () => {
+    setMock(false)
     session.begin()
   }
 
@@ -82,7 +88,7 @@ export function CatchStars() {
     return (
       <main className="screen">
         <TopBar backTo="/missions" />
-        <CameraProblem onRetry={session.begin} onButtons={useButtons} />
+        <CameraProblem onRetry={useCamera} onButtons={useButtons} />
       </main>
     )
   }
@@ -118,7 +124,13 @@ export function CatchStars() {
       </CameraStage>
 
       {phase === 'setup' ? (
-        <CameraIntro mock={mock} onStart={session.begin} onFallback={useButtons} />
+        <CameraIntro
+          mock={mock}
+          canUseCamera={canUseCamera}
+          onStart={session.begin}
+          onFallback={useButtons}
+          onUseCamera={useCamera}
+        />
       ) : (
         <>
           <ActivityHud

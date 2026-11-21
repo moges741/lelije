@@ -1,0 +1,368 @@
+{
+  "en": {
+    "highlands": {
+      "chapter1": {
+        "title": "Morning in the Green Highlands",
+        "text": "High in the green Ethiopian highlands, golden sunlight warmed the misty eucalyptus trees while sweet coffee aroma drifted from a nearby courtyard. {companion} the cheerful little hoopoe bird hopped onto a smooth garden stone and sang a bright hello. Today the village children were getting ready for a joyful harvest celebration, and everyone had a helpful part to play. Beside the sunny garden path sat a hand-woven basket waiting to be filled with bright yellow Meskel daisies and fresh green herbs. {companion} tilted its feathery crown and looked down the sunlit trail. Where should your adventure begin?",
+        "choices": [
+          "Gather bright yellow Meskel flowers along the sunny terrace",
+          "Carry fresh sweet herbs to the village courtyard table"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "The Terrace of Golden Flowers",
+          "text": "You and {companion} skipped along the green terraced hillside where hundreds of bright yellow Meskel flowers nodded in the warm mountain breeze. Careful not to step on any tiny ladybugs, you gently picked the sunniest blossoms and arranged them in a golden circle inside your woven basket. Halfway up the hill, a smiling grandmother waved from her stone wall and pointed toward two wonderful surprises nearby. A gentle krar musician was tuning strings under a tall acacia, while friendly bees hummed happily around a wooden hive. {companion} fluttered excitedly above your shoulder. What would you like to do next?",
+          "choices": [
+            "Clap along with the krar musician under the acacia tree",
+            "Ask the grandmother how the highland bees make sweet honey"
+          ]
+        },
+        {
+          "title": "The Courtyard of Warm Smiles",
+          "text": "Balancing the woven basket carefully, you followed {companion} down the pebble path to the lively village courtyard. Freshly cut green grass covered the ground like a soft carpet, and neighbours greeted you with warm smiles and cheerful applause. When you set the fragrant herbs on the wooden table, a gentle breeze carried the scent of rosemary and roasted barley across the yard. Two friendly cousins invited you over: one was painting joyful harvest patterns on clay bowls, and the other was practising a happy shoulder dance to a soft drumbeat. {companion} chirped in rhythm. Which activity sounds most fun?",
+          "choices": [
+            "Paint bright sunshine patterns on a harvest clay bowl",
+            "Join the joyful shoulder dance with the courtyard drum"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "A Song for the Harvest",
+          "text": "Under the shade of the tall acacia, your clapping matched the sparkling melody of the krar while {companion} hopped side to side in time with every note. Soon other children gathered in a happy circle, laughing and singing as golden petals glowed in the woven basket beside you. Grandmother shared cool spring water and warm roasted barley with everyone, thanking you for bringing so much kindness and brightness to the morning. As the sun climbed high over the green hills, {companion} perched gently on the wooden fence and whistled a cosy thank-you tune. It was the perfect time to stretch, smile, and tell your family about your highland adventure.",
+          "choices": []
+        },
+        {
+          "title": "Colours, Rhythm, and Family Joy",
+          "text": "With happy laughter and bright energy, your corner of the courtyard became the heart of the celebration. Neighbours admired the cheerful colours and joyful rhythm you shared, while {companion} glided in a playful loop overhead and landed softly beside the woven basket. Everyone sat together on cool woven mats to enjoy sweet roasted barley, fresh fruit, and stories from the elders. Looking out across the sunlit green terraces, you felt proud of how helpful and creative you had been all morning. {companion} gave one last cheerful chirp as it was time to rest and share your favourite part of the story at home.",
+          "choices": []
+        }
+      ]
+    },
+    "rift_valley": {
+      "chapter1": {
+        "title": "Flamingos of the Shimmering Lake",
+        "text": "Beside a shimmering turquoise lake in the Ethiopian Rift Valley, graceful pink flamingos stepped softly through shallow sunlit water while golden acacia trees swayed in a gentle warm breeze. {companion} the friendly weaver bird perched on a bright branch and sang a cheerful welcome song. Along the grassy shore, families were laying out colourful reed mats for an afternoon picnic and storytelling circle. A kind fisherman waved from his wooden papyrus boat and pointed toward two fascinating spots near the quiet cove. {companion} puffed up its sunny feathers with curiosity. Which lakeside path would you like to explore first?",
+        "choices": [
+          "Count the dancing pink flamingos from the grassy shore",
+          "Watch the weaver birds build cosy nests in the acacia tree"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "Counting the Pink Dancers",
+          "text": "Tip-toeing gently along the soft grassy bank so you would not startle a single bird, you counted one, two, five, and then twelve pink flamingos mirroring themselves in the glassy blue water. Every time one flamingo lifted a long leg, two more stepped in a graceful wave like dancers on a sparkling stage. {companion} landed on a smooth reed right beside you and bobbed its head along with the ripples. Nearby, the friendly fisherman gently pulled his papyrus boat onto the shore, and a group of children began skimming flat stones across the calm cove. What should you try next?",
+          "choices": [
+            "Learn how the fisherman weaves a papyrus boat from lake reeds",
+            "Draw the graceful flamingos in the smooth lakeside sand"
+          ]
+        },
+        {
+          "title": "The Tiny Architects of the Acacia",
+          "text": "Looking up into the lacy branches of the golden acacia, you spotted dozens of tiny round nests hanging like golden lanterns in the breeze. {companion} showed off with a joyful chirp as clever little weaver birds tucked fresh blades of grass neatly in and out with their beaks. Each nest looked strong, cosy, and carefully woven from morning sunshine and patience. Down by the water's edge, colourful reed mats were now ready for the picnic, and an elder was tuning a soft bamboo flute while families shared cool slices of sweet mango. {companion} fluttered down toward the mats. What would you like to do?",
+          "choices": [
+            "Listen to the bamboo flute melody by the sparkling water",
+            "Help arrange sweet fruit and reed mats for the lakeside circle"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "Ripples of Golden Light",
+          "text": "By the calm turquoise cove, you discovered how patiently nature and people work together beside the Rift Valley waters. The ripples on the lake sparkled like tiny stars as warm afternoon clouds drifted lazily across the wide blue sky. When the storytelling circle began on the woven reed mats, everyone clapped as you shared the graceful flamingos, clever boats, and peaceful lake sounds you had noticed. {companion} sang one last sweet melody before fluttering home to its cosy woven nest in the acacia tree. Taking a slow happy breath in the golden light, it felt wonderful to head home and share your story.",
+          "choices": []
+        },
+        {
+          "title": "Music Under the Acacia Shade",
+          "text": "Soft notes from the bamboo flute floated across the shimmering lake as families smiled together on the colourful mats. {companion} perched right on the edge of the fruit basket, tapping its tiny feet in happy rhythm while the breeze rustled the acacia leaves overhead. Sharing sweet mango and kind words with neighbours made the whole afternoon glow warmer than the setting sun. As pink flamingos glided calmly across the glassy water in the distance, you gave {companion} a gentle wave goodbye. With a calm heart and a big smile, it was time to rest and tell your family about the lake.",
+          "choices": []
+        }
+      ]
+    },
+    "simien": {
+      "chapter1": {
+        "title": "Above the Clouds in the Simien Peaks",
+        "text": "Across the breathtaking emerald terraces of the Simien Mountains, fluffy white clouds drifted below the grassy meadows like a soft warm blanket. {companion} the cheerful mountain wagtail skipped playfully along a flat stone beside a clear sparkling stream. Far across the sunlit ridge, a gentle troupe of fluffy gelada monkeys sat peacefully munching green grass and grooming one another in the crisp mountain air. A friendly park guide waved from the safe viewing trail and offered a shiny pair of binoculars plus a small nature sketchbook. {companion} bobbed its tail happily. How would you like to begin your mountain morning?",
+        "choices": [
+          "Sketch the peaceful gelada monkeys in your nature sketchbook",
+          "Spot soaring highland birds through the shiny binoculars"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "The Mountain Nature Sketchbook",
+          "text": "Opening your sketchbook on a warm mossy rock, you carefully drew the fluffy golden manes of the gelada monkeys and the tiny purple wildflowers blooming around their paws. A baby gelada playfully tumbled in the soft grass while its mother watched with calm pride. {companion} hopped right beside your pencil as if checking your artwork and chirped with delight! The park guide smiled and showed you two more wonders along the safe sunlit ridge: a sparkling mini-waterfall tumbling over smooth pebbles, and an echo point where cheerful hellos bounce gently across the green valley. Where will you go next?",
+          "choices": [
+            "Send a cheerful hello across the sunny mountain echo valley",
+            "Count the colourful wildflowers beside the sparkling pebble stream"
+          ]
+        },
+        {
+          "title": "Wings Over the Emerald Ridge",
+          "text": "Lifting the shiny binoculars to your eyes, you gasped with delight as a magnificent highland bird glided effortlessly above the white sea of clouds without even flapping its wings. {companion} fluttered up to a tall lobelia plant and chirped proudly as if introducing its sky-high neighbours! Through the lenses you also spotted tiny sparkling streams winding through green terraces and sunny families of geladas soaking up the warmth. The park guide pointed toward a cosy wooden viewing bench where warm spiced tea waited, and a smooth trail lined with bright alpine blossoms. Which way will you choose?",
+          "choices": [
+            "Walk the alpine blossom trail and name every flower colour",
+            "Share your bird discoveries with everyone at the sunny lodge"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "Echoes of Joy in the Clouds",
+          "text": "When your cheerful hello floated across the green Simien valley, a gentle playful echo answered right back, making you and the guide laugh with delight! Page by page, your sketchbook was now filled with purple mountain blooms, sparkling streams, and peaceful gelada families resting in the sunshine. Back at the warm wooden lodge, steaming spiced tea and fresh warm bread awaited beside the sunny window. {companion} tapped twice on the windowsill as if cheering for a wonderful adventure well spent in the crisp highland air. With happy feet and a calm heart, it was time to celebrate your story with family.",
+          "choices": []
+        },
+        {
+          "title": "Warm Tea Above the Mountain Mist",
+          "text": "Every blossom along the trail glowed like a tiny jewel in the crisp sunshine, from sunny yellow daisies to royal purple mountain bells. Back at the cosy family lodge, everyone gathered around to hear about the soaring birds, fluffy geladas, and glowing clouds you had spotted above the cliffs. The park guide praised your sharp eyes and calm kindness toward every living creature on the mountain. {companion} fluffed its feathers warmly on a sunlit branch outside and whistled a gentle farewell song. Feeling proud, peaceful, and inspired, it was time to rest and tell your family all about the Simien peaks.",
+          "choices": []
+        }
+      ]
+    }
+  },
+  "am": {
+    "highlands": {
+      "chapter1": {
+        "title": "በኢትዮጵያ ደጋማ ቦታዎች ጠዋት",
+        "text": "በአረንጓዴው የኢትዮጵያ ደጋማ ተራሮች ላይ የጠዋት ወርቃማ ፀሐይ በባሕር ዛፎቹ መካከል እያበራች፣ ከአቅራቢያው ግቢ የጣፋጭ ቡና መዓዛ በቀስታ ይነፍስ ነበር። {companion} የተባለችው ደስተኛ ትንሽ ወፍ ለስላሳ የአትክልት ድንጋይ ላይ ዘልላ ቆማ በደስታ ሰላምታ አቀረበች። ዛሬ የመንደሩ ልጆች ለደስታ የተሞላ የመከር በዓል እየተዘጋጁ ሲሆን ሁሉም የራሱን ቆንጆ ድርሻ ይወጣል። በአትክልቱ መንገድ ዳር በቢጫ የመስቀል አበቦችና በለምለም ቅጠላ ቅጠሎች የሚሞላ የተሸመነ ቅርጫት ተቀምጧል። {companion} በጉጉት ወደ ፀሐያማው መንገድ ተመለከተች። ጉዞህን ከየት መጀመር ትፈልጋለህ?",
+        "choices": [
+          "በፀሐያማው ኮረብታ ላይ ቢጫ የመስቀል አበቦችን መሰብሰብ",
+          "ለምለም ቅጠላ ቅጠሎችን ወደ መንደሩ ግቢ ጠረጴዛ መውሰድ"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "የወርቃማ አበቦች ኮረብታ",
+          "text": "አንተና {companion} በአረንጓዴው ኮረብታ ላይ በደስታ እየተራመዳችሁ በመቶዎች የሚቆጠሩ ቢጫ የመስቀል አበቦች በለስላሳ ነፋስ ሲወዛወዙ አያችሁ። ትናንሽ ነፍሳትን ሳትረግጡ በጥንቃቄ በጣም የሚያምሩትን አበቦች በመልቀም የተሸመነውን ቅርጫት በወርቃማ ቀለም አስዋባችሁት። በኮረብታው መካከል አንዲት ፈገግ ያሉ አያት እጃቸውን እያውለበለቡ ሁለት ድንቅ ነገሮችን አሳዩህ። ከትልቅ ግራር ዛፍ ሥር አንድ የክራር ተጫዋች ጣፋጭ ዜማ እየቃኘ ሲሆን፣ በሌላው ጥግ ደግሞ ንቦች በሰላም ማር ሲሠሩ ይታያሉ። {companion} በደስታ ክንፏን አውለበለበች። ቀጥሎ ምን ማድረግ ትፈልጋለህ?",
+          "choices": [
+            "ከግራር ዛፉ ሥር ከክራር ዜማው ጋር በደስታ ማጨብጨብ",
+            "ንቦች እንዴት ጣፋጭ ማር እንደሚሠሩ አያትን መጠየቅ"
+          ]
+        },
+        {
+          "title": "የፈገግታና የደስታ ግቢ",
+          "text": "የተሸመነውን ቅርጫት በጥንቃቄ ይዘህ {companion}ን ተከትለህ ወደ ደማቁ የመንደሩ ግቢ ገባህ። በግቢው ውስጥ ለምለም አረንጓዴ ቄጠማ እንደ ምንጣፍ ተነጥፎ ጎረቤቶች ሁሉ በሞቀ ፈገግታና በጭብጨባ ተቀበሉህ። ጣፋጭ መዓዛ ያላቸውን ቅጠሎች ጠረጴዛው ላይ ስታስቀምጥ የቆሎና የአትክልት ሽታ ግቢውን ሞላው። ሁለት ተግባቢ ጓደኞች ጠሩህ፤ አንዱ በሸክላ ሳህን ላይ የፀሐይ ሥዕል እየሳለ ሲሆን ሌላኛው ደግሞ ከከበሮ ድምፅ ጋር ደስ የሚል እስክስታ እየተለማመደ ነው። {companion} በዜማው ተወዛወዘች። የትኛውን ትመርጣለህ?",
+          "choices": [
+            "በሸክላ ሳህን ላይ ደማቅ የፀሐይ ሥዕሎችን መሳል",
+            "ከከበሮው ምት ጋር ደስተኛ እስክስታ መጨፈር"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "የመከር ደስታ ዜማ",
+          "text": "ከትልቁ ግራር ዛፍ ጥላ ሥር የአንተ ጭብጨባ ከክራሩ ጣፋጭ ዜማ ጋር ሲዋሃድ {companion} በእያንዳንዱ ምት በደስታ ትዘል ነበር። ብዙም ሳይቆይ ሌሎች ልጆች በክብ ተሰብስበው እየሳቁና እየዘመሩ በቅርጫትህ ውስጥ ያሉት ወርቃማ አበቦች በፀሐይ አበሩ። አያት ለሁሉም ቀዝቃዛ የምንጭ ውሃና ትኩስ ቆሎ እያካፈሉ ለጠዋቱ ያመጣኸውን ደግነትና ብርሃን አመሰገኑህ። {companion} በእንጨት አጥሩ ላይ አርፋ ጣፋጭ የምስጋና ዜማ አዜመች። አሁን እረፍት አድርገህ ይህን ቆንጆ የደጋማ ቦታ ታሪክ ለቤተሰብህ የምትነግርበት ድንቅ ጊዜ ነው።",
+          "choices": []
+        },
+        {
+          "title": "ቀለም፣ ምትና የቤተሰብ ደስታ",
+          "text": "በደስታ ሳቅህና በብሩህ ጉልበትህ የግቢው ጥግ የበዓሉ ልብ ሆነ። ጎረቤቶች የፈጠርከውን ቆንጆ ቀለምና ደማቅ ጭፈራ እያደነቁ {companion} ከላይ በክብ በርራ ከቅርጫቱ አጠገብ በቀስታ አረፈች። ሁሉም በቀዝቃዛ ስፌት ምንጣፍ ላይ ተቀምጠው ጣፋጭ ቆሎ፣ ትኩስ ፍራፍሬና የአዛውንቶችን ተረት ተካፈሉ። በፀሐይ ያሸበረቁትን አረንጓዴ ኮረብታዎች እየተመለከትክ በጠዋቱ ባሳየኸው ረዳትነትና ፈጠራ በጣም ኮራህ። {companion} የመጨረሻውን ደስተኛ ድምፅ ስታሰማ አሁን አርፈህ የሚወደደውን የታሪኩን ክፍል ለቤተሰብህ አጋራ።",
+          "choices": []
+        }
+      ]
+    },
+    "rift_valley": {
+      "chapter1": {
+        "title": "የሚያብረቀርቀው ሐይቅ ፍላሚንጎዎች",
+        "text": "በኢትዮጵያ ስምጥ ሸለቆ በሚያብረቀርቅ ሰማያዊ ሐይቅ ዳር፣ ቆንጆ ሮዝ ፍላሚንጎዎች በፀሐይ በሚያንጸባርቀው ውሃ ውስጥ በቀስታ ይራመዱ ነበር። ወርቃማ የግራር ዛፎች በለስላሳ ሙቅ ነፋስ ሲወዛወዙ {companion} የተባለችው ተግባቢ ወፍ ቅርንጫፍ ላይ ቆማ የደስታ ዜማ ዘመረች። በሳር በተሸፈነው ዳርቻ ቤተሰቦች ለከሰዓት ሽርሽርና ለተረት ክብ ባለቀለም ምንጣፎችን እያነጠፉ ነበር። አንድ ደግ ዓሣ አጥማጅ ከደንገል ጀልባው ላይ እጁን አውለብልቦ ሁለት አስደሳች ቦታዎችን ጠቆመ። {companion} በጉጉት ክንፏን አነቃነቀች። መጀመሪያ የትኛውን ቦታ ማየት ትፈልጋለህ?",
+        "choices": [
+          "በሳሩ ዳርቻ ቆመህ የሚጨፍሩትን ሮዝ ፍላሚንጎዎች መቁጠር",
+          "በግራር ዛፉ ላይ ጎጆ የሚሠሩ ትናንሽ ወፎችን መመልከት"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "ሮዝ ወፎቹን መቁጠር",
+          "text": "አንዲትም ወፍ ሳትደነግጥ በለስላሳው ሳር ዳርቻ በቀስታ እየተራመድክ አንድ፣ ሁለት፣ አምስት፣ ከዚያም አሥራ ሁለት ሮዝ ፍላሚንጎዎችን በመስታወት በሚመስለው ሰማያዊ ውሃ ውስጥ ቆጠርክ። አንዷ ወፍ ረጅም እግሯን በምታነሳበት ጊዜ ሌሎቹም እንደ ውብ ዳንሰኞች በሰላም ይንቀሳቀሱ ነበር። {companion} ከአጠገብህ ባለ ለስላሳ ሸምበቆ ላይ አርፋ ከውሃው ሞገድ ጋር ጭንቅላቷን ነቀነቀች። በአቅራቢያው ዓሣ አጥማጁ የደንገል ጀልባውን ወደ ዳርቻው ሲያቀርብ ልጆች ደግሞ በለስላሳው አሸዋ ላይ እየተጫወቱ ነበር። ቀጥሎ ምን ማድረግ ትፈልጋለህ?",
+          "choices": [
+            "ዓሣ አጥማጁ ከደንገል እንዴት ጀልባ እንደሚሠራ መማር",
+            "በሐይቁ ለስላሳ አሸዋ ላይ የፍላሚንጎዎችን ሥዕል መሳል"
+          ]
+        },
+        {
+          "title": "የግራር ዛፉ ትናንሽ መሐንዲሶች",
+          "text": "ወደ ወርቃማው ግራር ዛፍ ቅርንጫፎች ቀና ብለህ ስትመለከት እንደ ወርቃማ ፋኖስ በነፋስ የሚወዛወዙ ብዙ ክብ ጎጆዎችን አየህ። {companion} በደስታ እየዘመረች ትናንሽ ወፎች አረንጓዴ ሳርን በመንቆራቸው በጥበብ እየሸመኑ ጠንካራ ጎጆ ሲሠሩ ተመለከትክ። እያንዳንዱ ጎጆ በትዕግሥትና በፍቅር የተሠራ ይመስል ነበር። ከታች በውሃው ዳር ባለቀለም ምንጣፎች ተዘጋጅተው አንድ አዛውንት በዋሽንት ጣፋጭ ዜማ ሲጫወቱ ቤተሰቦች ጣፋጭ ማንጎ እየተካፈሉ ነበር። {companion} ወደ ምንጣፉ በረረች። ምን መምረጥ ትፈልጋለህ?",
+          "choices": [
+            "በሚያብረቀርቀው ውሃ ዳር የዋሽንቱን ጣፋጭ ዜማ ማዳመጥ",
+            "ለሽርሽሩ ክብ ጣፋጭ ፍራፍሬና ምንጣፎችን ማዘጋጀት"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "የወርቃማ ብርሃን ሞገዶች",
+          "text": "በሰላማዊው የሐይቅ ዳርቻ ተፈጥሮና ሰዎች እንዴት በትዕግሥትና በስምምነት እንደሚኖሩ ተማርክ። የከሰዓት ደመናዎች በሰፊው ሰማያዊ ሰማይ ላይ በቀስታ ሲጓዙ የሐይቁ ሞገዶች እንደ ትናንሽ ኮከቦች ያብረቀርቁ ነበር። የተረት ክቡ በተሸመኑት ምንጣፎች ላይ ሲጀምር ያየሃቸውን ውብ ፍላሚንጎዎች፣ የደንገል ጀልባና የውሃውን ድምፅ ስትተርክ ሁሉም በደስታ አጨበጨቡ። {companion} አንድ የመጨረሻ ጣፋጭ ዜማ ዘምራ ወደ ሞቃት ጎጆዋ በረረች። ቀስ ብለህ በደስታ ተንፍሰህ ታሪክህን ለቤተሰብህ ለመንገር ወደ ቤት መመለስ በጣም ደስ ይላል።",
+          "choices": []
+        },
+        {
+          "title": "ከግራር ዛፍ ጥላ ሥር ዜማ",
+          "text": "የዋሽንቱ ለስላሳ ዜማ በሚያብረቀርቀው ሐይቅ ላይ ሲንሳፈፍ ቤተሰቦች በባለቀለም ምንጣፎቹ ላይ በፈገግታ ተቀምጠው ያዳምጡ ነበር። {companion} በፍራፍሬ ቅርጫቱ ጠርዝ ላይ አርፋ በዜማው ትናንሽ እግሮቿን ስታንቀሳቅስ ነፋሱ የግራር ቅጠሎችን በቀስታ ያወዛውዝ ነበር። ጣፋጭ ማንጎና መልካም ቃላትን ከጎረቤቶች ጋር መካፈል ከሰዓቱን ከፀሐይም በላይ አደመቀው። ሮዝ ፍላሚንጎዎች በሩቅ በሰላም ሲራመዱ ለ{companion} በፈገግታ ደህና ሁኚ አልካት። በረጋ ልብና በትልቅ ፈገግታ አርፈህ የሐይቁን ታሪክ ለቤተሰብህ አጋራ።",
+          "choices": []
+        }
+      ]
+    },
+    "simien": {
+      "chapter1": {
+        "title": "ከደመና በላይ በሰሜን ተራሮች",
+        "text": "በሚያስደንቁት አረንጓዴ የሰሜን ተራሮች ላይ ነጭ ጥጥ የሚመስሉ ደመናዎች ከሳር መስኩ በታች እንደ ለስላሳ ብርድ ልብስ ተዘርግተው ነበር። {companion} የተባለችው ደስተኛ የተራራ ወፍ በጠራው ጅረት ዳር ባለ ጠፍጣፋ ድንጋይ ላይ በደስታ ዘለለች። በፀሐያማው ተዳፋት ላይ ጭላዳ ዝንጀሮዎች በሰላም አረንጓዴ ሳር እየበሉና እርስ በርስ እየተንከባከቡ ቁጭ ብለው ይታያሉ። አንድ ተግባቢ የፓርክ መሪ ከአስተማማኙ መንገድ ላይ እጁን አውለብልቦ የሚያብረቀርቅ መነጽርና ትንሽ የሥዕል ደብተር ሰጠህ። {companion} በደስታ ጅራቷን አወዛወዘች። የተራራውን ጠዋት እንዴት መጀመር ትፈልጋለህ?",
+        "choices": [
+          "በሥዕል ደብተርህ ላይ ሰላማዊዎቹን ጭላዳ ዝንጀሮዎች መሳል",
+          "በመነጽሩ በሰማይ የሚበሩ የተራራ ወፎችን መመልከት"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "የተራራው የሥዕል ደብተር",
+          "text": "የሥዕል ደብተርህን ሞቃት ድንጋይ ላይ ከፍተህ የጭላዳ ዝንጀሮቹን ወርቃማ ጸጉርና በአካባቢያቸው የበቀሉትን ሐምራዊ የዱር አበቦች በጥንቃቄ ሳልክ። አንድ ትንሽ የጭላዳ ግልገል በለስላሳው ሳር ላይ ሲንከባለል እናቱ በሰላምና በፍቅር ትመለከተው ነበር። {companion} ከእርሳስህ አጠገብ ዘልላ ቆማ ሥዕልህን እያየች በደስታ አዜመች! የፓርክ መሪው ፈገግ ብሎ ሁለት ተጨማሪ ድንቅ ቦታዎችን አሳየህ፤ በጠጠር ላይ የሚፈስ ትንሽ ፏፏቴና የሰላምታ ድምፅ የሚመልስ አረንጓዴ ሸለቆ። ወዴት መሄድ ትፈልጋለህ?",
+          "choices": [
+            "ወደ ፀሐያማው ሸለቆ ደስተኛ ሰላምታ ልኮ ማሚቶውን መስማት",
+            "በጠራው ጅረት ዳር ያሉትን ባለቀለም አበቦች መቁጠር"
+          ]
+        },
+        {
+          "title": "ከአረንጓዴው ተራራ በላይ ክንፎች",
+          "text": "የሚያብረቀርቀውን መነጽር ወደ ዓይንህ ስታደርግ አንድ ግርማ ሞገስ ያለው የተራራ ወፍ ከነጭ ደመናው ባሕር በላይ በሰላም ሲንሳፈፍ አይተህ በደስታ ተደነቅክ። {companion} በረጅም ጅብራ ተክል ላይ አርፋ የሰማይ ጓደኞቿን እንደምታስተዋውቅ በኩራት ዘመረች! በመነጽሩ ውስጥ በአረንጓዴ ኮረብታዎች የሚፈሱ ጠራ ጅረቶችንና በፀሐይ የሚሞቁ የጭላዳ ቤተሰቦችን አየህ። የፓርክ መሪው ትኩስ ቅመም ያለው ሻይ ወዳለበት ሞቃት ማረፊያ ወይም በአበባ የተሞላውን መንገድ እንድትመርጥ ጠየቀህ። የትኛውን ትመርጣለህ?",
+          "choices": [
+            "በአበባ የተሞላውን መንገድ ተራምዶ የአበቦቹን ቀለም መጥራት",
+            "ያየሃቸውን ወፎች ታሪክ በሞቃቱ ማረፊያ ለሁሉም ማካፈል"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "በደመና መካከል የደስታ ማሚቶ",
+          "text": "ደስተኛ ሰላምታህ በአረንጓዴው የሰሜን ሸለቆ ሲጓዝ ቆንጆ ማሚቶ መልሶ ሲመልስልህ አንተና መሪው በደስታ ሳቃችሁ! ገጽ በገጽ የሥዕል ደብተርህ በሐምራዊ የተራራ አበቦች፣ በጠራ ጅረቶችና በሰላማዊ የጭላዳ ቤተሰቦች ተሞላ። ወደ ሞቃቱ የእንጨት ማረፊያ ስትመለስ ትኩስ ሻይና ትኩስ ዳቦ በፀሐያማው መስኮት አጠገብ ይጠብቅህ ነበር። {companion} በመስኮቱ ጠርዝ ላይ ሁለት ጊዜ በቀስታ መታ አድርጋ ለድንቁ ቀን አጨበጨበች። በደስተኛ እግርና በረጋ ልብ ታሪክህን ለቤተሰብህ የምትነግርበት ምርጥ ጊዜ ነው።",
+          "choices": []
+        },
+        {
+          "title": "ከተራራው ጭጋግ በላይ ሞቃት ሻይ",
+          "text": "በመንገዱ ዳር የበቀለው እያንዳንዱ አበባ በጠራው ፀሐይ እንደ ትንሽ ጌጥ ያበራ ነበር፤ ከቢጫ አበቦች እስከ ደማቅ ሐምራዊ የተራራ አበቦች ድረስ። ወደ ሞቃቱ የቤተሰብ ማረፊያ ስትመለስ ሁሉም ተሰብስበው ስለ በራሪ ወፎቹ፣ ስለ ጭላዳዎቹና ስለ ነጭ ደመናዎቹ ታሪክህን በጉጉት ሰሙ። የፓርክ መሪው ስለ ጥልቅ ትኩረትህና ለተፈጥሮ ስላለህ ደግነት አመሰገነህ። {companion} ከውጭ በፀሐያማ ቅርንጫፍ ላይ አርፋ ጣፋጭ የስንብት ዜማ ዘመረች። በኩራትና በሰላም ተሞልተህ የሰሜን ተራሮችን ታሪክ ለቤተሰብህ አጋራ።",
+          "choices": []
+        }
+      ]
+    }
+  },
+  "om": {
+    "highlands": {
+      "chapter1": {
+        "title": "Ganama Baddaa Magariisa Itoophiyaa",
+        "text": "Baddaa magariisa Itoophiyaa olka'aa keessatti aduun ganamaa mukkeen baargamoo hurriin uwwifaman ho'isaa osoo jirtuu, urgaan bunaa mi'aawaan mooraa dhiyoo jiru irraa qilleensa suutaan dhufa ture. Simbirri gammachuu {companion} jedhamtu dhagaa iddoo biqiltuu lallaafaa irra utaaltee dhaabbachuun nagaa gammachiisaa faarfate. Har'a ijoolleen gandaa ayyaana makaraa gammachiisaaf qophaa'aa jiru, hundi isaaniis gahee gaarii qabu. Karaa biqiltuu aduun itti ba'u cinaatti guuboon harkaan dhahame abaaboo keelloo Masqalaa fi baala magariisaan guutamuuf eegaa jira. {companion} gara karaa ifaa ilaale. Imala kee eessaa jalqabuu barbaadda?",
+        "choices": [
+          "Tulluu aduun itti ba'u irraa abaaboo keelloo Masqalaa funaanuu",
+          "Baala urgaa'aa gara minjaala mooraa gandaatti geessuu"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "Tulluu Abaaboo Warqee",
+          "text": "Atii fi {companion} tulluu magariisa irra gammachuun deemtanii abaaboo keelloo dhibbootaan lakkaa'aman qilleensa ho'aa keessatti yeroo raafaman argitan. Ilbiisota xixiqqoo osoo hin miidhin of eeggannoon abaaboowwan bareedoo funaantanii guuboo dhahame keessatti bifa warqeen miidhagsitan. Walakkaa tullichaa irratti akkoon seeqan tokko harka raasanii wantoota ajaa'ibaa lama sitti agarsiisan. Mukaa laaftoo guddaa jalatti taphataan kiraaraa muuziqaa mi'aawaa qopheessaa jira, gama biraatiin immoo kanniisni nagaan damma hojjechaa jiru. {companion} gammachuun koochoo ishee raaste. Itti aansitee maal gochuu barbaadda?",
+          "choices": [
+            "Muka laaftoo jalatti sagalee kiraaraa waliin harka rukutuu",
+            "Akkoo biratti kanniisni akkamitti damma mi'aawaa akka hojjetan gaafachuu"
+          ]
+        },
+        {
+          "title": "Mooraa Seeqaa fi Gammachuu",
+          "text": "Guuboo dhahame of eeggannoon baattee {companion} hordofuun gara mooraa gandaa bareedaa seente. Mooraa keessa margi magariisni akka afata lallaafaatti afamee ollaaleen hundi seeqaa ho'aa fi harka rukuttaan si simatan. Baala urgaa'aa minjaala irra yeroo keessu urgaan qolloo fi biqiltuu mooraa guute. Hiriyaan lama si waaman; tokko saanii suphee irratti fakkii aduu kaasaa jira, inni biraan immoo sagalee dibbee waliin shubbisa gammachiisaa shaakalaa jira. {companion} sagalee dibbee waliin raafamte. Isa kam filatta?",
+          "choices": [
+            "Saanii suphee irratti fakkii aduu ifaa dibuu fi kaasuu",
+            "Sagalee dibbee mooraa waliin shubbisa gammachiisaa taphachuu"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "Faarfannaa Ayyaana Makaraa",
+          "text": "Gaaddisa muka laaftoo guddaa jalatti harka rukuttaan kee sagalee kiraaraa mi'aawaa waliin wal fudhatee {companion} gammachuun utaalaa turte. Yeroo gabaabaa keessatti ijoolleen biroon marfatanii kolfaa fi faarfataa abaaboowwan keelloo guuboo kee keessa jiran aduu jalatti calaqqisan. Akkoon bishaan burqaa qabbanaa'aa fi qolloo ho'aa hundaaf hiranii gaarummaa fi ifa ganamaa fiddeef si galateeffatan. {companion} dallaa mukaa irra qubattee faarfannaa galataa mi'aawaa faarfate. Amma boqottee seenaa baddaa bareedaa kana maatii keetti himuuf yeroo gaarii dha.",
+          "choices": []
+        },
+        {
+          "title": "Halluu, Rukuttaa fi Gammachuu Maatii",
+          "text": "Kolfaa fi humna gammachiisaa keetiin kutaan mooraa kee onnee ayyaanichaa ta'e. Ollaaleen halluu bareedaa fi shubbisa gammachiisaa agarsiiste dinqisiifatanii {companion} samii irra marfattee guuboo cinaa qubatte. Hundi isaaniis afata qabbanaa'aa irra taa'anii qolloo mi'aawaa, fuduraa fi oduu manguddootaa waliin qooddatan. Tulluuwwan magariisa aduun itti ifu ilaalaa gargaarsa fi kalaqa ganama agarsiistetti baay'ee boonte. {companion} sagalee gammachuu dhumaa dhageessisuu irratti amma boqottee kutaa seenaa baay'ee jaallatte maatii keetti himi.",
+          "choices": []
+        }
+      ]
+    },
+    "rift_valley": {
+      "chapter1": {
+        "title": "Haroo Calaqqisaa fi Simbirroota Diimaa",
+        "text": "Haroo bishaan cuquliisaa calaqqisaa Sulula Qiinxamaa Itoophiyaa cinaatti simbirroonni filaamingoo bifa roozii bishaan aduun itti ifu keessa suuta tarkaanfatu turan. Mukkeen laaftoo warqeen qilleensa ho'aa keessatti yeroo raafaman simbirri hiriyaa {companion} jedhamtu damee bareedaa irra qubattee faarfannaa simannaa faarfate. Qarqara margaa irratti maatiiwwan afata halluu garaagaraa boqonnaa waaree boodaa fi marfannaa seenaaf afataa jiru. Qurxummii qabaan gaariin tokko bidiruu shomboqqoo irraa harka raasee bakka bareedaa lama agarsiise. {companion} fedhiin koochoo ishee kaaste. Jalqaba karaa haroo isa kam ilaaluu barbaadda?",
+        "choices": [
+          "Qarqara margaa irraa simbirroota filaamingoo shubbisan lakkaa'uu",
+          "Mukaa laaftoo keessatti simbirroota man'ee dhahan ilaaluu"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "Shubbisoota Bifa Roozii Lakkaa'uu",
+          "text": "Simbirri tokkollee akka hin naaneef marga lallaafaa irra suuta tarkaanfattee tokko, lama, shan, achiis simbirroota filaamingoo kudha lama bishaan akka daawwitii calaqqisu keessatti lakkoofte. Yeroo simbirri tokko miila dheeraa ol kaastu kaan immoo akka shubbisoota bareedaa wal faana socho'u turan. {companion} shomboqqoo lallaafaa si cinaa jiru irra qubattee dambalii bishaanii waliin mataa raaste. Dhiyoo sanatti qurxummii qabaan bidiruu isaa gara qarqaraatti dhiyeesse, ijoolleen immoo cirracha lallaafaa irratti taphataa jiru. Itti aansitee maal yaaluu barbaadda?",
+          "choices": [
+            "Qurxummii qabaan akkamitti shomboqqoo irraa bidiruu dhahu barachuu",
+            "Cirracha qarqara haroo lallaafaa irratti fakkii filaamingoo kaasuu"
+          ]
+        },
+        {
+          "title": "Ogeeyyii Xixiqqoo Muka Laaftoo",
+          "text": "Gara damee muka laaftoo warqee ol ilaaltee man'eewwan geengoo xixiqqoo akka faanosii warqee qilleensa keessatti rarra'an hedduu argite. {companion} gammachuun faarfachaa osoo jirtuu simbirroonni gamnoonni baala margaa haaraa afaan isaaniin ogummaan walitti dhahanii man'ee cimaa ijaaran ilaaltan. Man'een hundi obsa fi jaalalaan kan hojjetame fakkaata. Gadi qarqara bishaanii irratti afanni qophaa'ee manguddoon tokko ulullee shomboqqoon muuziqaa mi'aawaa taphachaa maatiiwwan maangoo mi'aawaa hirataa jiru. {companion} gara afataatti bararte. Maal gochuu filatta?",
+          "choices": [
+            "Qarqara bishaan calaqqisaa irratti sagalee ulullee dhaggeeffachuu",
+            "Marfannaa haroo sanaaf fuduraa mi'aawaa fi afata qopheessuu"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "Dambalii Ifa Warqee",
+          "text": "Qarqara haroo tasgabbaa'aa irratti uumamni fi namoonni akkamitti obsa fi walta'iinsaan akka waliin jiraatan barte. Duumessi waaree boodaa samii bal'aa keessa suuta yeroo yaa'u dambaliin haroo akka urjiilee xixiqqoo calaqqisa ture. Marfannaan seenaa afata dhahame irratti yeroo jalqabu filaamingoo bareedoo, bidiruu shomboqqoo fi sagalee bishaanii argite yeroo himtu hundi gammachuun harka rukutan. {companion} faarfannaa mi'aawaa dhumaa faarfatee gara man'ee ishee ho'aatti bararte. Ifa warqee keessatti suuta hafuura fudhattee gara manaatti deebitee maatii keetti himuun baay'ee nama gammachiisa.",
+          "choices": []
+        },
+        {
+          "title": "Muuziqaa Gaaddisa Laaftoo Jalaa",
+          "text": "Sagaleen ulullee shomboqqoo lallaafaan haroo calaqqisaa irra yaa'aa maatiiwwan afata bareedaa irra taa'anii seeqaa dhaggeeffatan. {companion} qarqara guuboo fuduraa irra qubattee miila ishee xixiqqoo rukuttaa muuziqaan sochoostee qilleensi baala laaftoo raasa ture. Maangoo mi'aawaa fi dubbii gaarii ollaalee waliin qooddachuun waaree booda sana aduu caalaa ho'ise. Filaamingoonni bifa roozii fagootti bishaan irra nagaan yeroo deeman {companion}tti nagaan ooli jette. Onnee tasgabbaa'aa fi seeqaa guddaan amma boqottee seenaa haroo maatii keetti himi.",
+          "choices": []
+        }
+      ]
+    },
+    "simien": {
+      "chapter1": {
+        "title": "Duumessa Olii Gaarren Simeen",
+        "text": "Tulluuwwan magariisa dinqisiisaa Gaarren Simeen irra duumessi adiin akka uffata lallaafaa dirree margaa jalatti diriiree jira. Simbirri gaaraa gammachuu {companion} jedhamtu bishaan qulqulluu cinaa dhagaa diriiraa irra gammachuun utaalte. Tulluu aduun itti ifu irra gareen jaldeessa chilladaa nagaan marga magariisa nyaachaa fi wal kunuunsaa taa'anii mul'atu. Qajeelchaan paarkii gaariin karaa nageenyaa irraa harka raasee daawwitii fageenyaa calaqqisaa fi dabtara fakkii uumamaa xiqqaa siif kenne. {companion} gammachuun eegee ishee raaste. Ganama gaaraa kana akkamitti jalqabuu barbaadda?",
+        "choices": [
+          "Dabtara fakkii kee keessatti jaldeessota chilladaa nagaa kaasuu",
+          "Daawwitii fageenyaan simbirroota gaaraa samii irra bararan ilaaluu"
+        ]
+      },
+      "chapter2": [
+        {
+          "title": "Dabtara Fakkii Uumamaa Gaaraa",
+          "text": "Dabtara fakkii kee dhagaa ho'aa irra bantee rifeensa warqee jaldeessota chilladaa fi abaaboowwan bifa diimaa-cuquliisaa naannoo isaanii biqilan of eeggannoon kaafte. Ilmoon chilladaa xiqqoon marga lallaafaa keessatti taphachaa haati ishee nagaan eegdi turte. {companion} qalama kee cinaa utaaltee fakkii kee ilaaluun gammachuun faarfate! Qajeelchaan paarkii seeqee bakka dinqisiisaa lama dabalataan sitti agarsiise: fincaa'aa xiqqaa cirracha irra yaa'u fi sulula sagalee nagaa deebisu. Eessa deemuu barbaadda?",
+          "choices": [
+            "Gara sulula gaaraatti nagaa gammachiisaa ergitee deebii dhaggeeffachuu",
+            "Bishaan qulqulluu cinaatti abaaboowwan halluu garaagaraa lakkaa'uu"
+          ]
+        },
+        {
+          "title": "Koochoowwan Gaara Magariisaa Olii",
+          "text": "Daawwitii fageenyaa gara ija keetti ol kaaftee simbirri gaaraa guddaan tokko galaana duumessa adii olii osoo koochoo hin rukutin nagaan yeroo balali'u argitee gammachuun dinqisiifatte. {companion} biqiltuu gaaraa dheeraa irra qubattee akka waan hiriyaa samii ishee beeksistuutti boonaan faarfate! Daawwiticha keessaan laggeen qulqulluu tulluu magariisa keessa yaa'anii fi maatii chilladaa aduu ho'ifatan argite. Qajeelchaan paarkii gara mana boqonnaa shayii ho'aa qabuutti yookaan karaa abaaboon guutameetti si afeere. Karaa kam filatta?",
+          "choices": [
+            "Karaa abaaboo gaaraa irra deemtee halluu abaaboo hunda waamuu",
+            "Mana boqonnaa aduu keessatti seenaa simbirroota argitee hundaaf himuu"
+          ]
+        }
+      ],
+      "chapter3": [
+        {
+          "title": "Sagalee Gammachuu Duumessa Keessaa",
+          "text": "Nagaan gammachiisaan kee sulula magariisa Simeen irra yeroo balali'u sagaleen gaaraa deebisee waamuu isaatiin atii fi qajeelchaan gammachuun kolfite! Fuula fuulaan dabtarri fakkii kee abaaboo gaaraa, laggeen qulqulluu fi maatii chilladaa nagaan boqotan guutame. Mana boqonnaa mukaa ho'aatti yeroo deebitu shayii mi'aawaa fi daabboo ho'aan foddaa aduu cinaa si eegaa ture. {companion} foddaa irratti al lama suuta rukuttee guyyaa dinqisiisaa kanaaf si jajjabeessite. Miila gammadaa fi onnee tasgabbaa'aan amma seenaa kee maatii keetti himi.",
+          "choices": []
+        },
+        {
+          "title": "Shayii Ho'aa Hurrii Gaaraa Olii",
+          "text": "Abaaboon karaa cinaa jiru hundi aduu qulqulluu keessatti akka faaya xiqqoo ifa ture; abaaboo keelloo irraa hanga abaaboo gaaraa bifa diimaa-cuquliisaa bareedootti. Mana boqonnaa maatii ho'aatti yeroo deebitu hundi marfatanii seenaa simbirroota bararanii, chilladaa fi duumessa ifaa argitee gammachuun dhaggeeffatan. Qajeelchaan paarkii ija qaraa fi gaarummaa uumamaaf qabduuf si galateeffate. {companion} alatti damee aduun itti ba'u irra qubattee faarfannaa nagaa faarfate. Boonaa fi nagaan guutamtee amma boqottee seenaa Gaarren Simeen maatii keetti himi.",
+          "choices": []
+        }
+      ]
+    }
+  }
+}

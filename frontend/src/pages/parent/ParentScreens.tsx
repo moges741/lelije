@@ -3,16 +3,16 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../api/client'
 import type { Failure, Result } from '../../api/http'
 import { Icon } from '../../components/Icon'
-import { LanguageSwitcher } from '../../components/LanguageSwitcher'
 import { LoadState } from '../../components/LoadState'
+import { ParentShell } from '../../components/ParentShell'
 import { PinPrompt } from '../../components/PinPrompt'
 import { StatusPill, type StatusTone } from '../../components/Status'
 import { Panel, SecretField } from '../../components/TextField'
-import { TopBar } from '../../components/TopBar'
 import { useApp } from '../../context/app-context'
 import type { TranslationKey } from '../../i18n'
 import { failureKey, pinFailureKey } from '../../lib/failure'
 import { isValidPin, PIN_LENGTH, pinDigits } from '../../lib/pin'
+import { activityDisplayName } from '../../lib/pose/activityMeta'
 import { groupByDay, whenText } from '../../lib/time'
 import { useRemote } from '../../lib/useRemote'
 import type { ChildRecord } from '../../types/account'
@@ -25,6 +25,7 @@ import type {
   PlayStatus,
   Progress,
   Review,
+  WeeklySummary,
 } from '../../types/api'
 import { Notifications as NotificationList } from '../Notifications'
 
@@ -75,7 +76,7 @@ async function loadHome(code: string): Promise<Result<Home>> {
   }
 }
 
-/** The grown-up's home: what is waiting for them first, then each child. */
+/** Calm Executive Parent Overview: flat KPI strip, priority approvals queue, and children progress roster. */
 export function ParentHome() {
   const { t, parent, setSession, signOut } = useParent()
   const navigate = useNavigate()
@@ -96,30 +97,36 @@ export function ParentHome() {
 
   if (!parent) return null
 
-  const openChild = (child: ChildRecord) => {
-    setSession({ role: 'child', family: parent.family, child })
+  const openChild = async (child: ChildRecord) => {
+    const auth = await api.childLogin(parent.family.code, child.id)
+    if (auth.ok) {
+      setSession({ role: 'child', family: auth.data.family, child: auth.data.child })
+    } else {
+      setSession({ role: 'child', family: parent.family, child })
+    }
     navigate('/missions')
   }
 
   const data = home.data
-  const waitingCount = data ? data.reviews.length + data.waitingPlay.length : 0
+  const pendingMissions = data ? data.reviews.length : 0
+  const pendingPlay = data ? data.waitingPlay.length : 0
+  const waitingCount = pendingMissions + pendingPlay
+  const familyPointsToday = data
+    ? data.progress.reduce((sum, row) => sum + row.pointsToday, 0)
+    : 0
 
   return (
-    <main className="screen screen-wide">
-      <TopBar>
-        <LanguageSwitcher />
-        <Link className="icon-btn" to="/parent/notifications" aria-label={t('notifications')}>
-          <Icon name="bell" />
-          {data && data.unread > 0 && <span className="dot">{data.unread}</span>}
+    <ParentShell
+      title={parent.family.name}
+      subtitle={t('parentLead')}
+      unreadCount={data?.unread ?? 0}
+      waitingPlayCount={pendingPlay}
+      action={
+        <Link className="btn btn-primary btn-sm" to="/family">
+          + {t('addChildTitle')}
         </Link>
-        <Link className="icon-btn" to="/parent/settings" aria-label={t('settings')}>
-          <Icon name="settings" />
-        </Link>
-      </TopBar>
-      <div>
-        <h1 className="title">{parent.family.name}</h1>
-        <p className="lead">{t('parentLead')}</p>
-      </div>
+      }
+    >
       {toast && (
         <p className="banner banner-ok" role="status">
           {t(toast === 'approved' ? 'approvedToast' : 'rejectedToast')}
@@ -134,104 +141,141 @@ export function ParentHome() {
       {!data ? (
         <LoadState error={home.error} onRetry={home.reload} />
       ) : (
-        <div className="parent-grid">
-          <Panel>
-            <h2 className="panel-title">
-              {t('waitingForYou')} {waitingCount > 0 && `(${waitingCount})`}
-            </h2>
-            {waitingCount === 0 ? (
-              <p className="lead">{t('noPending')}</p>
-            ) : (
-              <ul className="mission-list">
-                {data.reviews.map((item) => (
-                  <li key={item.id}>
-                    <Link className="mission-card" to={`/parent/review/${encodeURIComponent(item.id)}`}>
-                      <span className="mission-icon">
-                        <Icon name={item.verifiedBy === 'pose' ? 'camera' : 'hand'} size={26} />
-                      </span>
-                      <span className="mission-body">
-                        <strong>{item.title ?? t('missionFallbackTitle')}</strong>
-                        <span>
-                          {item.nickname || t('childProfile')} · +{item.points}
-                        </span>
-                      </span>
-                      <span className="mission-go" aria-hidden="true">
-                        <Icon name="play" size={20} />
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-                {data.waitingPlay.map((item) => (
-                  <li key={item.id}>
-                    <Link className="mission-card" to="/parent/play">
-                      <span className="mission-icon">
-                        <Icon name="clock" size={26} />
-                      </span>
-                      <span className="mission-body">
-                        <strong>{item.nickname || t('childProfile')}</strong>
-                        <span>{t('asksForPlay')}</span>
-                      </span>
-                      <span className="mission-go" aria-hidden="true">
-                        <Icon name="play" size={20} />
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+        <>
+          <section className="exec-kpi-strip" aria-label={t('parentHome')}>
+            <div className={`exec-kpi ${pendingMissions > 0 ? 'is-attention' : ''}`}>
+              <span className="exec-kpi-label">{t('missionsWaiting')}</span>
+              <strong className="exec-kpi-value">{pendingMissions}</strong>
+            </div>
+            <div className={`exec-kpi ${pendingPlay > 0 ? 'is-attention' : ''}`}>
+              <span className="exec-kpi-label">{t('playTime')}</span>
+              <strong className="exec-kpi-value">{pendingPlay}</strong>
+            </div>
+            <div className="exec-kpi">
+              <span className="exec-kpi-label">{t('children')}</span>
+              <strong className="exec-kpi-value">{data.children.length}</strong>
+            </div>
+            <div className="exec-kpi is-accent">
+              <span className="exec-kpi-label">{t('pointsToday')}</span>
+              <strong className="exec-kpi-value">{familyPointsToday}</strong>
+            </div>
+          </section>
 
-          <Panel>
-            <h2 className="panel-title">{t('children')}</h2>
-            {data.children.length === 0 ? (
-              <p className="lead">{t('noChildrenYet')}</p>
-            ) : (
-              <ul className="child-list">
-                {data.children.map((child) => {
-                  const stats = data.progress.find((row) => row.childId === child.id)
-                  return (
-                    <li key={child.id} className="child-row">
-                      <span className="mission-body">
-                        <strong>{child.nickname || t('childProfile')}</strong>
-                        <span>
-                          {t('age')} {child.age}
-                          {stats && ` · ${stats.pointsToday} / ${stats.dailyCap} ${t('pointsToday')}`}
-                        </span>
-                        {stats && (
-                          <span>
-                            {stats.streak} {t('streak')} · {stats.totalPoints} {t('totalPoints')}
+          <div className="exec-grid">
+            <section className="exec-panel">
+              <div className="exec-panel-head">
+                <h2>{t('waitingForYou')}</h2>
+                <span className="exec-panel-meta">{waitingCount}</span>
+              </div>
+              {waitingCount === 0 ? (
+                <div className="exec-empty">
+                  <Icon name="check" size={20} />
+                  <p>{t('noPending')}</p>
+                </div>
+              ) : (
+                <ul className="exec-list">
+                  {data.reviews.map((item) => (
+                    <li key={item.id}>
+                      <Link className="exec-row" to={`/parent/review/${encodeURIComponent(item.id)}`}>
+                        <div className="exec-row-main">
+                          <strong>{item.title ?? t('missionFallbackTitle')}</strong>
+                          <span className="exec-row-meta">
+                            {item.nickname || t('childProfile')} · +{item.points} {t('points')}
                           </span>
-                        )}
-                      </span>
-                      <button type="button" className="btn btn-plain" onClick={() => openChild(child)}>
-                        {t('openChild')}
-                      </button>
+                        </div>
+                        <span className="exec-row-action">{t('approve')} →</span>
+                      </Link>
                     </li>
-                  )
-                })}
-              </ul>
-            )}
-            <Link className="btn btn-plain" to="/family">
-              {t('addChildTitle')}
-            </Link>
-          </Panel>
+                  ))}
+                  {data.waitingPlay.map((item) => (
+                    <li key={item.id}>
+                      <Link className="exec-row" to="/parent/play">
+                        <div className="exec-row-main">
+                          <strong>{item.nickname || t('childProfile')}</strong>
+                          <span className="exec-row-meta">{t('asksForPlay')}</span>
+                        </div>
+                        <span className="exec-row-action">{t('reviewPlay')} →</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-          <Panel>
-            <h2 className="panel-title">{t('familyCode')}</h2>
-            <p className="code-chip">{parent.family.code}</p>
-            <Link className="btn btn-plain" to="/parent/activity">
-              {t('activity')}
-            </Link>
-            <Link className="btn btn-plain" to="/parent/play">
-              {t('reviewPlay')}
-            </Link>
-          </Panel>
-        </div>
+            <section className="exec-panel">
+              <div className="exec-panel-head">
+                <h2>{t('children')}</h2>
+                <Link className="text-link" to="/parent/activity">
+                  {t('reportTitle')} →
+                </Link>
+              </div>
+              {data.children.length === 0 ? (
+                <div className="exec-empty">
+                  <p>{t('noChildrenYet')}</p>
+                  <Link className="btn btn-primary btn-sm" to="/family">
+                    {t('addChildTitle')}
+                  </Link>
+                </div>
+              ) : (
+                <ul className="exec-roster">
+                  {data.children.map((child) => {
+                    const stats = data.progress.find((row) => row.childId === child.id)
+                    const pct =
+                      stats && stats.dailyCap > 0
+                        ? Math.min(100, Math.round((stats.pointsToday / stats.dailyCap) * 100))
+                        : 0
+                    return (
+                      <li key={child.id} className="exec-roster-row">
+                        <div className="exec-roster-info">
+                          <div className="exec-roster-head">
+                            <strong>{child.nickname || t('childProfile')}</strong>
+                            <span className="exec-row-meta">
+                              {t('age')} {child.age} · {child.language.toUpperCase()}
+                            </span>
+                          </div>
+                          {stats && (
+                            <>
+                              <p className="exec-roster-nums">
+                                <span>
+                                  {stats.pointsToday} / {stats.dailyCap} {t('pointsToday')}
+                                </span>
+                                <span aria-hidden="true">·</span>
+                                <span>
+                                  {stats.streak} {t('streak')}
+                                </span>
+                                <span aria-hidden="true">·</span>
+                                <span>
+                                  {stats.totalPoints} {t('totalPoints')}
+                                </span>
+                              </p>
+                              <div className="cap-track is-slim" aria-hidden="true">
+                                <span className="cap-fill" style={{ width: `${pct}%` }} />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-plain btn-sm"
+                          onClick={() => void openChild(child)}
+                        >
+                          {t('openChild')}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+          </div>
+
+          <p className="exec-privacy-foot">
+            <Icon name="shield" size={16} />
+            <span>{t('notSurveillance')}</span>
+          </p>
+        </>
       )}
-      <button type="button" className="btn btn-plain" onClick={signOut}>
-        {t('signOut')}
-      </button>
-    </main>
+    </ParentShell>
   )
 }
 
@@ -248,9 +292,15 @@ export function MissionReview() {
   const item = reviews.data?.find((row) => row.id === id) ?? null
 
   return (
-    <main className="screen">
-      <TopBar backTo="/parent" />
-      <h1 className="title">{t('reviewTitle')}</h1>
+    <ParentShell
+      title={t('reviewTitle')}
+      subtitle={t('reviewLead')}
+      action={
+        <Link className="btn btn-plain btn-sm" to="/parent">
+          {t('back')}
+        </Link>
+      }
+    >
       {failed && (
         <p className="banner banner-warn" role="alert">
           {t(failureKey(failed))}
@@ -259,9 +309,9 @@ export function MissionReview() {
       {!reviews.data ? (
         <LoadState error={reviews.error} onRetry={reviews.reload} />
       ) : !item ? (
-        <div className="empty">
+        <div className="exec-panel">
           <p className="lead">{t('reviewGone')}</p>
-          <Link className="btn btn-plain" to="/parent">
+          <Link className="btn btn-plain btn-sm" to="/parent">
             {t('parentHome')}
           </Link>
         </div>
@@ -270,24 +320,27 @@ export function MissionReview() {
           <h2 className="panel-title">{item.title ?? t('missionFallbackTitle')}</h2>
           <ul className="facts">
             <li>
-              <Icon name="child" />
-              {item.nickname || t('childProfile')}
+              <Icon name="child" size={18} />
+              <span>{item.nickname || t('childProfile')}</span>
             </li>
             <li>
-              <Icon name="star" />+{item.points} {t('points')}
+              <Icon name="star" size={18} />
+              <span>
+                +{item.points} {t('points')}
+              </span>
             </li>
             <li>
-              <Icon name={item.verifiedBy === 'pose' ? 'camera' : 'hand'} />
-              {t(item.verifiedBy === 'pose' ? 'verifiedByCamera' : 'verifiedBySelf')}
+              <Icon name={item.verifiedBy === 'pose' ? 'camera' : 'hand'} size={18} />
+              <span>{t(item.verifiedBy === 'pose' ? 'verifiedByCamera' : 'verifiedBySelf')}</span>
             </li>
             <li>
-              <Icon name="clock" />
-              {whenText(item.completedAt, language)}
+              <Icon name="clock" size={18} />
+              <span>{whenText(item.completedAt, language)}</span>
             </li>
           </ul>
-          <p className="lead">{t('reviewLead')}</p>
           <div className="row-actions">
-            <button type="button" className="btn btn-sun" onClick={() => setAsking('approve')}>
+            <button type="button" className="btn btn-primary" onClick={() => setAsking('approve')}>
+              <Icon name="check" size={18} />
               {t('approve')}
             </button>
             <button type="button" className="btn btn-danger" onClick={() => setAsking('reject')}>
@@ -313,7 +366,7 @@ export function MissionReview() {
           }}
         />
       )}
-    </main>
+    </ParentShell>
   )
 }
 
@@ -325,9 +378,9 @@ const PLAY_LABEL: Record<PlayStatus, { tone: StatusTone; label: TranslationKey }
 }
 
 const ANSWERS: { answer: PlayAnswer; label: TranslationKey; className: string }[] = [
-  { answer: 'allowed', label: 'allowPlay', className: 'btn btn-sun' },
-  { answer: 'later', label: 'laterPlay', className: 'btn btn-plain' },
-  { answer: 'declined', label: 'declinePlay', className: 'btn btn-plain' },
+  { answer: 'allowed', label: 'allowPlay', className: 'btn btn-primary btn-sm' },
+  { answer: 'later', label: 'laterPlay', className: 'btn btn-plain btn-sm' },
+  { answer: 'declined', label: 'declinePlay', className: 'btn btn-danger btn-sm' },
 ]
 
 export function PlayReview() {
@@ -339,9 +392,7 @@ export function PlayReview() {
   if (!parent) return null
 
   return (
-    <main className="screen">
-      <TopBar backTo="/parent" />
-      <h1 className="title">{t('playTime')}</h1>
+    <ParentShell title={t('playTime')} subtitle={t('reviewPlay')}>
       {failed && (
         <p className="banner banner-warn" role="alert">
           {t(failureKey(failed))}
@@ -350,26 +401,32 @@ export function PlayReview() {
       {!requests.data ? (
         <LoadState error={requests.error} onRetry={requests.reload} />
       ) : requests.data.length === 0 ? (
-        <p className="lead">{t('noPlay')}</p>
+        <div className="exec-panel">
+          <p className="lead">{t('noPlay')}</p>
+        </div>
       ) : (
         <ul className="mission-list">
           {requests.data.map((row) => (
-            <li key={row.id} className="panel">
+            <li key={row.id} className="exec-panel">
               <div className="split">
-                <strong>{row.nickname || t('childProfile')}</strong>
-                <StatusPill tone={PLAY_LABEL[row.status].tone}>{t(PLAY_LABEL[row.status].label)}</StatusPill>
+                <div>
+                  <strong>{row.nickname || t('childProfile')}</strong>
+                  <p className="meta">{whenText(row.requestedAt, language)}</p>
+                </div>
+                <StatusPill tone={PLAY_LABEL[row.status].tone}>
+                  {t(PLAY_LABEL[row.status].label)}
+                </StatusPill>
               </div>
-              <span className="meta">{whenText(row.requestedAt, language)}</span>
               {row.status === 'sent' && (
                 <div className="row-actions">
-                  {ANSWERS.map((option) => (
+                  {ANSWERS.map((choice) => (
                     <button
-                      key={option.answer}
+                      key={choice.answer}
                       type="button"
-                      className={option.className}
-                      onClick={() => setAsking({ id: row.id, answer: option.answer })}
+                      className={choice.className}
+                      onClick={() => setAsking({ id: row.id, answer: choice.answer })}
                     >
-                      {t(option.label)}
+                      {t(choice.label)}
                     </button>
                   ))}
                 </div>
@@ -381,16 +438,18 @@ export function PlayReview() {
       {asking && (
         <PinPrompt
           family={parent.family}
-          action={(pin) => api.answerPlay(asking.id, { familyCode: code, pin, answer: asking.answer })}
+          action={(pin) =>
+            api.answerPlay(asking.id, { familyCode: code, pin, answer: asking.answer })
+          }
           onCancel={() => setAsking(null)}
           onDone={(result) => {
             setAsking(null)
-            setFailed(result.ok ? null : result.error)
+            if (!result.ok) setFailed(result.error)
             requests.reload()
           }}
         />
       )}
-    </main>
+    </ParentShell>
   )
 }
 
@@ -407,59 +466,94 @@ async function loadActivity(code: string): Promise<Result<{ report: ChildReport[
   return { ok: true, data: { report: report.data, items: items.data } }
 }
 
-/** The last 7 days: one summary per child, then everything they did, newest first. */
+/** 7-day executive report with AI Weekly Insight on left, chronological feed on right. */
 export function Activity() {
   const { t, language, parent } = useParent()
   const code = parent?.family.code ?? ''
   const activity = useRemote(parent ? `activity:${code}` : null, () => loadActivity(code))
+  const [insights, setInsights] = useState<Record<string, WeeklySummary>>({})
+  const [insightBusy, setInsightBusy] = useState<Record<string, boolean>>({})
   if (!parent) return null
   const data = activity.data
 
+  const loadInsight = async (childId: string) => {
+    setInsightBusy((prev) => ({ ...prev, [childId]: true }))
+    const res = await api.generateWeeklySummary({ familyCode: code, childId, language })
+    setInsightBusy((prev) => ({ ...prev, [childId]: false }))
+    if (res.ok) {
+      setInsights((prev) => ({ ...prev, [childId]: res.data }))
+    }
+  }
+
   return (
-    <main className="screen">
-      <TopBar backTo="/parent" />
-      <h1 className="title">{t('activity')}</h1>
+    <ParentShell title={t('activity')} subtitle={t('reportTitle')}>
       {!data ? (
         <LoadState error={activity.error} onRetry={activity.reload} />
       ) : (
-        <>
+        <div className="activity-grid">
           <section className="stack">
             <h2 className="panel-title">{t('reportTitle')}</h2>
             {data.report.length === 0 && <p className="lead">{t('noChildrenYet')}</p>}
-            {data.report.map((child) => (
-              <Panel key={child.childId}>
-                <div className="split">
-                  <strong className="panel-title">{child.nickname || t('childProfile')}</strong>
-                  <span className="meta">
-                    {child.totalPoints} {t('totalPoints')}
-                  </span>
-                </div>
-                <ul className="facts">
-                  <li>
-                    <Icon name="star" />
-                    {child.pointsInPeriod} {t('pointsInWeek')}
-                  </li>
-                  <li>
-                    <Icon name="flame" />
-                    {child.streak} {t('streak')}
-                  </li>
-                  <li>
-                    <Icon name="check" />
-                    {child.period.missionsApproved} {t('missionsApproved')}
-                  </li>
+            {data.report.map((child) => {
+              const insight = insights[child.childId]
+              const busy = Boolean(insightBusy[child.childId])
+              return (
+                <Panel key={child.childId}>
+                  <div className="split">
+                    <strong className="panel-title">{child.nickname || t('childProfile')}</strong>
+                    <span className="meta">
+                      {child.totalPoints} {t('totalPoints')}
+                    </span>
+                  </div>
+                  <div className="report-stats">
+                    <div className="report-stat">
+                      <strong>{child.pointsInPeriod}</strong>
+                      <span>{t('pointsInWeek')}</span>
+                    </div>
+                    <div className="report-stat">
+                      <strong>{child.streak}</strong>
+                      <span>{t('streak')}</span>
+                    </div>
+                    <div className="report-stat">
+                      <strong>{child.period.missionsApproved}</strong>
+                      <span>{t('missionsApproved')}</span>
+                    </div>
+                    <div className="report-stat">
+                      <strong>{child.period.gamesPlayed}</strong>
+                      <span>{t('gamesPlayed')}</span>
+                    </div>
+                  </div>
                   {child.period.missionsPending > 0 && (
-                    <li>
-                      <Icon name="clock" />
+                    <p className="meta">
                       {child.period.missionsPending} {t('missionsWaiting')}
-                    </li>
+                    </p>
                   )}
-                  <li>
-                    <Icon name="play" />
-                    {child.period.gamesPlayed} {t('gamesPlayed')}
-                  </li>
-                </ul>
-              </Panel>
-            ))}
+
+                  {insight ? (
+                    <div className="ai-insight-box rise">
+                      <div className="split">
+                        <strong>{insight.headline}</strong>
+                        <StatusPill tone="info">
+                          {insight.source === 'ai' ? 'AI Insight' : 'Weekly Summary'}
+                        </StatusPill>
+                      </div>
+                      <p>{insight.summary}</p>
+                      <p className="ai-insight-tip">{insight.suggestion}</p>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-plain btn-sm"
+                      disabled={busy}
+                      onClick={() => void loadInsight(child.childId)}
+                    >
+                      <Icon name="star" size={16} />
+                      {busy ? t('loading') : 'Generate AI Weekly Insight'}
+                    </button>
+                  )}
+                </Panel>
+              )
+            })}
           </section>
 
           <section className="stack">
@@ -476,7 +570,7 @@ export function Activity() {
                         <span>
                           {item.kind === 'mission'
                             ? (item.title ?? t('missionFallbackTitle'))
-                            : `${t('playCatchStars')} · ${t('gameScore')} ${item.score}`}
+                            : `${activityDisplayName(item.game, language)} · ${t('gameScore')} ${item.score}`}
                         </span>
                       </span>
                       <span className="feed-meta">
@@ -485,7 +579,7 @@ export function Activity() {
                             {t(MISSION_STATUS[item.status].label)}
                           </StatusPill>
                         )}
-                        {item.points > 0 && <span>+{item.points}</span>}
+                        {item.points > 0 && <span className="mission-points">+{item.points}</span>}
                         <span>{whenText(item.at, language)}</span>
                       </span>
                     </li>
@@ -494,9 +588,9 @@ export function Activity() {
               </div>
             ))}
           </section>
-        </>
+        </div>
       )}
-    </main>
+    </ParentShell>
   )
 }
 
@@ -535,50 +629,53 @@ export function ParentSettings() {
   }
 
   return (
-    <main className="screen">
-      <TopBar backTo="/parent">
-        <LanguageSwitcher />
-      </TopBar>
-      <h1 className="title">{t('settingsTitle')}</h1>
-      <p className="lead">{t('privacyNote')}</p>
-      <p className="hint">{t('notSurveillance')}</p>
-      <p className="code-chip">{parent.family.code}</p>
-      <form className="auth-form" onSubmit={(event) => void save(event)}>
-        <h2 className="panel-title">{t('pinChangeTitle')}</h2>
-        {needsCurrent && (
-          <SecretField
-            name="currentPin"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            label={t('pinCurrent')}
-            value={currentPin}
-            maxLength={PIN_LENGTH}
-            autoComplete="off"
-            onChange={(event) => setCurrentPin(pinDigits(event.target.value))}
-          />
-        )}
-        <SecretField
-          name="newPin"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          label={t('pinNew')}
-          value={nextPin}
-          maxLength={PIN_LENGTH}
-          autoComplete="new-password"
-          onChange={(event) => setNextPin(pinDigits(event.target.value))}
-        />
-        {message && (
-          <p className={message === 'pinSaved' ? 'banner banner-ok' : 'banner banner-warn'} role="status">
-            {t(message)}
-          </p>
-        )}
-        <button type="submit" className="btn btn-sun btn-block" disabled={busy} aria-busy={busy}>
-          {busy ? t('saving') : t('pinChangeTitle')}
-        </button>
-      </form>
-      <button type="button" className="btn btn-plain btn-block" onClick={signOut}>
-        {t('signOut')}
-      </button>
-    </main>
+    <ParentShell title={t('settingsTitle')} subtitle={t('privacyNote')}>
+      <div className="exec-grid">
+        <Panel>
+          <form className="auth-form" onSubmit={(event) => void save(event)}>
+            <h2 className="panel-title">{t('pinChangeTitle')}</h2>
+            {needsCurrent && (
+              <SecretField
+                name="currentPin"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                label={t('pinCurrent')}
+                value={currentPin}
+                maxLength={PIN_LENGTH}
+                autoComplete="off"
+                onChange={(event) => setCurrentPin(pinDigits(event.target.value))}
+              />
+            )}
+            <SecretField
+              name="newPin"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              label={t('pinNew')}
+              value={nextPin}
+              maxLength={PIN_LENGTH}
+              autoComplete="new-password"
+              onChange={(event) => setNextPin(pinDigits(event.target.value))}
+            />
+            {message && (
+              <p className={message === 'pinSaved' ? 'banner banner-ok' : 'banner banner-warn'} role="status">
+                {t(message)}
+              </p>
+            )}
+            <button type="submit" className="btn btn-primary btn-block" disabled={busy} aria-busy={busy}>
+              {busy ? t('saving') : t('pinChangeTitle')}
+            </button>
+          </form>
+        </Panel>
+
+        <Panel>
+          <h2 className="panel-title">{t('familyCode')}</h2>
+          <p className="meta">{t('notSurveillance')}</p>
+          <p className="code-chip">{parent.family.code}</p>
+          <button type="button" className="btn btn-plain btn-block" onClick={signOut}>
+            {t('signOut')}
+          </button>
+        </Panel>
+      </div>
+    </ParentShell>
   )
 }

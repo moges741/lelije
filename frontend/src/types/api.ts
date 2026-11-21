@@ -113,6 +113,7 @@ export type ActivityItem =
       id: string
       childId: string
       nickname: string | null
+      game?: string
       score: number
       points: number
       at: string
@@ -131,4 +132,38 @@ export interface ChildReport {
     missionsRejected: number
     gamesPlayed: number
   }
+}
+
+export type StoryRegion = 'highlands' | 'rift_valley' | 'simien'
+
+/** POST /api/ai/story */
+export interface StoryChapter {
+  source: 'ai' | 'fallback'
+  title?: string
+  text: string
+  choices: string[]
+  endsWith: 'choice' | 'rest'
+  region: StoryRegion
+  chapter: number
+  maxChapters?: number
+  language: 'en' | 'am' | 'om'
+  companionName?: string
+}
+
+/** POST /api/ai/story/complete */
+export interface StoryCompleted {
+  region: StoryRegion
+  alreadyRecorded: boolean
+  pointsAwarded: number
+  pointsToday: number
+  dailyCap: number
+}
+
+/** POST /api/ai/summary */
+export interface WeeklySummary {
+  source: 'ai' | 'fallback'
+  language: 'en' | 'am' | 'om'
+  headline: string
+  summary: string
+  suggestion: string
 }

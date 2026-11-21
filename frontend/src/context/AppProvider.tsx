@@ -63,11 +63,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     store(SESSION_KEY, next && JSON.stringify(next))
   }, [])
 
-  const signOut = useCallback(() => setSession(null), [setSession])
+  const signOut = useCallback(() => {
+    void api.logout()
+    setLoaded(null)
+    setProgress(null)
+    setSession(null)
+  }, [setSession])
 
   useEffect(() => {
     document.documentElement.lang = language
+    document.documentElement.dir = 'ltr'
   }, [language])
+
+  useEffect(() => {
+    if (!session) return
+    let ignore = false
+    void api.fetchMe().then((me) => {
+      if (ignore || me === null) return
+      if (!me.ok && me.error === 'unauthorized') {
+        signOut()
+      }
+    })
+    return () => {
+      ignore = true
+    }
+  }, [session, signOut])
 
   useEffect(() => {
     if (!childId) return
@@ -76,7 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ([missions, latest]) => {
         if (ignore) return
         // The profile was removed on the server; this device cannot use it any more.
-        if (!missions.ok && missions.error === 'not_found') {
+        if (!missions.ok && (missions.error === 'not_found' || missions.error === 'unauthorized')) {
           signOut()
           return
         }

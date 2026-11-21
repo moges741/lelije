@@ -84,4 +84,65 @@ describe("S1 generateStoryChapter & companionLine", () => {
     const om = companionLine({ event: "freeze", language: "om", mood: "calm" });
     expect(om.needs_translation).toBe(true);
   });
+
+  it("supports 3-chapter choice branching and native Amharic and Afaan Oromo stories", async () => {
+    const ch1 = await generateStoryChapter({
+      region: "highlands",
+      chapter: 1,
+      maxChapters: 3,
+      language: "en",
+      companionName: "Kora",
+      _env: { MOCK_AI: "true" },
+    });
+    expect(ch1.endsWith).toBe("choice");
+    expect(ch1.choices).toHaveLength(2);
+    expect(ch1.text).toContain("Kora");
+
+    const ch2A = await generateStoryChapter({
+      region: "highlands",
+      chapter: 2,
+      maxChapters: 3,
+      choiceIndex: 0,
+      previousChoice: ch1.choices[0],
+      language: "en",
+      companionName: "Kora",
+      _env: { MOCK_AI: "true" },
+    });
+    const ch2B = await generateStoryChapter({
+      region: "highlands",
+      chapter: 2,
+      maxChapters: 3,
+      choiceIndex: 1,
+      previousChoice: ch1.choices[1],
+      language: "en",
+      companionName: "Kora",
+      _env: { MOCK_AI: "true" },
+    });
+    expect(ch2A.endsWith).toBe("choice");
+    expect(ch2B.endsWith).toBe("choice");
+    expect(ch2A.text).not.toBe(ch2B.text);
+
+    const ch3 = await generateStoryChapter({
+      region: "highlands",
+      chapter: 3,
+      maxChapters: 3,
+      choiceIndex: 1,
+      language: "am",
+      companionName: "ሎሚ",
+      _env: { MOCK_AI: "true" },
+    });
+    expect(ch3.endsWith).toBe("rest");
+    expect(ch3.choices).toHaveLength(0);
+    expect(/[\u1200-\u137F]/.test(ch3.text)).toBe(true);
+
+    const omCh1 = await generateStoryChapter({
+      region: "rift_valley",
+      chapter: 1,
+      maxChapters: 3,
+      language: "om",
+      companionName: "Lomi",
+      _env: { MOCK_AI: "true" },
+    });
+    expect(omCh1.text).toContain("Itoophiyaa");
+  });
 });

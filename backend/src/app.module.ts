@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { AiModule } from './ai/ai.module';
+import { AuthModule } from './auth/auth.module';
 import { ChildrenModule } from './children/children.module';
 import { FamiliesModule } from './families/families.module';
 import { GamesModule } from './games/games.module';
@@ -17,6 +19,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     PrismaModule,
     PointsModule,
     FamiliesModule,
+    AuthModule,
     ChildrenModule,
     MissionsModule,
     GamesModule,
@@ -25,6 +28,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     PlayModule,
     NotificationsModule,
     ReportsModule,
+    AiModule,
   ],
   controllers: [HealthController],
 })

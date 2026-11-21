@@ -29,12 +29,23 @@ const FRIGHTENING_PATTERN =
 /** @type {Record<LanguageCode, Record<StoryRegion, Array<{ chapter: number, text: string, choices: string[], endsWith: "choice" | "rest", needs_translation?: boolean }>>> | null} */
 let cachedStories = null;
 
+/** @type {Record<LanguageCode, Record<StoryRegion, { chapter1: { title: string, text: string, choices: string[] }, chapter2: Array<{ title: string, text: string, choices: string[] }>, chapter3: Array<{ title: string, text: string, choices: string[] }> }>> | null} */
+let cachedBranchStories = null;
+
 function loadFallbackStories() {
   if (!cachedStories) {
     const raw = readFileSync(new URL("./fallback_story.json", import.meta.url), "utf8");
     cachedStories = JSON.parse(raw);
   }
   return /** @type {NonNullable<typeof cachedStories>} */ (cachedStories);
+}
+
+function loadBranchStories() {
+  if (!cachedBranchStories) {
+    const raw = readFileSync(new URL("./story_branches.json", import.meta.url), "utf8");
+    cachedBranchStories = JSON.parse(raw);
+  }
+  return /** @type {NonNullable<typeof cachedBranchStories>} */ (cachedBranchStories);
 }
 
 /**
@@ -71,8 +82,59 @@ export function validateStoryChapter(text, choices) {
 }
 
 /**
- * Generates one calm, joyful Ethiopian story chapter (80-120 words).
- * Falls back cleanly to fallback_story.json after 5 s timeout or any AI/safety error.
+ * Validates live AI-generated story chapters with child safety strictly enforced and
+ * flexible word bounds (45..180 words) so natural Amharic/Oromo/English prose is preserved.
+ * @param {string} text
+ * @param {string[]} choices
+ * @returns {{ ok: boolean, reasons: string[] }}
+ */
+function validateAiStoryChapter(text, choices) {
+  /** @type {string[]} */
+  const reasons = [];
+  const words = countWords(text);
+  if (words < 45 || words > 180) {
+    reasons.push(`AI word count must be 45..180 (got ${words})`);
+  }
+  const safeCheck = checkTextsSafe([text, ...choices]);
+  if (!safeCheck.safe) reasons.push(...safeCheck.reasons);
+  if (FRIGHTENING_PATTERN.test(text) || choices.some((c) => FRIGHTENING_PATTERN.test(c))) {
+    reasons.push("story must never contain frightening content");
+  }
+  return { ok: reasons.length === 0, reasons };
+}
+
+/**
+ * Resolves which branch index (0 or 1) matches the child's selected choice.
+ * @param {number | undefined} explicitIndex
+ * @param {string} previousChoice
+ * @param {string[]} chapter1Choices
+ * @param {Array<{ choices: string[] }>} chapter2List
+ * @returns {0 | 1}
+ */
+function resolveBranchIndex(explicitIndex, previousChoice, chapter1Choices, chapter2List) {
+  if (explicitIndex === 0 || explicitIndex === 1) return explicitIndex;
+  const needle = previousChoice.trim().toLowerCase();
+  if (!needle) return 0;
+
+  if (chapter1Choices[1] && needle === chapter1Choices[1].trim().toLowerCase()) return 1;
+  if (chapter1Choices[0] && needle === chapter1Choices[0].trim().toLowerCase()) return 0;
+
+  for (let i = 0; i < chapter2List.length; i += 1) {
+    const chChoices = chapter2List[i].choices ?? [];
+    if (chChoices.some((c) => c.trim().toLowerCase() === needle)) {
+      return i === 1 ? 1 : 0;
+    }
+  }
+
+  // Soft keyword fallback when the user picked a custom or AI-generated choice label.
+  const secondKeywords = ["herb", "courtyard", "weaver", "nest", "bird", "binocular", "dance", "tea", "flute", "ቅጠላ", "ወፎች", "መነጽር", "baala", "man'ee", "daawwitii"];
+  if (secondKeywords.some((kw) => needle.includes(kw))) return 1;
+  return 0;
+}
+
+/**
+ * Generates one calm, joyful Ethiopian story chapter (supports 2-chapter or 3-chapter branching arcs).
+ * Uses live Gemini when configured, with authentic trilingual branching fallback on timeout or error.
  *
  * @param {object} input
  * @param {number} [input.age]
@@ -80,39 +142,77 @@ export function validateStoryChapter(text, choices) {
  * @param {string[]} [input.interests]
  * @param {string} [input.companionName]
  * @param {StoryRegion} [input.region]
- * @param {number} [input.chapter]  1 or 2 (chapter 2 ends with "rest" for natural session end).
+ * @param {number} [input.chapter]  1, 2, or 3
+ * @param {number} [input.maxChapters]  2 (default for compatibility) or 3 (full adventure arc)
+ * @param {number} [input.choiceIndex]  0 or 1 for deterministic branch continuation
  * @param {string | null} [input.previousChoice]
+ * @param {string | null} [input.previousText]
+ * @param {string | null} [input.theme]
  * @param {string} [input.requestId]
  * @param {Record<string, string | undefined>} [input._env]
  * @param {typeof fetch} [input._fetch]
- * @returns {Promise<{ source: "ai" | "fallback", text: string, choices: string[], endsWith: "choice" | "rest", needs_translation?: boolean }>}
+ * @returns {Promise<{ source: "ai" | "fallback", title: string, text: string, choices: string[], endsWith: "choice" | "rest", needs_translation?: boolean }>}
  */
 export async function generateStoryChapter(input = {}) {
-  const age = Math.max(6, Math.min(12, Math.round(Number.isFinite(input.age) ? Number(input.age) : 8)));
+  const age = Math.max(5, Math.min(13, Math.round(Number.isFinite(input.age) ? Number(input.age) : 8)));
   /** @type {LanguageCode} */
   const language = input.language === "am" || input.language === "om" ? input.language : "en";
   /** @type {StoryRegion} */
   const region = STORY_REGIONS.includes(/** @type {any} */ (input.region))
     ? /** @type {StoryRegion} */ (input.region)
     : "highlands";
-  const chapter = input.chapter === 2 ? 2 : 1;
+  const maxChapters = input.maxChapters === 3 ? 3 : 2;
+  const rawChapter = Number.isFinite(input.chapter) ? Math.round(Number(input.chapter)) : 1;
+  const chapter = Math.max(1, Math.min(maxChapters, rawChapter));
   const companionName =
     stripPersonalInfo(typeof input.companionName === "string" ? input.companionName : "").slice(0, 24) ||
     "Lomi";
+  const cleanPrev =
+    typeof input.previousChoice === "string"
+      ? stripPersonalInfo(input.previousChoice).slice(0, 120)
+      : "";
+  const cleanTheme =
+    typeof input.theme === "string" ? stripPersonalInfo(input.theme).slice(0, 60) : "";
+  const cleanPrevText =
+    typeof input.previousText === "string" ? stripPersonalInfo(input.previousText).slice(0, 320) : "";
 
-  const stories = loadFallbackStories();
-  const regionChapters = stories[language]?.[region] ?? stories.en[region];
-  const fallbackEntry = regionChapters.find((c) => c.chapter === chapter) ?? regionChapters[0];
-  const fallbackText = fallbackEntry.text.replace(/\bLomi\b/g, companionName);
+  const isFinal = chapter >= maxChapters;
 
-  /** @type {{ source: "fallback", text: string, choices: string[], endsWith: "choice" | "rest", needs_translation?: boolean }} */
+  // Build authentic trilingual branching fallback entry.
+  const branches = loadBranchStories();
+  const regionBank = branches[language]?.[region] ?? branches.en[region];
+  const branchIdx = resolveBranchIndex(
+    input.choiceIndex,
+    cleanPrev,
+    regionBank.chapter1.choices,
+    regionBank.chapter2
+  );
+
+  let selectedEntry;
+  if (chapter === 1) {
+    selectedEntry = regionBank.chapter1;
+  } else if (isFinal) {
+    selectedEntry = regionBank.chapter3[branchIdx] ?? regionBank.chapter3[0];
+  } else {
+    selectedEntry = regionBank.chapter2[branchIdx] ?? regionBank.chapter2[0];
+  }
+
+  // Keep loadFallbackStories warm for unit/contract consumers.
+  loadFallbackStories();
+
+  const fallbackText = selectedEntry.text
+    .replace(/\{companion\}/g, companionName)
+    .replace(/\bLomi\b/g, companionName);
+  const fallbackChoices = isFinal ? [] : selectedEntry.choices.slice(0, 2);
+
+  /** @type {{ source: "fallback", title: string, text: string, choices: string[], endsWith: "choice" | "rest" }} */
   const fallbackResult = {
     source: "fallback",
+    title: selectedEntry.title,
     text: fallbackText,
-    choices: fallbackEntry.choices.slice(),
-    endsWith: fallbackEntry.endsWith,
+    choices: fallbackChoices,
+    endsWith: isFinal ? "rest" : "choice",
   };
-  if (fallbackEntry.needs_translation) fallbackResult.needs_translation = true;
 
   const env = input._env ?? (typeof process !== "undefined" ? process.env : {});
   if (env.MOCK_AI === "true") return fallbackResult;
@@ -121,26 +221,31 @@ export async function generateStoryChapter(input = {}) {
   if (!llm) return fallbackResult;
 
   const cleanInterests = sanitiseInterests(input.interests);
-  const cleanPrev =
-    typeof input.previousChoice === "string"
-      ? stripPersonalInfo(input.previousChoice).slice(0, 100)
-      : "";
+  const langLabel =
+    language === "am"
+      ? "Amharic (write naturally in Amharic Ethiopic script / አማርኛ)"
+      : language === "om"
+        ? "Afaan Oromo (write naturally in Afaan Oromo)"
+        : "English";
 
-  const isFinal = chapter >= 2;
   const system = [
-    "You are a warm, gentle children's storyteller for LeLije in Ethiopia (ages 6-12).",
-    "Write strictly 85 to 115 words (must be within 80-120 words).",
+    "You are a warm, joyful children's storyteller for LeLije in Ethiopia (ages 5-13).",
+    "Write strictly 85 to 115 words for the story text.",
+    "Include a short cheerful chapter title (3-7 words).",
     "Tone: bright, curious, positive, culturally Ethiopian, NEVER frightening, no monsters, no danger, no sadness.",
     isFinal
       ? 'This is the final chapter: bring the story to a cosy, happy ending encouraging rest or sharing with family. Set choices to [] and endsWith to "rest".'
-      : 'Offer exactly 2 short cheerful choices (each <= 80 chars) and set endsWith to "choice".',
-    'Return JSON ONLY: { "text": "...", "choices": ["...", "..."], "endsWith": "choice" | "rest" }',
+      : 'Offer exactly 2 short cheerful, distinct choices (each <= 80 chars) that truly branch the adventure and set endsWith to "choice".',
+    'Return JSON ONLY: { "title": "...", "text": "...", "choices": ["...", "..."], "endsWith": "choice" | "rest" }',
   ].join("\n");
 
   const user = [
-    `Language: ${language}. Child age: ${age}. Ethiopian region: ${region}. Companion animal/bird name: ${companionName}. Chapter: ${chapter}.`,
+    `Language: ${langLabel}.`,
+    `Child age: ${age}. Ethiopian region: ${region}. Companion animal/bird name: ${companionName}. Chapter: ${chapter} of ${maxChapters}.`,
+    cleanTheme ? `Special story spark/theme to weave in joyfully: ${cleanTheme}.` : "",
     cleanInterests.length > 0 ? `Hobbies to weave in lightly: ${cleanInterests.join(", ")}.` : "",
-    cleanPrev ? `The child previously chose: "${cleanPrev}".` : "",
+    cleanPrevText ? `Summary of previous chapter: "${cleanPrevText}"` : "",
+    cleanPrev ? `The child just chose: "${cleanPrev}". Make this chapter directly follow that exact choice!` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -152,7 +257,7 @@ export async function generateStoryChapter(input = {}) {
       model: llm.model,
       system,
       user,
-      timeoutMs: STORY_LIMITS.timeoutMs,
+      timeoutMs: input._fetch ? STORY_LIMITS.timeoutMs : 10000,
       fetchImpl: input._fetch,
     });
     const cleaned = raw
@@ -161,6 +266,10 @@ export async function generateStoryChapter(input = {}) {
       .replace(/\s*```$/i, "")
       .trim();
     const parsed = JSON.parse(cleaned);
+    const title =
+      typeof parsed?.title === "string" && parsed.title.trim()
+        ? parsed.title.trim().slice(0, 80)
+        : selectedEntry.title;
     const text = typeof parsed?.text === "string" ? parsed.text.replace(/\s+/g, " ").trim() : "";
     const choices = Array.isArray(parsed?.choices)
       ? parsed.choices
@@ -172,10 +281,11 @@ export async function generateStoryChapter(input = {}) {
     const endsWith = isFinal || choices.length === 0 ? "rest" : "choice";
     const finalChoices = endsWith === "rest" ? [] : choices;
 
-    const valid = validateStoryChapter(text, finalChoices);
+    const valid = validateAiStoryChapter(text, finalChoices);
     if (valid.ok && (endsWith === "rest" || finalChoices.length === 2)) {
       return {
         source: "ai",
+        title,
         text,
         choices: finalChoices,
         endsWith,

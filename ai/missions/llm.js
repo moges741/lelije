@@ -32,7 +32,7 @@ export const GENERATION_BUDGET = Object.freeze({
 
 const DEFAULT_MODELS = Object.freeze({
   anthropic: "claude-3-5-haiku-latest",
-  gemini: "gemini-2.5-flash",
+  gemini: "gemini-4-hydrogen",
   openai: "gpt-4o-mini",
 });
 
@@ -69,13 +69,13 @@ export function resolveLlmConfig(env = typeof process !== "undefined" ? process.
       provider === "anthropic"
         ? env.ANTHROPIC_API_KEY
         : provider === "gemini"
-          ? env.GEMINI_API_KEY
+          ? env.GEMINI_API_KEY || env.API_KEY
           : env.OPENAI_API_KEY;
     if (apiKey && apiKey.trim() !== "") {
       return {
         provider,
         apiKey: apiKey.trim(),
-        model: (env.AI_MODEL || "").trim() || DEFAULT_MODELS[provider],
+        model: (env.AI_MODEL || env.LLM_MODEL || "").trim() || DEFAULT_MODELS[provider],
       };
     }
   }
@@ -83,7 +83,7 @@ export function resolveLlmConfig(env = typeof process !== "undefined" ? process.
 }
 
 /**
- * Calls the configured provider via standard `fetch` with an AbortController timeout.
+ * Calls the configured provider via @google/genai (for live Gemini) or standard `fetch` with timeout.
  *
  * @param {object} params
  * @param {LlmProvider} params.provider
@@ -102,19 +102,59 @@ export async function callLlmText({
   system,
   user,
   timeoutMs,
-  fetchImpl = globalThis.fetch,
+  fetchImpl,
 }) {
-  if (typeof fetchImpl !== "function") {
+  const effectiveFetch = fetchImpl ?? globalThis.fetch;
+  if (typeof effectiveFetch !== "function") {
     throw new Error("fetch is not available in this runtime");
   }
 
+  const boundedTimeoutMs = Math.max(200, timeoutMs);
+
+  // Use the official @google/genai SDK for live server-side Gemini calls (unless a test injected a custom fetchImpl).
+  if (provider === "gemini" && !fetchImpl) {
+    const { GoogleGenAI, ThinkingLevel } = await import("@google/genai");
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+    const isGemini4 = /^gemini-(3|4)/i.test(model);
+    let timer;
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("gemini timeout")), boundedTimeoutMs);
+      });
+      const response = /** @type {{ text?: string }} */ (
+        await Promise.race([
+          ai.models.generateContent({
+            model,
+            contents: user,
+            config: {
+              systemInstruction: system,
+              responseMimeType: "application/json",
+              ...(isGemini4 ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
+            },
+          }),
+          timeoutPromise,
+        ])
+      );
+      return typeof response?.text === "string" ? response.text : "";
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), Math.max(200, timeoutMs));
+  const timer = setTimeout(() => controller.abort(), boundedTimeoutMs);
 
   try {
     if (provider === "anthropic") {
       // Docs: https://docs.anthropic.com/en/api/messages
-      const res = await fetchImpl("https://api.anthropic.com/v1/messages", {
+      const res = await effectiveFetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         signal: controller.signal,
         headers: {
@@ -140,7 +180,7 @@ export async function callLlmText({
     if (provider === "gemini") {
       // Docs: https://ai.google.dev/api/generate-content
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const res = await fetchImpl(url, {
+      const res = await effectiveFetch(url, {
         method: "POST",
         signal: controller.signal,
         headers: { "content-type": "application/json" },
@@ -149,7 +189,6 @@ export async function callLlmText({
           contents: [{ role: "user", parts: [{ text: user }] }],
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.7,
           },
         }),
       });
@@ -160,7 +199,7 @@ export async function callLlmText({
     }
 
     // OpenAI Chat Completions API: https://platform.openai.com/docs/api-reference/chat/create
-    const res = await fetchImpl("https://api.openai.com/v1/chat/completions", {
+    const res = await effectiveFetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
       headers: {

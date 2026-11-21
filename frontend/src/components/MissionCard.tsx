@@ -1,11 +1,13 @@
+import type { MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/app-context'
 import { missionIcon } from '../lib/missionIcon'
 import type { MissionState } from '../lib/progress'
+import { isVoiceSupported, speakText } from '../lib/voice'
 import type { Mission } from '../types/mission'
 import { Icon } from './Icon'
 
-const BADGE: Record<MissionState, 'completed' | 'statusWaiting' | 'statusRedo' | null> = {
+const STATE_LABEL: Record<MissionState, 'completed' | 'statusWaiting' | 'statusRedo' | null> = {
   done: 'completed',
   pending: 'statusWaiting',
   redo: 'statusRedo',
@@ -13,41 +15,86 @@ const BADGE: Record<MissionState, 'completed' | 'statusWaiting' | 'statusRedo' |
 }
 
 /**
- * The single mission layout: icon, short title, time and points, who checks it,
- * and one tap target (the whole card).
+ * Playful, tap-friendly child quest card with one-tap voice read-aloud.
  */
 export function MissionCard({ mission, state }: { mission: Mission; state: MissionState }) {
-  const { t } = useApp()
+  const { t, language } = useApp()
   const camera = mission.verification === 'pose'
   const finished = state === 'done' || state === 'pending'
-  const badge = BADGE[state]
+  const stateLabel = STATE_LABEL[state]
+  const stateClass =
+    state === 'done'
+      ? 'is-done'
+      : state === 'pending'
+        ? 'is-pending'
+        : state === 'redo'
+          ? 'is-redo'
+          : ''
+
+  const hearMission = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const spoken = `${mission.title}. ${mission.description}. +${mission.points} ${t('points')}.`
+    speakText(spoken, language)
+  }
+
   return (
-    <Link
-      className={finished ? 'mission-card is-done' : 'mission-card'}
-      to={`/missions/${encodeURIComponent(mission.id)}`}
-    >
-      <span className="mission-icon">
-        <Icon name={state === 'done' ? 'check' : state === 'pending' ? 'clock' : missionIcon(mission)} size={28} />
-      </span>
-      <span className="mission-body">
-        <strong>{mission.title}</strong>
-        <span className="mission-meta">
-          <span>
-            <Icon name="clock" size={16} />
-            {mission.durationMin} {t('minutes')}
-          </span>
-          <span className="mission-points">
-            <Icon name="star" size={16} />+{mission.points}
+    <div className={`mission-row-wrap ${stateClass}`.trim()}>
+      <Link
+        className={`mission-card child-quest-card ${stateClass}`.trim()}
+        to={`/missions/${encodeURIComponent(mission.id)}`}
+      >
+        <span className={`mission-icon ${camera ? 'is-camera' : 'is-self'}`}>
+          <Icon
+            name={state === 'done' ? 'check' : state === 'pending' ? 'clock' : missionIcon(mission)}
+            size={26}
+          />
+        </span>
+        <span className="mission-body">
+          <strong>{mission.title}</strong>
+          <span className="mission-meta">
+            <span className="mission-points">
+              <Icon name="star" size={15} />+{mission.points}
+            </span>
+            <span className="meta-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="meta-unit">
+              {mission.durationMin} {t('minutes')}
+            </span>
+            <span className="meta-sep" aria-hidden="true">
+              ·
+            </span>
+            <span
+              className={`mission-verify ${
+                state === 'redo'
+                  ? 'is-redo'
+                  : state === 'pending'
+                    ? 'is-waiting'
+                    : state === 'done'
+                      ? 'is-done'
+                      : ''
+              }`}
+            >
+              {stateLabel ? t(stateLabel) : camera ? t('cameraMission') : t('grownUpConfirm')}
+            </span>
           </span>
         </span>
-        <span className={camera ? 'mission-badge is-camera' : 'mission-badge is-grownup'}>
-          <Icon name={camera ? 'camera' : 'family'} size={14} />
-          {badge ? t(badge) : camera ? t('cameraMission') : t('grownUpConfirm')}
+        <span className="mission-go" aria-hidden="true">
+          <Icon name={finished ? (state === 'done' ? 'check' : 'clock') : 'play'} size={19} />
         </span>
-      </span>
-      <span className="mission-go" aria-hidden="true">
-        <Icon name={state === 'done' ? 'check' : state === 'pending' ? 'clock' : 'play'} size={20} />
-      </span>
-    </Link>
+      </Link>
+      {isVoiceSupported() && (
+        <button
+          type="button"
+          className="quest-speak-btn"
+          aria-label={`Read ${mission.title}`}
+          title={`Read ${mission.title}`}
+          onClick={hearMission}
+        >
+          <Icon name="volume" size={20} />
+        </button>
+      )}
+    </div>
   )
 }
