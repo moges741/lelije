@@ -9,6 +9,7 @@ import { PlayModule } from './play/play.module';
 import { PointsModule } from './points/points.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProgressModule } from './progress/progress.module';
+import { ReportsModule } from './reports/reports.module';
 import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     ReviewsModule,
     PlayModule,
     NotificationsModule,
+    ReportsModule,
   ],
   controllers: [HealthController],
 })

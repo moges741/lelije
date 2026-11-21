@@ -4,25 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Child } from '@prisma/client';
-import { addisDay, previousDay } from '../common/day';
+import { addisDay, countStreak } from '../common/day';
 import { FamiliesService } from '../families/families.service';
 import { Mission } from '../missions/missions.types';
 import { PointsService } from '../points/points.service';
 import { PrismaService } from '../prisma/prisma.service';
-
-/**
- * Consecutive active days ending today. A day with nothing yet today does not
- * break the streak, so it still shows in the morning: counting then starts yesterday.
- */
-function countStreak(activeDays: Set<string>, today: string): number {
-  let day = activeDays.has(today) ? today : previousDay(today);
-  let streak = 0;
-  while (activeDays.has(day)) {
-    streak++;
-    day = previousDay(day);
-  }
-  return streak;
-}
 
 function sumPoints(rows: { points: number }[]): number {
   return rows.reduce((total, row) => total + row.points, 0);

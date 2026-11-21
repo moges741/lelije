@@ -55,6 +55,8 @@ Every route starts with `/api`. Bodies are JSON. Errors look like `{ "message": 
 | `POST /play-requests` | A child asks for play time |
 | `GET /families/:code/play-requests` | Lists the family's play-time requests |
 | `POST /play-requests/:id/answer` | A parent allows, postpones, or declines a request (needs the PIN) |
+| `GET /families/:code/activity` | Missions and games over recent days, newest first |
+| `GET /families/:code/report` | A per-child summary for the same period |
 | `GET /families/:code/notifications` | Lists a parent or child's notifications, with the unread count |
 | `POST /families/:code/notifications/read` | Marks that audience's notifications as read |
 | `GET /progress?childId=` | One child's points, today's work, and streak |
@@ -307,6 +309,60 @@ curl -s -X POST $API/families/$CODE/notifications/read -H "$JSON" \
 ```
 
 Marks every unread notification for that audience. A parent body is `{ "audience": "parent" }`. Marking again returns `{ "marked": 0 }`.
+
+### Activity history
+
+```bash
+curl -s "$API/families/$CODE/activity?days=7"
+```
+
+```json
+{
+  "from": "2026-11-15",
+  "to": "2026-11-21",
+  "days": 7,
+  "items": [
+    { "kind": "mission", "id": "...", "childId": "...", "nickname": "Liya", "day": "2026-11-21", "missionId": "m_20261121_0", "title": "Star Jumps", "status": "approved", "points": 15, "verifiedBy": "pose", "at": "2026-11-21T15:17:40.000Z" },
+    { "kind": "game", "id": "...", "childId": "...", "nickname": "Liya", "day": "2026-11-20", "game": "catch-the-stars", "score": 42, "points": 21, "at": "2026-11-20T15:17:40.000Z" }
+  ]
+}
+```
+
+Newest first, at most 100 items. `days` defaults to 7 and is clamped to 1–30. A mission's `title` is null when that day's mission list is no longer stored.
+
+### Family report
+
+```bash
+curl -s "$API/families/$CODE/report?days=7"
+```
+
+```json
+{
+  "family": { "name": "Abebe family", "code": "LJ-82SRVP" },
+  "from": "2026-11-15",
+  "to": "2026-11-21",
+  "days": 7,
+  "children": [
+    {
+      "childId": "...",
+      "nickname": "Liya",
+      "totalPoints": 46,
+      "pointsInPeriod": 36,
+      "streak": 2,
+      "period": {
+        "missionsApproved": 1,
+        "missionsPending": 1,
+        "missionsRejected": 0,
+        "gamesPlayed": 1,
+        "gamePoints": 21,
+        "playRequests": { "sent": 0, "allowed": 0, "later": 0, "declined": 0 }
+      }
+    }
+  ]
+}
+```
+
+`totalPoints` and `streak` cover all time. Everything inside `period` covers `from` to `to` only, and only approved missions and games add to `pointsInPeriod`.
 
 ### Get a child's progress
 
