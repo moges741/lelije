@@ -6,3 +6,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// `day` is always the Africa/Addis_Ababa calendar date as "YYYY-MM-DD".
+
+model Child {
+  id        String   @id @default(uuid())
+  age       Int
+  language  String
+  nickname  String?
+  createdAt DateTime @default(now())
+
+  dailyMissions DailyMission[]
+  completions   Completion[]
+  gameResults   GameResult[]
+}
+
+model DailyMission {
+  id        String   @id @default(uuid())
+  childId   String
+  day       String
+  missions  Json
+  source    String
+  createdAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, day])
+}
+
+model Completion {
+  id          String   @id @default(uuid())
+  childId     String
+  missionId   String
+  day         String
+  points      Int
+  verifiedBy  String
+  result      Json?
+  completedAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, missionId, day])
+  @@index([childId, day])
+}
+
+model GameResult {
+  id        String   @id @default(uuid())
+  childId   String
+  day       String
+  game      String
+  score     Int
+  points    Int
+  result    Json
+  createdAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, day, game])
+}
