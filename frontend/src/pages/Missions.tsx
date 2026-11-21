@@ -1,13 +1,18 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import * as api from '../api/client'
 import { Icon } from '../components/Icon'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
+import { MissionCard } from '../components/MissionCard'
+import { PinPrompt } from '../components/PinPrompt'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
 
 export function Missions() {
   const { t, missions, missionsReady, missionsOrigin, reloadMissions, progress, session, setSession } =
     useApp()
+  const navigate = useNavigate()
+  const [askingPin, setAskingPin] = useState(false)
   const invite =
     session?.child &&
     api
@@ -74,25 +79,9 @@ export function Missions() {
           {missions.map((mission, index) => {
             const done = progress.todayCompleted.includes(mission.id)
             const pending = progress.pendingIds.includes(mission.id)
-            const pose = mission.verification === 'pose'
             return (
               <li key={mission.id} className="rise" style={{ animationDelay: `${index * 70}ms` }}>
-                <Link
-                  className={done || pending ? 'mission-card is-done' : 'mission-card'}
-                  to={`/missions/${encodeURIComponent(mission.id)}`}
-                >
-                  <span className="mission-icon">
-                    <Icon name={done ? 'check' : pose ? 'camera' : 'hand'} size={28} />
-                  </span>
-                  <span className="mission-body">
-                    <strong>{mission.title}</strong>
-                    <span>
-                      {mission.durationMin} {t('minutes')} ·{' '}
-                      {done ? t('completed') : pending ? t('waitingApprovalDemo') : t(pose ? 'cameraMission' : 'selfMission')}
-                    </span>
-                  </span>
-                  <span className="mission-points">+{mission.points}</span>
-                </Link>
+                <MissionCard mission={mission} state={done ? 'done' : pending ? 'pending' : 'todo'} />
               </li>
             )
           })}
@@ -100,13 +89,20 @@ export function Missions() {
       )}
 
       {session && (
-        <button
-          type="button"
-          className="text-link"
-          onClick={() => setSession({ ...session, role: 'parent' })}
-        >
+        <button type="button" className="text-link" onClick={() => setAskingPin(true)}>
           {t('openParent')}
         </button>
+      )}
+      {session && askingPin && (
+        <PinPrompt
+          familyCode={session.family.code}
+          onCancel={() => setAskingPin(false)}
+          onSuccess={() => {
+            setAskingPin(false)
+            setSession({ ...session, role: 'parent' })
+            navigate('/parent')
+          }}
+        />
       )}
 
       <Link className="stars-card" to="/stars">

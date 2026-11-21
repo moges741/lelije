@@ -63,6 +63,7 @@ export default function App() {
             <Route path="/register/child" element={<ChildJoin />} />
             <Route path="/login" element={<Login />} />
             <Route path="/help/code" element={<CodeHelp />} />
+            <Route path="/parents" element={<Navigate to="/parent" replace />} />
 
             <Route element={<RequireParent />}>
               <Route path="/family" element={<FamilySetup />} />

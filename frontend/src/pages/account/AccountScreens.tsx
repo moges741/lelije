@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import * as api from '../../api/client'
 import { isValidPin, PIN_LENGTH } from '../../api/pin'
-import { ChoiceCard, Panel, TextField } from '../../components/TextField'
+import { AuthShell, AuthTabs, Steps, type AuthRole } from '../../components/Auth'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
+import { ChoiceCard, Panel, SecretField, TextField } from '../../components/TextField'
 import { TopBar } from '../../components/TopBar'
 import { useApp } from '../../context/app-context'
 import { LANGUAGES } from '../../i18n'
+import { looksLikeFamilyCode, normalizeFamilyCode } from '../../lib/familyCode'
 import { CHILD_AGES, type AccountError, type ChildRecord, type DataOrigin, type FamilyRecord } from '../../types/account'
-import type { AppLanguage } from '../../types/mission'
 
 function errorText(
   t: (key: 'networkError' | 'invalidCode' | 'expiredCodeDemo' | 'usedCodeDemo' | 'fieldRequired' | 'saveFailed') => string,
@@ -23,11 +24,10 @@ function errorText(
   return ''
 }
 
+/** Step 1 of the account screens: pick a path. */
 export function Start() {
-  const { t, session, language, setSession } = useApp()
+  const { t, language, setSession } = useApp()
   const navigate = useNavigate()
-  if (session?.role === 'child' && session.child) return <Navigate to="/missions" replace />
-  if (session?.role === 'parent') return <Navigate to="/parent" replace />
 
   const practice = () => {
     const { family } = api.startDemoFamily(language)
@@ -36,16 +36,22 @@ export function Start() {
   }
 
   return (
-    <main className="screen">
-      <TopBar backTo="/">
-        <LanguageSwitcher />
-      </TopBar>
-      <div>
-        <h1 className="title">{t('choosePathTitle')}</h1>
-        <p className="lead">{t('choosePathLead')}</p>
-      </div>
-      <ChoiceCard title={t('pathFamily')} body={t('pathFamilyLead')} onClick={() => navigate('/register/family')} />
-      <ChoiceCard title={t('pathChild')} body={t('pathChildLead')} onClick={() => navigate('/register/child')} />
+    <AuthShell backTo="/" title={t('choosePathTitle')} lead={t('choosePathLead')}>
+      <ChoiceCard
+        icon="family"
+        badge={t('authFamilyBadge')}
+        title={t('pathFamily')}
+        body={t('pathFamilyLead')}
+        onClick={() => navigate('/register/family')}
+      />
+      <ChoiceCard
+        icon="child"
+        tone="child"
+        badge={t('authChildBadge')}
+        title={t('pathChild')}
+        body={t('pathChildLead')}
+        onClick={() => navigate('/register/child')}
+      />
       <button type="button" className="btn btn-plain btn-block" onClick={practice}>
         {t('tryDemoFamily')}
       </button>
@@ -53,7 +59,7 @@ export function Start() {
       <p className="hint">
         <Link to="/login">{t('haveAccount')}</Link>
       </p>
-    </main>
+    </AuthShell>
   )
 }
 
@@ -62,32 +68,25 @@ export function FamilyRegister() {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
-  const [pinError, setPinError] = useState(false)
   const [ack, setAck] = useState(false)
-  const [error, setError] = useState<AccountError | 'ack' | null>(null)
+  const [touched, setTouched] = useState({ name: false, pin: false, ack: false })
+  const [serverError, setServerError] = useState<AccountError | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const submit = async () => {
-    const pinOk = isValidPin(pin)
-    setPinError(!pinOk)
-    if (!name.trim()) {
-      setError('invalid')
-      return
-    }
-    if (!pinOk) {
-      setError(null)
-      return
-    }
-    if (!ack) {
-      setError('ack')
-      return
-    }
+  const touch = (field: keyof typeof touched) => setTouched((state) => ({ ...state, [field]: true }))
+  const nameError = !name.trim() ? t('fieldRequired') : undefined
+  const pinError = !isValidPin(pin) ? t('pinInvalid') : undefined
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    setTouched({ name: true, pin: true, ack: true })
+    if (nameError || pinError || !ack) return
     setBusy(true)
-    setError(null)
+    setServerError(null)
     const result = await api.createFamily(name, pin)
     setBusy(false)
     if (!result.ok) {
-      setError(result.error)
+      setServerError(result.error)
       return
     }
     setSession({
@@ -100,91 +99,116 @@ export function FamilyRegister() {
   }
 
   return (
-    <main className="screen">
-      <TopBar backTo="/start">
-        <LanguageSwitcher />
-      </TopBar>
-      <div>
-        <h1 className="title">{t('registerFamilyTitle')}</h1>
-        <p className="lead">{t('noPasswordBody')}</p>
-      </div>
-      <TextField
-        name="familyName"
-        label={t('familyName')}
-        hint={t('familyNameHint')}
-        value={name}
-        maxLength={40}
-        autoComplete="organization"
-        onChange={(event) => setName(event.target.value)}
-        error={error === 'invalid' ? t('fieldRequired') : undefined}
-      />
-      <TextField
-        name="parentPin"
-        type="password"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        label={t('pinLabel')}
-        hint={t('pinHint')}
-        value={pin}
-        maxLength={PIN_LENGTH}
-        autoComplete="new-password"
-        onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))}
-        error={pinError ? t('pinInvalid') : undefined}
-      />
-      <label className="check">
-        <input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} />
-        <span>{t('privacyAgree')}</span>
-      </label>
-      {error === 'ack' && <p className="field-error">{t('ackRequired')}</p>}
-      {error && error !== 'invalid' && error !== 'ack' && <p className="banner banner-demo">{errorText(t, error)}</p>}
-      <div className="actions">
-        <button type="button" className="btn btn-sun btn-block" disabled={busy} onClick={() => void submit()}>
+    <AuthShell
+      backTo="/"
+      badge={t('authFamilyBadge')}
+      title={t('registerFamilyTitle')}
+      lead={t('noPasswordBody')}
+      tabs={<AuthTabs role="parent" active="register" />}
+    >
+      <Steps current={1} />
+      <form className="auth-form" noValidate onSubmit={(event) => void submit(event)}>
+        <TextField
+          name="familyName"
+          label={t('familyName')}
+          hint={t('familyNameHint')}
+          value={name}
+          maxLength={40}
+          autoComplete="organization"
+          onChange={(event) => setName(event.target.value)}
+          onBlur={() => touch('name')}
+          error={touched.name ? nameError : undefined}
+        />
+        <SecretField
+          name="parentPin"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          label={t('pinLabel')}
+          hint={t('pinHint')}
+          value={pin}
+          maxLength={PIN_LENGTH}
+          autoComplete="new-password"
+          onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))}
+          onBlur={() => touch('pin')}
+          error={touched.pin ? pinError : undefined}
+        />
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={ack}
+            onChange={(event) => {
+              setAck(event.target.checked)
+              touch('ack')
+            }}
+          />
+          <span>{t('privacyAgree')}</span>
+        </label>
+        {touched.ack && !ack && (
+          <p className="field-error" role="alert">
+            {t('ackRequired')}
+          </p>
+        )}
+        {serverError && (
+          <p className="banner banner-demo" role="alert">
+            {errorText(t, serverError)}
+          </p>
+        )}
+        <button type="submit" className="btn btn-sun btn-block" disabled={busy}>
           {busy ? t('creating') : t('createFamily')}
         </button>
-      </div>
-    </main>
+      </form>
+    </AuthShell>
   )
 }
 
 export function CodeHelp() {
   const { t } = useApp()
   return (
-    <main className="screen">
-      <TopBar backTo="/login" />
-      <h1 className="title">{t('noPasswordTitle')}</h1>
-      <p className="lead">{t('lostCodeBody')}</p>
-      <div className="actions">
-        <Link className="btn btn-sun btn-block" to="/login">
-          {t('signIn')}
-        </Link>
-      </div>
-    </main>
+    <AuthShell backTo="/login" title={t('noPasswordTitle')} lead={t('lostCodeBody')}>
+      <Link className="btn btn-sun btn-block" to="/login">
+        {t('signIn')}
+      </Link>
+    </AuthShell>
   )
-}
-
-function useCodeForm() {
-  const [code, setCode] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<AccountError | null>(null)
-  return { code, setCode, busy, setBusy, error, setError }
 }
 
 export function Login() {
   const { t, setSession } = useApp()
   const navigate = useNavigate()
-  const [role, setRole] = useState<'parent' | 'child'>('parent')
-  const form = useCodeForm()
+  const [params] = useSearchParams()
+  const [role, setRole] = useState<AuthRole>(params.get('role') === 'child' ? 'child' : 'parent')
+  const [code, setCode] = useState('')
+  const [touched, setTouched] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<AccountError | null>(null)
   const [children, setChildren] = useState<ChildRecord[] | null>(null)
   const [family, setFamily] = useState<FamilyRecord | null>(null)
   const [origin, setOrigin] = useState<DataOrigin>('server')
 
-  const lookup = async () => {
-    form.setBusy(true)
-    form.setError(null)
-    const result = await api.lookupFamily(form.code)
-    form.setBusy(false)
+  const normalized = normalizeFamilyCode(code)
+  const codeError = !normalized
+    ? t('fieldRequired')
+    : !looksLikeFamilyCode(normalized)
+      ? t('codeFormat')
+      : undefined
+
+  const chooseRole = (next: AuthRole) => {
+    setRole(next)
+    setChildren(null)
+    setFamily(null)
+    setError(null)
+  }
+
+  const lookup = async (event: FormEvent) => {
+    event.preventDefault()
+    setTouched(true)
+    if (codeError) return
+    setBusy(true)
+    setError(null)
+    const result = await api.lookupFamily(normalized)
+    setBusy(false)
     if (!result.ok) {
-      form.setError(result.error)
+      setError(result.error)
       return
     }
     if (role === 'parent') {
@@ -204,44 +228,59 @@ export function Login() {
   }
 
   return (
-    <main className="screen">
-      <TopBar backTo="/">
-        <LanguageSwitcher />
-      </TopBar>
-      <div>
-        <h1 className="title">{t('loginTitle')}</h1>
-        <p className="lead">{t('loginLead')}</p>
-      </div>
-      <div className="choices">
-        <button type="button" className={role === 'parent' ? 'choice is-on' : 'choice'} onClick={() => setRole('parent')}>
+    <AuthShell
+      backTo="/"
+      title={t('loginTitle')}
+      lead={t('loginLead')}
+      tabs={<AuthTabs role={role} active="login" />}
+    >
+      <div className="choices" role="group" aria-label={t('loginTitle')}>
+        <button
+          type="button"
+          className={role === 'parent' ? 'choice is-on' : 'choice'}
+          aria-pressed={role === 'parent'}
+          onClick={() => chooseRole('parent')}
+        >
           {t('roleParent')}
         </button>
-        <button type="button" className={role === 'child' ? 'choice is-on' : 'choice'} onClick={() => setRole('child')}>
+        <button
+          type="button"
+          className={role === 'child' ? 'choice is-on' : 'choice'}
+          aria-pressed={role === 'child'}
+          onClick={() => chooseRole('child')}
+        >
           {t('roleChild')}
         </button>
       </div>
-      <TextField
-        name="familyCode"
-        label={t('familyCode')}
-        hint={t('familyCodeHint')}
-        value={form.code}
-        autoCapitalize="characters"
-        autoComplete="off"
-        onChange={(event) => form.setCode(event.target.value)}
-      />
-      {form.error && <p className="banner banner-demo">{errorText(t, form.error)}</p>}
-      {form.error === 'expired_demo' || form.error === 'used_demo' ? (
-        <p className="hint">{t('demoCodeNote')}</p>
-      ) : null}
-      <button type="button" className="btn btn-sun btn-block" disabled={form.busy} onClick={() => void lookup()}>
-        {form.busy ? t('loading') : role === 'parent' ? t('signInParent') : t('signInChild')}
-      </button>
+      <form className="auth-form" noValidate onSubmit={(event) => void lookup(event)}>
+        <TextField
+          name="familyCode"
+          label={t('familyCode')}
+          hint={t('familyCodeHint')}
+          value={code}
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          onChange={(event) => setCode(event.target.value.toUpperCase())}
+          onBlur={() => setTouched(true)}
+          error={touched ? codeError : undefined}
+        />
+        {error && (
+          <p className="banner banner-demo" role="alert">
+            {errorText(t, error)}
+          </p>
+        )}
+        {error === 'expired_demo' || error === 'used_demo' ? <p className="hint">{t('demoCodeNote')}</p> : null}
+        <button type="submit" className="btn btn-sun btn-block" disabled={busy}>
+          {busy ? t('loading') : role === 'parent' ? t('signInParent') : t('signInChild')}
+        </button>
+      </form>
       <Link className="hint" to="/help/code">
         {t('lostCode')}
       </Link>
 
       {children && family && (
-        <Panel>
+        <section className="auth-profiles">
           <h2 className="panel-title">{t('pickChild')}</h2>
           {children.length === 0 ? (
             <p className="lead">{t('noChildrenYet')}</p>
@@ -264,26 +303,41 @@ export function Login() {
           <Link className="btn btn-plain btn-block" to="/register/child">
             {t('pathChild')}
           </Link>
-        </Panel>
+        </section>
       )}
-    </main>
+    </AuthShell>
   )
 }
 
+/**
+ * Child join flow: a family code, then an optional nickname and an age.
+ * No real name, email or phone number; the language follows the switcher.
+ */
 export function ChildJoin() {
-  const { t, language, setLanguage, setSession } = useApp()
+  const { t, language, setSession } = useApp()
   const navigate = useNavigate()
   const [code, setCode] = useState('')
+  const [codeTouched, setCodeTouched] = useState(false)
   const [nickname, setNickname] = useState('')
   const [age, setAge] = useState(8)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<AccountError | null>(null)
   const [family, setFamily] = useState<{ record: FamilyRecord; origin: DataOrigin } | null>(null)
 
-  const lookup = async () => {
+  const normalized = normalizeFamilyCode(code)
+  const codeError = !normalized
+    ? t('fieldRequired')
+    : !looksLikeFamilyCode(normalized)
+      ? t('codeFormat')
+      : undefined
+
+  const lookup = async (event: FormEvent) => {
+    event.preventDefault()
+    setCodeTouched(true)
+    if (codeError) return
     setBusy(true)
     setError(null)
-    const result = await api.lookupFamily(code)
+    const result = await api.lookupFamily(normalized)
     setBusy(false)
     if (!result.ok) {
       setError(result.error)
@@ -293,9 +347,11 @@ export function ChildJoin() {
     setFamily({ record: result.data.family, origin: result.origin })
   }
 
-  const create = async () => {
+  const create = async (event: FormEvent) => {
+    event.preventDefault()
     if (!family) return
     setBusy(true)
+    setError(null)
     const result = await api.addChild({
       familyCode: family.record.code,
       age,
@@ -313,54 +369,56 @@ export function ChildJoin() {
   }
 
   return (
-    <main className="screen">
-      <TopBar backTo="/start">
-        <LanguageSwitcher />
-      </TopBar>
-      <div>
-        <h1 className="title">{t('joinTitle')}</h1>
-        <p className="lead">{t('pathChildLead')}</p>
-      </div>
-      <TextField
-        name="familyCode"
-        label={t('familyCode')}
-        value={code}
-        autoCapitalize="characters"
-        onChange={(event) => setCode(event.target.value)}
-      />
-      {error && <p className="banner banner-demo">{errorText(t, error)}</p>}
-      {(error === 'expired_demo' || error === 'used_demo') && <p className="hint">{t('demoCodeNote')}</p>}
+    <AuthShell
+      backTo="/"
+      badge={t('authChildBadge')}
+      title={t('joinTitle')}
+      lead={t('pathChildLead')}
+      tabs={<AuthTabs role="child" active="register" />}
+    >
       {!family ? (
-        <button type="button" className="btn btn-sun btn-block" disabled={busy} onClick={() => void lookup()}>
-          {busy ? t('loading') : t('joinFamily')}
-        </button>
+        <form className="auth-form" noValidate onSubmit={(event) => void lookup(event)}>
+          <TextField
+            name="familyCode"
+            label={t('familyCode')}
+            hint={t('codeFormat')}
+            value={code}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            onBlur={() => setCodeTouched(true)}
+            error={codeTouched ? codeError : undefined}
+          />
+          {error && (
+            <p className="banner banner-demo" role="alert">
+              {errorText(t, error)}
+            </p>
+          )}
+          {(error === 'expired_demo' || error === 'used_demo') && <p className="hint">{t('demoCodeNote')}</p>}
+          <button type="submit" className="btn btn-sun btn-block" disabled={busy}>
+            {busy ? t('loading') : t('joinFamily')}
+          </button>
+        </form>
       ) : (
-        <>
+        <form className="auth-form" onSubmit={(event) => void create(event)}>
           {family.origin === 'demo' && <p className="banner banner-demo">{t('demoBanner')}</p>}
-          <p className="lead">{family.record.name}</p>
+          <div className="join-family">
+            <span>{t('joinWelcome')}</span>
+            <strong>{family.record.name}</strong>
+            <button type="button" className="text-link" onClick={() => setFamily(null)}>
+              {t('changeCode')}
+            </button>
+          </div>
           <TextField
             name="nickname"
-            label={t('nickname')}
+            label={t('nicknameOptional')}
             hint={t('nicknameHint')}
             value={nickname}
             maxLength={20}
+            autoComplete="off"
             onChange={(event) => setNickname(event.target.value)}
           />
-          <fieldset className="field">
-            <legend>{t('language')}</legend>
-            <div className="choices">
-              {LANGUAGES.map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  className={item.code === language ? 'choice is-on' : 'choice'}
-                  onClick={() => setLanguage(item.code as AppLanguage)}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          </fieldset>
           <fieldset className="field">
             <legend>{t('age')}</legend>
             <div className="choices choices-grid">
@@ -369,6 +427,7 @@ export function ChildJoin() {
                   key={value}
                   type="button"
                   className={value === age ? 'choice is-on' : 'choice'}
+                  aria-pressed={value === age}
                   onClick={() => setAge(value)}
                 >
                   {value}
@@ -377,12 +436,20 @@ export function ChildJoin() {
             </div>
             <p className="hint">{t('ageNote13')}</p>
           </fieldset>
-          <button type="button" className="btn btn-sun btn-block" disabled={busy} onClick={() => void create()}>
+          {error && (
+            <p className="banner banner-demo" role="alert">
+              {errorText(t, error)}
+            </p>
+          )}
+          <button type="submit" className="btn btn-sun btn-block" disabled={busy}>
             {busy ? t('saving') : t('saveChild')}
           </button>
-        </>
+        </form>
       )}
-    </main>
+      <p className="hint">
+        <Link to="/login?role=child">{t('haveProfile')}</Link>
+      </p>
+    </AuthShell>
   )
 }
 
@@ -422,6 +489,7 @@ export function FamilySetup() {
       <TopBar backTo="/parent">
         <LanguageSwitcher />
       </TopBar>
+      <Steps current={2} />
       {session.origin === 'demo' && <p className="banner banner-demo">{t('demoBanner')}</p>}
       <div>
         <h1 className="title">{t('familyCodeTitle')}</h1>
@@ -441,7 +509,7 @@ export function FamilySetup() {
         <h2 className="panel-title">{t('addChildTitle')}</h2>
         <TextField
           name="nickname"
-          label={t('nickname')}
+          label={t('nicknameOptional')}
           hint={t('nicknameHint')}
           value={nickname}
           maxLength={20}
@@ -455,6 +523,7 @@ export function FamilySetup() {
                 key={item.code}
                 type="button"
                 className={item.code === language ? 'choice is-on' : 'choice'}
+                aria-pressed={item.code === language}
                 onClick={() => setLanguage(item.code)}
               >
                 {item.name}
@@ -470,6 +539,7 @@ export function FamilySetup() {
                 key={value}
                 type="button"
                 className={value === age ? 'choice is-on' : 'choice'}
+                aria-pressed={value === age}
                 onClick={() => setAge(value)}
               >
                 {value}

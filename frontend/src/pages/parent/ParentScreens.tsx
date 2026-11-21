@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../../api/client'
 import type { DemoCompletion, DemoNote, DemoPlay, FamilyChildProgress } from '../../api/client'
 import { Icon } from '../../components/Icon'
@@ -19,6 +19,7 @@ function useParent() {
 
 export function ParentHome() {
   const { t, parent, signOut, setSession } = useParent()
+  const navigate = useNavigate()
   const [children, setChildren] = useState<ChildRecord[]>([])
   const [report, setReport] = useState<FamilyChildProgress[] | null>(null)
   const [pending, setPending] = useState<DemoCompletion[]>([])
@@ -146,14 +147,15 @@ export function ParentHome() {
             <button
               type="button"
               className="btn btn-plain"
-              onClick={() =>
+              onClick={() => {
                 setSession({
                   role: 'child',
                   origin: parent.origin,
                   family: parent.family,
                   child: children[0],
                 })
-              }
+                navigate('/missions')
+              }}
             >
               {t('openChild')}
             </button>
@@ -187,7 +189,7 @@ export function ParentHome() {
 
 export function MissionReview() {
   const { t, parent } = useParent()
-  const id = window.location.pathname.split('/').pop()
+  const { id } = useParams()
   const [item, setItem] = useState<DemoCompletion | null>(null)
   const [asking, setAsking] = useState<'approved' | 'rejected' | null>(null)
 

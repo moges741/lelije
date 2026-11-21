@@ -1,12 +1,35 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { StatusPill, type StatusTone } from '../components/Status'
 import { useApp } from '../context/app-context'
-import { isSuccessState } from '../types/navigation'
+import type { TranslationKey } from '../i18n'
+import { isSuccessState, type SaveStatus } from '../types/navigation'
 
 const SPARKS = [0, 1, 2, 3, 4, 5]
 
-/** Screen 7: celebration, points and the next mission. */
+type Outcome = 'saved' | 'waiting' | 'demo' | 'already' | 'failed'
+
+function outcomeOf(status: SaveStatus): Outcome {
+  if (status === 'server_awarded') return 'saved'
+  if (status === 'demo_pending') return 'waiting'
+  if (status === 'demo_only') return 'demo'
+  if (status === 'already') return 'already'
+  return 'failed'
+}
+
+const LABEL: Record<Outcome, { tone: StatusTone; label: TranslationKey; body: TranslationKey }> = {
+  saved: { tone: 'done', label: 'statusSaved', body: 'serverSaved' },
+  waiting: { tone: 'waiting', label: 'statusWaiting', body: 'outcomeWaitingBody' },
+  demo: { tone: 'info', label: 'statusDemo', body: 'outcomeDemoBody' },
+  already: { tone: 'done', label: 'alreadyDone', body: 'alreadyDone' },
+  failed: { tone: 'problem', label: 'statusNotSaved', body: 'saveFailed' },
+}
+
+/**
+ * Screen 7: the result. It says what happened (saved, waiting for a grown-up,
+ * demo only, not saved) and only calls points "earned" once they are saved.
+ */
 export function Success() {
   const { t, missions, progress, completeMission, submitGame } = useApp()
   const location = useLocation()
@@ -53,45 +76,65 @@ export function Success() {
     })
   }
 
+  const outcome = outcomeOf(state.status)
+  const copy = LABEL[outcome]
+  const celebrate = outcome === 'saved' || outcome === 'waiting' || outcome === 'demo'
+  const waitingPoints =
+    state.kind === 'mission'
+      ? (missions.find((item) => item.id === state.missionId)?.points ?? 0)
+      : 0
   const next = missions.find((mission) => !progress.todayCompleted.includes(mission.id))
+  const heading = outcome === 'already' ? t('alreadyDone') : t('successTitle')
 
   return (
     <main className="screen success">
-      <div className="burst" aria-hidden="true">
-        {SPARKS.map((i) => (
-          <span key={i} className="spark" style={{ rotate: `${i * 60}deg` }}>
-            <Icon name="star" size={18} />
+      {celebrate ? (
+        <div className="burst" aria-hidden="true">
+          {SPARKS.map((i) => (
+            <span key={i} className="spark" style={{ rotate: `${i * 60}deg` }}>
+              <Icon name="star" size={18} />
+            </span>
+          ))}
+          <span className="burst-star">
+            <Icon name="star" size={104} />
           </span>
-        ))}
-        <span className="burst-star">
-          <Icon name="star" size={104} />
-        </span>
-      </div>
+        </div>
+      ) : (
+        <div className="burst is-calm" aria-hidden="true">
+          <span className={outcome === 'failed' ? 'calm-badge is-problem' : 'calm-badge'}>
+            <Icon name={outcome === 'failed' ? 'alert' : 'check'} size={64} />
+          </span>
+        </div>
+      )}
 
       <div>
-        <h1 className="title">{t('successTitle')}</h1>
+        <h1 className="title">{heading}</h1>
         <p className="lead">{state.kind === 'mission' ? state.title : t('playCatchStars')}</p>
       </div>
 
-      <p className="success-points">
-        <strong>+{state.awarded}</strong>
-        <span>{t(state.status === 'demo_pending' ? 'waitingApprovalDemo' : 'successPoints')}</span>
-      </p>
-      <p className={state.origin === 'demo' || state.status === 'not_saved' || state.status === 'save_failed' ? 'banner banner-demo' : 'banner'}>
-        {t(
-          state.status === 'save_failed'
-            ? 'saveFailed'
-            : state.status === 'not_saved'
-              ? 'gameNotSaved'
-              : state.status === 'demo_only'
-                ? 'demoOnlyPoints'
-                : state.status === 'demo_pending'
-                  ? 'demoReviewNote'
-                  : state.status === 'already'
-                    ? 'alreadyDone'
-                    : 'serverSaved',
-        )}
-      </p>
+      <div className="outcome" role="status">
+        <StatusPill tone={copy.tone}>{t(copy.label)}</StatusPill>
+        {outcome !== 'already' && <p>{t(copy.body)}</p>}
+      </div>
+
+      {outcome === 'saved' && state.awarded > 0 && (
+        <p className="points-earned">
+          <strong>+{state.awarded}</strong>
+          <span>{t('successPoints')}</span>
+        </p>
+      )}
+      {outcome === 'waiting' && waitingPoints > 0 && (
+        <p className="points-held">
+          <strong>{waitingPoints}</strong>
+          <span>{t('pointsWaiting')}</span>
+        </p>
+      )}
+      {outcome === 'demo' && state.awarded > 0 && (
+        <p className="points-held">
+          <strong>{state.awarded}</strong>
+          <span>{t('pointsDemoLabel')}</span>
+        </p>
+      )}
 
       {state.kind === 'game' && (
         <ul className="facts">
@@ -113,25 +156,30 @@ export function Success() {
       </p>
 
       <div className="actions">
-        {next && (
-          <Link
+        {state.status === 'save_failed' ? (
+          <button
+            type="button"
             className="btn btn-sun btn-block"
-            to={`/missions/${encodeURIComponent(next.id)}`}
+            disabled={saving}
+            aria-busy={saving}
+            onClick={() => void retry()}
           >
-            {t('nextMission')}
-          </Link>
-        )}
-        {state.status === 'save_failed' && (
-          <button type="button" className="btn btn-sun btn-block" disabled={saving} onClick={() => void retry()}>
             {saving ? t('saving') : t('retrySave')}
           </button>
-        )}
-        {state.kind === 'game' && (
-          <Link className={next ? 'btn btn-plain btn-block' : 'btn btn-sun btn-block'} to="/stars">
+        ) : next ? (
+          <Link className="btn btn-sun btn-block" to={`/missions/${encodeURIComponent(next.id)}`}>
+            {t('nextMission')}
+          </Link>
+        ) : state.kind === 'game' ? (
+          <Link className="btn btn-sun btn-block" to="/stars">
             {t('playAgain')}
           </Link>
+        ) : (
+          <Link className="btn btn-sun btn-block" to="/stars">
+            {t('playCatchStars')}
+          </Link>
         )}
-        <Link className="btn btn-plain btn-block" to="/missions">
+        <Link className="text-link success-home" to="/missions">
           {t('home')}
         </Link>
       </div>

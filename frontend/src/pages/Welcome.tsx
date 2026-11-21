@@ -1,9 +1,9 @@
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { KidFigure } from '../components/KidFigure'
+import { KidsScene } from '../components/KidsScene'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
 import { useApp } from '../context/app-context'
-import { BRAND } from '../i18n'
+import { BRAND, BRAND_AM } from '../i18n'
 
 const HERO_STARS = [
   { left: '8%', size: 22, delay: '0s', duration: '7s' },
@@ -18,13 +18,16 @@ export function Welcome() {
   const { t, session } = useApp()
   const navigate = useNavigate()
 
-  if (session?.role === 'child' && session.child) return <Navigate to="/missions" replace />
-  if (session?.role === 'parent') return <Navigate to="/parent" replace />
+  // The home page always shows. A saved session adds a Continue button instead of redirecting.
+  const resumeTo =
+    session?.role === 'child' && session.child ? '/missions' : session?.role === 'parent' ? '/parent' : null
 
   return (
     <main className="hero">
       <div className="hero-scene" aria-hidden="true">
         <span className="hero-sun" />
+        <span className="hero-cloud hero-cloud-left" />
+        <span className="hero-cloud hero-cloud-right" />
         {HERO_STARS.map((star) => (
           <span
             key={star.left}
@@ -41,7 +44,6 @@ export function Welcome() {
         <svg className="hero-hill hero-hill-back" viewBox="0 0 400 200" preserveAspectRatio="none">
           <path d="M0 70C80 20 150 30 220 60s120 40 180-10v150H0z" />
         </svg>
-        <KidFigure className="hero-kid" />
         <svg className="hero-hill hero-hill-front" viewBox="0 0 400 200" preserveAspectRatio="none">
           <path d="M0 80C90 30 180 40 260 70s100 30 140 0v130H0z" />
         </svg>
@@ -52,18 +54,35 @@ export function Welcome() {
       </header>
 
       <div className="hero-copy">
-        <h1 className="hero-brand">{BRAND}</h1>
-        <p className="hero-tagline">{t('tagline')}</p>
+        <p className="hero-brand">
+          <span>{BRAND}</span>
+          <span className="hero-brand-am" lang="am">
+            {BRAND_AM}
+          </span>
+        </p>
+        <h1 className="hero-headline">{t('heroHeadline')}</h1>
         <p className="hero-support">{t('heroSupport')}</p>
       </div>
 
       <div className="hero-actions">
-        <button type="button" className="btn btn-sun hero-cta" onClick={() => navigate('/start')}>
-          {t('getStarted')}
+        {resumeTo && (
+          <Link className="btn btn-sun hero-cta hero-resume" to={resumeTo}>
+            {t('continueSession')}
+          </Link>
+        )}
+        <button type="button" className="btn btn-sun hero-cta" onClick={() => navigate('/register/family')}>
+          {t('ctaCreateFamily')}
         </button>
-        <button type="button" className="btn btn-plain hero-cta" onClick={() => navigate('/login')}>
-          {t('signIn')}
+        <button type="button" className="btn btn-plain hero-cta" onClick={() => navigate('/register/child')}>
+          {t('ctaJoinFamily')}
         </button>
+        <Link className="hero-login" to="/login">
+          {t('haveAccount')}
+        </Link>
+      </div>
+
+      <div className="hero-art">
+        <KidsScene label={t('heroArtAlt')} />
       </div>
     </main>
   )

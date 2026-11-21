@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { checkPin, hasPin, isValidPin, PIN_LENGTH, savePin } from '../api/pin'
 import { useApp } from '../context/app-context'
-import { TextField } from './TextField'
+import { SecretField } from './TextField'
 
 /**
  * Asks for the grown-up PIN before an action. If this device has no PIN for the
@@ -58,9 +58,8 @@ export function PinPrompt({
           {setting ? t('pinSetTitle') : t('pinEnterTitle')}
         </h2>
         <p className="lead">{setting ? t('pinSetLead') : t('pinEnterLead')}</p>
-        <TextField
+        <SecretField
           name="pin"
-          type="password"
           inputMode="numeric"
           pattern="[0-9]*"
           label={t('pinLabel')}
