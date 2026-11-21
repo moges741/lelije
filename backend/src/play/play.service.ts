@@ -6,6 +6,7 @@ import {
 import { PlayRequest } from '@prisma/client';
 import { addisDay } from '../common/day';
 import { FamiliesService } from '../families/families.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const ANSWERS = ['allowed', 'later', 'declined'];
@@ -27,6 +28,7 @@ export class PlayService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly families: FamiliesService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -61,6 +63,14 @@ export class PlayService {
         : await tx.playRequest.create({
             data: { childId, day, status: 'sent' },
           });
+      if (!open) {
+        await this.notifications.record(tx, {
+          familyId: child.familyId,
+          childId,
+          audience: 'parent',
+          kind: 'play_sent',
+        });
+      }
       return { ...view(request, child.nickname), alreadyAsked: open !== null };
     });
   }
@@ -90,6 +100,7 @@ export class PlayService {
         "answer must be 'allowed', 'later' or 'declined'",
       );
     }
+    const answer = input.answer;
     const family = await this.families.verifyParent(input.familyCode, input.pin);
 
     const request = await this.prisma.playRequest.findFirst({
@@ -98,16 +109,27 @@ export class PlayService {
     });
     if (!request) throw new NotFoundException('play request not found');
 
-    const { count } = await this.prisma.playRequest.updateMany({
-      where: { id, status: 'sent' },
-      data: { status: input.answer, answeredAt: new Date() },
-    });
-    const current = await this.prisma.playRequest.findUniqueOrThrow({
-      where: { id },
+    const { current, changed } = await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.playRequest.updateMany({
+        where: { id, status: 'sent' },
+        data: { status: answer, answeredAt: new Date() },
+      });
+      if (count > 0) {
+        await this.notifications.record(tx, {
+          familyId: family.id,
+          childId: request.childId,
+          audience: 'child',
+          kind: 'play_answered',
+        });
+      }
+      return {
+        current: await tx.playRequest.findUniqueOrThrow({ where: { id } }),
+        changed: count > 0,
+      };
     });
     return {
       ...view(current, request.child.nickname),
-      alreadyAnswered: count === 0,
+      alreadyAnswered: !changed,
     };
   }
 }

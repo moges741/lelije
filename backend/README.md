@@ -55,6 +55,8 @@ Every route starts with `/api`. Bodies are JSON. Errors look like `{ "message": 
 | `POST /play-requests` | A child asks for play time |
 | `GET /families/:code/play-requests` | Lists the family's play-time requests |
 | `POST /play-requests/:id/answer` | A parent allows, postpones, or declines a request (needs the PIN) |
+| `GET /families/:code/notifications` | Lists a parent or child's notifications, with the unread count |
+| `POST /families/:code/notifications/read` | Marks that audience's notifications as read |
 | `GET /progress?childId=` | One child's points, today's work, and streak |
 | `GET /families/:code/progress` | That progress for every child in a family |
 
@@ -272,6 +274,39 @@ curl -s -X POST $API/play-requests/$PLAY_ID/answer -H "$JSON" \
 - Each answer closes the request, `later` included. The child can then ask again.
 - Answering a request that is already answered returns `alreadyAnswered: true` and changes nothing.
 - A request that belongs to another family returns `404`.
+
+### List notifications
+
+The server writes a notification when something happens. A parent gets `mission_pending` and `play_sent`. The child gets `mission_approved`, `mission_rejected`, and `play_answered`. Asking again while a request is still open, or repeating an action, does not add another one.
+
+```bash
+curl -s "$API/families/$CODE/notifications?audience=parent"
+curl -s "$API/families/$CODE/notifications?audience=child&childId=$CHILD_ID"
+```
+
+```json
+{
+  "unread": 1,
+  "notifications": [
+    { "id": "9c1e...", "audience": "parent", "kind": "play_sent", "childId": "7329551c-...", "nickname": "Liya", "read": false, "at": "2026-11-21T15:01:12.441Z" }
+  ]
+}
+```
+
+Newest first, at most 50. A child only sees their own. `audience` must be `parent` or `child`, and a child list needs `childId`.
+
+### Mark notifications read
+
+```bash
+curl -s -X POST $API/families/$CODE/notifications/read -H "$JSON" \
+  -d "{\"audience\":\"child\",\"childId\":\"$CHILD_ID\"}"
+```
+
+```json
+{ "marked": 2 }
+```
+
+Marks every unread notification for that audience. A parent body is `{ "audience": "parent" }`. Marking again returns `{ "marked": 0 }`.
 
 ### Get a child's progress
 

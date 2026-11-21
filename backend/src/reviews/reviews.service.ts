@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FamiliesService } from '../families/families.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { MissionsService } from '../missions/missions.service';
 import { PointsService } from '../points/points.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,6 +16,7 @@ export class ReviewsService {
     private readonly points: PointsService,
     private readonly families: FamiliesService,
     private readonly missions: MissionsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Every completion in the family that is waiting for a parent, oldest first. */
@@ -103,6 +105,12 @@ export class ReviewsService {
       await tx.completion.update({
         where: { id },
         data: { status, points: pointsAwarded, reviewedAt: new Date() },
+      });
+      await this.notifications.record(tx, {
+        familyId: family.id,
+        childId,
+        audience: 'child',
+        kind: status === 'approved' ? 'mission_approved' : 'mission_rejected',
       });
 
       return {
