@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: lelije-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lelije
+      POSTGRES_PASSWORD: lelije
+      POSTGRES_DB: lelije
+    ports:
+      - "5434:5432"
+    volumes:
+      - lelije_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lelije -d lelije"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  lelije_pg:
