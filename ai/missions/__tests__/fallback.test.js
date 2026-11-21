@@ -77,8 +77,9 @@ describe("fallback.json", () => {
         }
       });
 
-      it("give every outdoor mission a parent-approval role and note", () => {
+      it("give every outdoor mission needs_parent true plus a parent-approval role and note", () => {
         for (const mission of fallback[language].filter((m) => m.type === "outdoor")) {
+          expect(mission.needs_parent, mission.title).toBe(true);
           expect(mission.roles.parent, mission.title).not.toBe("");
           expect(mission.supervision_note, mission.title).not.toBe("");
         }

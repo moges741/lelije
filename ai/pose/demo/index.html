@@ -3,20 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LeLije pose demo</title>
+    <title>LeLije Pose Activities Demo</title>
     <!--
-      Standalone test page for ai/pose. No app needed. It uses only the public
-      API (ai/pose/index.js), exactly like the real frontend will.
-
-      Recommended:  from the ai/ folder run  npm run demo
-      Plain static server started at the repo root:
-        open /ai/pose/demo/index.html?assets=/public
-        (the import map below resolves the MediaPipe package for that case;
-         Vite ignores it because it rewrites the import itself)
-
+      Standalone test page for ai/pose using ONLY the public entry point (../index.js).
+      Recommended: from the ai/ folder run `npm run demo`.
       URL options:
-        ?debug=1       skeleton, standing-height line, live numbers and an event log
-        ?duration=20   game length in seconds (default 60)
+        ?debug=1           Show skeleton + live debug overlay
+        ?duration=20       Override session length in seconds
+        ?activity=floor_is_lava  Pre-select an activity from the catalog
+        ?mode=keyboard     Start in keyboard/touch fallback mode
+        ?autostart=1       Immediately start the selected activity
     -->
     <script type="importmap">
       {
@@ -30,6 +26,9 @@
         color-scheme: dark;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
@@ -37,52 +36,88 @@
         flex-direction: column;
         align-items: center;
         gap: 12px;
-        padding: 16px;
-        box-sizing: border-box;
-        background: #14213d;
+        padding: 18px 16px 32px;
+        background: #10203a;
         color: #ffffff;
+      }
+      header {
+        text-align: center;
       }
       h1 {
         margin: 0;
-        font-size: 1.25rem;
+        font-size: 1.4rem;
+        letter-spacing: -0.01em;
+      }
+      .subtitle {
+        margin: 4px 0 0;
+        font-size: 0.9rem;
+        color: #b7c8e6;
       }
       .controls {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         flex-wrap: wrap;
         justify-content: center;
+        max-width: 760px;
+      }
+      label.field {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.88rem;
+        color: #dbe7ff;
+        background: #192e52;
+        padding: 6px 10px;
+        border-radius: 10px;
+      }
+      select {
+        font: inherit;
+        background: #0f1e38;
+        color: #ffffff;
+        border: 1px solid #35507d;
+        border-radius: 6px;
+        padding: 4px 8px;
       }
       button {
         font: inherit;
         font-weight: 700;
-        padding: 10px 28px;
+        padding: 9px 22px;
         border: 0;
         border-radius: 999px;
         background: #fca311;
-        color: #14213d;
+        color: #10203a;
         cursor: pointer;
+        transition: transform 0.1s ease, opacity 0.15s ease;
       }
-      label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+      button:active {
+        transform: scale(0.97);
       }
-      input[type="number"] {
-        font: inherit;
-        width: 4.5em;
-        padding: 6px 8px;
-        border-radius: 8px;
-        border: 1px solid #44527a;
-        background: #0b1326;
-        color: inherit;
+      button.secondary {
+        background: #233b66;
+        color: #ffffff;
+        border: 1px solid #3c5d96;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
       }
       #status {
         min-height: 1.4em;
         text-align: center;
+        font-size: 0.98rem;
+        color: #ffd166;
       }
       #status.error {
         color: #ffb4a2;
+      }
+      progress {
+        width: min(100%, 340px);
+        height: 12px;
+        accent-color: #fca311;
+      }
+      progress[hidden] {
+        display: none;
       }
       .stage {
         position: relative;
@@ -94,8 +129,8 @@
         aspect-ratio: 4 / 3;
         border-radius: 16px;
         background: #0b1326;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
       }
-      /* Kept in the layout (not display:none) so mobile browsers keep decoding frames. */
       video {
         position: absolute;
         width: 1px;
@@ -105,155 +140,310 @@
       }
       #debug {
         position: absolute;
-        top: 8px;
-        left: 8px;
+        top: 52px;
+        right: 10px;
         margin: 0;
         padding: 6px 10px;
         border-radius: 8px;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.68);
         font: 12px/1.4 ui-monospace, Consolas, monospace;
         white-space: pre;
         pointer-events: none;
       }
-      #result {
-        width: min(100%, 640px);
-        box-sizing: border-box;
-        margin: 0;
-        padding: 10px 14px;
-        border-radius: 12px;
-        background: #0b1326;
-        font: 13px/1.5 ui-monospace, Consolas, monospace;
-        white-space: pre-wrap;
+      #debug[hidden] {
+        display: none;
       }
-      [hidden] {
-        display: none !important;
+      #keyboardPad {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        max-width: 640px;
+      }
+      #keyboardPad[hidden] {
+        display: none;
+      }
+      #keyboardPad button {
+        background: #224070;
+        color: #ffffff;
+        border: 1px solid #4d78ba;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+      }
+      #keyboardPad button:hover {
+        background: #2f538d;
+      }
+      .panel {
+        width: min(100%, 640px);
+        background: #0d1a31;
+        border: 1px solid #263f6b;
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        color: #9bb5e0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      pre#resultJson {
+        margin: 0;
+        font: 12px/1.45 ui-monospace, Consolas, monospace;
+        color: #c8f7dc;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      #fallbackNotice {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      #fallbackNotice[hidden] {
+        display: none;
       }
     </style>
   </head>
-  <body>
-    <h1>LeLije pose demo: Catch the Stars</h1>
+  <body data-state="idle">
+    <header>
+      <h1>LeLije Pose Activities Demo</h1>
+      <p class="subtitle">On-device camera movement games with keyboard &amp; touch fallback</p>
+    </header>
 
     <div class="controls">
+      <label class="field" for="activitySelect">
+        Activity
+        <select id="activitySelect" aria-label="Choose pose activity"></select>
+      </label>
+
+      <label class="field" for="modeSelect">
+        Mode
+        <select id="modeSelect" aria-label="Input mode">
+          <option value="camera">Camera</option>
+          <option value="keyboard">Keyboard / Touch</option>
+        </select>
+      </label>
+
+      <label class="field" for="dressUpSelect">
+        Dress-Up
+        <select id="dressUpSelect" aria-label="Dress-up overlay">
+          <option value="none">None</option>
+          <option value="crown">Crown</option>
+          <option value="cat_ears">Cat Ears</option>
+          <option value="cape">Cape</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <input id="coopToggle" type="checkbox" />
+        2-Player Coop
+      </label>
+
+      <button id="muteBtn" type="button" class="secondary" aria-pressed="false">Sound On</button>
       <button id="startBtn" type="button">Start</button>
-      <label>Seconds <input id="duration" type="number" min="10" max="300" step="5" value="60" /></label>
     </div>
-    <div id="status" role="status">Press Start and allow the camera. Star = jump, cloud = both arms up.</div>
+
+    <div id="status" role="status">Choose an activity and press Start.</div>
+    <div id="fallbackNotice" hidden>
+      <button id="switchKeyboardBtn" type="button" class="secondary">Play in Keyboard Mode Instead</button>
+    </div>
+    <progress id="progress" max="1" value="0" hidden></progress>
 
     <div class="stage">
       <video id="video" playsinline muted></video>
-      <canvas id="canvas" width="640" height="480"></canvas>
+      <canvas id="canvas" width="640" height="480" data-testid="pose-canvas"></canvas>
       <pre id="debug" hidden></pre>
     </div>
 
-    <pre id="result" hidden></pre>
+    <div id="keyboardPad" hidden aria-label="Touch and keyboard controls">
+      <button type="button" data-action="jump">Jump (Space / ↑)</button>
+      <button type="button" data-action="armsUp">Arms Up (A)</button>
+      <button type="button" data-hold="squat">Squat / Duck (Hold S / ↓)</button>
+      <button type="button" data-action="jumpingJack">Jumping Jack (X)</button>
+      <button type="button" data-hold="balance">Tree Balance (Hold B)</button>
+      <button type="button" data-action="move">Dance / Eskista Beat (M)</button>
+    </div>
+
+    <section class="panel" aria-live="polite">
+      <h2>onFinish Payload</h2>
+      <pre id="resultJson">Finish an activity to inspect the result payload.</pre>
+    </section>
 
     <script type="module">
-      import { startCatchTheStars } from "../index.js";
+      import { getActivityCatalog, startActivity } from "../index.js";
 
       const params = new URLSearchParams(location.search);
       const debugOn = params.get("debug") === "1";
-      // "" under Vite (public/ is served at "/"); "/public" under a plain static server.
       const assets = params.get("assets") ?? "";
+      const durationParam = Number(params.get("duration"));
+      const autostart = params.get("autostart") === "1";
 
       const videoEl = /** @type {HTMLVideoElement} */ (document.getElementById("video"));
       const canvasEl = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
+      const activitySelect = /** @type {HTMLSelectElement} */ (document.getElementById("activitySelect"));
+      const modeSelect = /** @type {HTMLSelectElement} */ (document.getElementById("modeSelect"));
+      const dressUpSelect = /** @type {HTMLSelectElement} */ (document.getElementById("dressUpSelect"));
+      const coopToggle = /** @type {HTMLInputElement} */ (document.getElementById("coopToggle"));
+      const muteBtn = /** @type {HTMLButtonElement} */ (document.getElementById("muteBtn"));
       const startBtn = /** @type {HTMLButtonElement} */ (document.getElementById("startBtn"));
-      const durationEl = /** @type {HTMLInputElement} */ (document.getElementById("duration"));
+      const switchKeyboardBtn = /** @type {HTMLButtonElement} */ (document.getElementById("switchKeyboardBtn"));
+      const fallbackNotice = /** @type {HTMLElement} */ (document.getElementById("fallbackNotice"));
       const statusEl = /** @type {HTMLElement} */ (document.getElementById("status"));
+      const progressEl = /** @type {HTMLProgressElement} */ (document.getElementById("progress"));
       const debugEl = /** @type {HTMLElement} */ (document.getElementById("debug"));
-      const resultEl = /** @type {HTMLElement} */ (document.getElementById("result"));
+      const keyboardPad = /** @type {HTMLElement} */ (document.getElementById("keyboardPad"));
+      const resultJson = /** @type {HTMLElement} */ (document.getElementById("resultJson"));
 
-      const durationParam = Number(params.get("duration"));
-      if (durationParam > 0) durationEl.value = String(durationParam);
+      debugEl.hidden = !debugOn;
 
-      /** The game that is running now (null when idle). @type {{ stop: () => void } | null} */
-      let game = null;
-      /** The last game, kept so its end screen can be cleared before the next one starts. @type {{ stop: () => void } | null} */
-      let previous = null;
+      const LABELS = {
+        catch_the_stars: "Catch the Stars",
+        squats: "Squats",
+        jumping_jacks: "Jumping Jacks",
+        freeze_dance: "Freeze Dance",
+        tree_balance: "Tree Balance",
+        eskista: "Eskista Dance",
+        floor_is_lava: "Floor is Lava",
+      };
 
-      // Debug only: the last few events, shown in the overlay. Nothing is stored or sent.
-      const MAX_LOG_LINES = 6;
-      /** @type {string[]} */
-      const eventLog = [];
-
-      function setIdle() {
-        game = null;
-        startBtn.textContent = "Start";
-        durationEl.disabled = false;
+      for (const item of getActivityCatalog()) {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = `${LABELS[item.id] || item.id} (target ${item.defaultTarget})`;
+        activitySelect.appendChild(opt);
       }
 
-      startBtn.addEventListener("click", async () => {
-        if (game) {
-          game.stop();
-          setIdle();
-          statusEl.classList.remove("error");
-          statusEl.textContent = "Stopped. The camera is off.";
-          debugEl.hidden = true;
-          return;
-        }
+      if (params.get("activity")) {
+        activitySelect.value = params.get("activity") || "catch_the_stars";
+      }
+      if (params.get("mode") === "keyboard") {
+        modeSelect.value = "keyboard";
+      }
 
-        if (previous) previous.stop();
-        eventLog.length = 0;
-        resultEl.hidden = true;
-        debugEl.hidden = !debugOn;
-        debugEl.textContent = "";
-        statusEl.classList.remove("error");
+      /** @type {ReturnType<typeof startActivity> | null} */
+      let session = null;
+      let muted = false;
+
+      /** @param {string} text @param {boolean} [isError] */
+      function setStatus(text, isError = false) {
+        statusEl.textContent = text;
+        statusEl.classList.toggle("error", isError);
+      }
+
+      function stopSession() {
+        if (!session) return;
+        session.stop();
+        session = null;
+        startBtn.textContent = "Start";
+        progressEl.hidden = true;
+        keyboardPad.hidden = true;
+        document.body.dataset.state = "idle";
+      }
+
+      function startSession() {
+        stopSession();
+        fallbackNotice.hidden = true;
+        resultJson.textContent = "Playing... payload will appear here when the activity ends.";
+
+        const activity = /** @type {any} */ (activitySelect.value);
+        const mode = modeSelect.value === "keyboard" ? "keyboard" : "camera";
+        keyboardPad.hidden = mode !== "keyboard";
+
         startBtn.textContent = "Stop";
-        durationEl.disabled = true;
+        document.body.dataset.state = "starting";
 
-        let ended = false;
-        const handle = await startCatchTheStars({
-          videoEl,
-          canvasEl,
-          durationSec: Number(durationEl.value) || 60,
+        session = startActivity({
+          activity,
+          canvas: canvasEl,
+          video: videoEl,
+          missionId: `demo_${activity}`,
+          durationSec: Number.isFinite(durationParam) && durationParam > 0 ? durationParam : undefined,
+          mode,
+          coop: coopToggle.checked,
+          dressUp: /** @type {any} */ (dressUpSelect.value),
+          muted,
+          debug: debugOn,
           modelPath: `${assets}/models/pose_landmarker_lite.task`,
           wasmPath: `${assets}/wasm`,
-          debug: debugOn,
-          onStatus(status) {
-            statusEl.classList.toggle("error", status.state === "error");
-            statusEl.textContent = status.errorCode ? `${status.hint} (${status.errorCode})` : status.hint;
-            if (status.state === "error") {
-              // The game already switched the camera off; just reset the button.
-              ended = true;
-              setIdle();
+          onStatus(s) {
+            document.body.dataset.state = s.state;
+            if (s.state === "error") {
+              setStatus(`${s.message || "Camera error"} (${s.code || "unsupported"})`, true);
+              fallbackNotice.hidden = false;
+              startBtn.textContent = "Start";
+              session = null;
+              progressEl.hidden = true;
+              return;
             }
+            if (s.hint) setStatus(s.hint, false);
+            progressEl.hidden = s.state !== "calibrating";
+            if (typeof s.progress === "number") progressEl.value = s.progress;
           },
-          onEvent: debugOn
-            ? (event) => {
-                const kind = event.kind ? ` ${event.kind}` : "";
-                eventLog.push(`${(event.timeMs / 1000).toFixed(1).padStart(5)}s  ${event.type}${kind} ${event.value}`);
-                if (eventLog.length > MAX_LOG_LINES) eventLog.shift();
-              }
-            : undefined,
-          onDebug: debugOn
-            ? (info) => {
-                // "hip up": positive = hips ABOVE the standing height, in torso lengths (a jump needs +0.18).
-                const offset = info.hipOffset;
-                let text =
-                  `fps      ${info.fps.toFixed(1)}` +
-                  `\nstate    ${info.state}` +
-                  `\nbaseline ${info.baselineHipY === null ? "-" : info.baselineHipY.toFixed(3)}` +
-                  `\ntorso    ${info.torsoLength.toFixed(3)}` +
-                  `\nhip up   ${offset >= 0.005 ? "+" : offset <= -0.005 ? "-" : " "}${Math.abs(offset).toFixed(2)} torso` +
-                  `${info.jumping ? "  IN AIR" : ""}` +
-                  `\narms     ${info.armsRaised ? `up ${info.armsHeldMs.toFixed(0)} ms` : "down"}`;
-                if (eventLog.length > 0) text += `\n${eventLog.join("\n")}`;
-                debugEl.textContent = text;
-              }
-            : undefined,
-          onFinish(result) {
-            // This object is what the frontend sends to the backend.
-            resultEl.textContent = `onFinish payload:\n${JSON.stringify(result, null, 2)}`;
-            resultEl.hidden = false;
-            debugEl.hidden = true;
-            ended = true;
-            setIdle();
+          onFinish(payload) {
+            session = null;
+            startBtn.textContent = "Start";
+            progressEl.hidden = true;
+            keyboardPad.hidden = true;
+            document.body.dataset.state = "finished";
+            resultJson.textContent = JSON.stringify(payload, null, 2);
+          },
+          onDebug(text) {
+            debugEl.textContent = text;
           },
         });
-        previous = handle;
-        // If it failed straight away, the button is already back to "Start".
-        if (!ended) game = handle;
+      }
+
+      startBtn.addEventListener("click", () => {
+        if (session) {
+          stopSession();
+          setStatus("Stopped.");
+        } else {
+          startSession();
+        }
       });
+
+      switchKeyboardBtn.addEventListener("click", () => {
+        modeSelect.value = "keyboard";
+        startSession();
+      });
+
+      muteBtn.addEventListener("click", () => {
+        muted = !muted;
+        muteBtn.textContent = muted ? "Sound Off" : "Sound On";
+        muteBtn.setAttribute("aria-pressed", String(muted));
+        session?.setMuted(muted);
+      });
+
+      dressUpSelect.addEventListener("change", () => {
+        session?.setDressUp(/** @type {any} */ (dressUpSelect.value));
+      });
+
+      // On-screen touch buttons for keyboard/tap fallback mode.
+      for (const btn of keyboardPad.querySelectorAll("button")) {
+        const tapAction = btn.getAttribute("data-action");
+        const holdAction = btn.getAttribute("data-hold");
+        if (tapAction) {
+          btn.addEventListener("click", () => {
+            session?.triggerAction(/** @type {any} */ (tapAction));
+          });
+        } else if (holdAction) {
+          const startHold = () => {
+            session?.setActionHeld(/** @type {any} */ (holdAction), true);
+            session?.triggerAction(/** @type {any} */ (holdAction));
+          };
+          const endHold = () => {
+            session?.setActionHeld(/** @type {any} */ (holdAction), false);
+          };
+          btn.addEventListener("pointerdown", startHold);
+          btn.addEventListener("pointerup", endHold);
+          btn.addEventListener("pointerleave", endHold);
+          btn.addEventListener("pointercancel", endHold);
+        }
+      }
+
+      if (autostart) {
+        startSession();
+      }
     </script>
   </body>
 </html>

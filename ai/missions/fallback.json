@@ -387,7 +387,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 25
     },
     {
@@ -408,7 +408,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20
     },
     {
@@ -429,7 +429,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20
     },
     {
@@ -450,7 +450,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20
     },
     {
@@ -471,7 +471,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20
     },
     {
@@ -492,7 +492,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20
     }
   ],
@@ -902,7 +902,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 25,
       "needs_translation": true
     },
@@ -924,7 +924,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -946,7 +946,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -968,7 +968,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -990,7 +990,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -1012,7 +1012,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     }
@@ -1423,7 +1423,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 25,
       "needs_translation": true
     },
@@ -1445,7 +1445,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -1467,7 +1467,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -1489,7 +1489,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -1511,7 +1511,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     },
@@ -1533,7 +1533,7 @@
       ],
       "activity": null,
       "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
-      "needs_parent": false,
+      "needs_parent": true,
       "points": 20,
       "needs_translation": true
     }

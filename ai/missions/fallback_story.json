@@ -1,0 +1,173 @@
+{
+  "en": {
+    "highlands": [
+      {
+        "chapter": 1,
+        "text": "High in the green Ethiopian highlands, morning sunlight warmed the misty eucalyptus trees while sweet coffee aroma drifted from a nearby courtyard. Lomi the curious little hoopoe bird hopped onto a smooth garden stone and chirped a cheerful hello. Today the village children were preparing for a joyful harvest celebration, and everyone had a helpful part to play. Beside the garden path sat a woven basket waiting to be filled with bright yellow meskel flowers and fresh herbs. Lomi tilted its feathery crown and looked down the sunny trail. Where should the adventure begin this bright highland morning?",
+        "choices": [
+          "Gather yellow meskel flowers along the sunny terrace",
+          "Help carry fresh herbs to the courtyard table"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "text": "With steady steps and happy laughter, the basket soon overflowed with golden petals and fragrant green leaves. Grandmothers smiled warmly from the shaded porch and thanked you for bringing such colour to the celebration. Music from a gentle krar began to ripple across the hills as neighbours clapped in rhythm. Lomi fluttered in a playful circle above the courtyard and landed gently on the wooden fence, whistling a thank-you tune. Everyone shared warm roasted barley and cool spring water in the sunshine. It was time to rest, stretch your arms wide, and share your favourite moment with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "rift_valley": [
+      {
+        "chapter": 1,
+        "text": "Beside a shimmering lake in the Ethiopian Rift Valley, pink flamingos stepped gracefully through shallow sunlit water while acacia trees swayed in a soft warm breeze. Lomi the friendly little weaver bird perched on a golden branch and sang a bright welcome song. Along the grassy shore, families were setting up colourful reed mats for an afternoon picnic and storytelling circle. A friendly fisherman waved from his papyrus boat and pointed toward two interesting spots near the quiet cove. Lomi puffed up its bright feathers with excitement. Which sunny lakeside path would you like to explore first?",
+        "choices": [
+          "Count the dancing flamingos from the grassy bank",
+          "Listen to the weaver birds building baskets in the acacia"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "text": "Watching closely by the calm shore, you discovered how patiently every bird worked and moved in harmony with the gentle wind. The ripples on the lake sparkled like tiny stars as afternoon clouds drifted lazily across the wide blue sky. Soon the storytelling circle began on the woven mats, and you shared all the bright colours and peaceful sounds you had noticed near the water. Lomi sang one last cheerful melody before fluttering home to its cosy woven nest. As the golden sun dipped lower, it felt wonderful to take a slow breath, smile, and head home to tell your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "simien": [
+      {
+        "chapter": 1,
+        "text": "Across the breathtaking terraces of the Simien Mountains, fluffy white clouds drifted below the grassy meadows like a soft blanket. Lomi the cheerful highland wagtail skipped playfully along a flat rock beside a clear mountain stream. Far across the sunlit ridge, a gentle troupe of gelada monkeys sat peacefully munching green grass and grooming one another in the warm air. A park guide waved from the safe viewing trail and offered a shiny pair of binoculars plus a small nature sketchbook. Lomi bobbed its tail happily in the crisp breeze. How would you like to enjoy this mountain morning?",
+        "choices": [
+          "Sketch the peaceful gelada monkeys in your nature book",
+          "Spot colourful mountain birds soaring over the meadow"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "text": "Page by page and glance by glance, the mountain meadow revealed tiny purple wildflowers, soaring hawks, and gentle families of geladas soaking up the sun. You shared your discoveries with the guide, who praised your sharp eyes and calm patience on the trail. Back at the warm family lodge, a steaming cup of spiced tea and warm bread waited on the wooden table. Lomi tapped twice on the sunny windowsill as if cheering for a wonderful day well spent outdoors. With happy feet and a calm heart, it was the perfect moment to put away your sketchbook and celebrate with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ]
+  },
+  "am": {
+    "highlands": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "High in the green Ethiopian highlands, morning sunlight warmed the misty eucalyptus trees while sweet coffee aroma drifted from a nearby courtyard. Lomi the curious little hoopoe bird hopped onto a smooth garden stone and chirped a cheerful hello. Today the village children were preparing for a joyful harvest celebration, and everyone had a helpful part to play. Beside the garden path sat a woven basket waiting to be filled with bright yellow meskel flowers and fresh herbs. Lomi tilted its feathery crown and looked down the sunny trail. Where should the adventure begin this bright highland morning?",
+        "choices": [
+          "Gather yellow meskel flowers along the sunny terrace",
+          "Help carry fresh herbs to the courtyard table"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "With steady steps and happy laughter, the basket soon overflowed with golden petals and fragrant green leaves. Grandmothers smiled warmly from the shaded porch and thanked you for bringing such colour to the celebration. Music from a gentle krar began to ripple across the hills as neighbours clapped in rhythm. Lomi fluttered in a playful circle above the courtyard and landed gently on the wooden fence, whistling a thank-you tune. Everyone shared warm roasted barley and cool spring water in the sunshine. It was time to rest, stretch your arms wide, and share your favourite moment with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "rift_valley": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "Beside a shimmering lake in the Ethiopian Rift Valley, pink flamingos stepped gracefully through shallow sunlit water while acacia trees swayed in a soft warm breeze. Lomi the friendly little weaver bird perched on a golden branch and sang a bright welcome song. Along the grassy shore, families were setting up colourful reed mats for an afternoon picnic and storytelling circle. A friendly fisherman waved from his papyrus boat and pointed toward two interesting spots near the quiet cove. Lomi puffed up its bright feathers with excitement. Which sunny lakeside path would you like to explore first?",
+        "choices": [
+          "Count the dancing flamingos from the grassy bank",
+          "Listen to the weaver birds building baskets in the acacia"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "Watching closely by the calm shore, you discovered how patiently every bird worked and moved in harmony with the gentle wind. The ripples on the lake sparkled like tiny stars as afternoon clouds drifted lazily across the wide blue sky. Soon the storytelling circle began on the woven mats, and you shared all the bright colours and peaceful sounds you had noticed near the water. Lomi sang one last cheerful melody before fluttering home to its cosy woven nest. As the golden sun dipped lower, it felt wonderful to take a slow breath, smile, and head home to tell your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "simien": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "Across the breathtaking terraces of the Simien Mountains, fluffy white clouds drifted below the grassy meadows like a soft blanket. Lomi the cheerful highland wagtail skipped playfully along a flat rock beside a clear mountain stream. Far across the sunlit ridge, a gentle troupe of gelada monkeys sat peacefully munching green grass and grooming one another in the warm air. A park guide waved from the safe viewing trail and offered a shiny pair of binoculars plus a small nature sketchbook. Lomi bobbed its tail happily in the crisp breeze. How would you like to enjoy this mountain morning?",
+        "choices": [
+          "Sketch the peaceful gelada monkeys in your nature book",
+          "Spot colourful mountain birds soaring over the meadow"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "Page by page and glance by glance, the mountain meadow revealed tiny purple wildflowers, soaring hawks, and gentle families of geladas soaking up the sun. You shared your discoveries with the guide, who praised your sharp eyes and calm patience on the trail. Back at the warm family lodge, a steaming cup of spiced tea and warm bread waited on the wooden table. Lomi tapped twice on the sunny windowsill as if cheering for a wonderful day well spent outdoors. With happy feet and a calm heart, it was the perfect moment to put away your sketchbook and celebrate with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ]
+  },
+  "om": {
+    "highlands": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "High in the green Ethiopian highlands, morning sunlight warmed the misty eucalyptus trees while sweet coffee aroma drifted from a nearby courtyard. Lomi the curious little hoopoe bird hopped onto a smooth garden stone and chirped a cheerful hello. Today the village children were preparing for a joyful harvest celebration, and everyone had a helpful part to play. Beside the garden path sat a woven basket waiting to be filled with bright yellow meskel flowers and fresh herbs. Lomi tilted its feathery crown and looked down the sunny trail. Where should the adventure begin this bright highland morning?",
+        "choices": [
+          "Gather yellow meskel flowers along the sunny terrace",
+          "Help carry fresh herbs to the courtyard table"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "With steady steps and happy laughter, the basket soon overflowed with golden petals and fragrant green leaves. Grandmothers smiled warmly from the shaded porch and thanked you for bringing such colour to the celebration. Music from a gentle krar began to ripple across the hills as neighbours clapped in rhythm. Lomi fluttered in a playful circle above the courtyard and landed gently on the wooden fence, whistling a thank-you tune. Everyone shared warm roasted barley and cool spring water in the sunshine. It was time to rest, stretch your arms wide, and share your favourite moment with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "rift_valley": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "Beside a shimmering lake in the Ethiopian Rift Valley, pink flamingos stepped gracefully through shallow sunlit water while acacia trees swayed in a soft warm breeze. Lomi the friendly little weaver bird perched on a golden branch and sang a bright welcome song. Along the grassy shore, families were setting up colourful reed mats for an afternoon picnic and storytelling circle. A friendly fisherman waved from his papyrus boat and pointed toward two interesting spots near the quiet cove. Lomi puffed up its bright feathers with excitement. Which sunny lakeside path would you like to explore first?",
+        "choices": [
+          "Count the dancing flamingos from the grassy bank",
+          "Listen to the weaver birds building baskets in the acacia"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "Watching closely by the calm shore, you discovered how patiently every bird worked and moved in harmony with the gentle wind. The ripples on the lake sparkled like tiny stars as afternoon clouds drifted lazily across the wide blue sky. Soon the storytelling circle began on the woven mats, and you shared all the bright colours and peaceful sounds you had noticed near the water. Lomi sang one last cheerful melody before fluttering home to its cosy woven nest. As the golden sun dipped lower, it felt wonderful to take a slow breath, smile, and head home to tell your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ],
+    "simien": [
+      {
+        "chapter": 1,
+        "needs_translation": true,
+        "text": "Across the breathtaking terraces of the Simien Mountains, fluffy white clouds drifted below the grassy meadows like a soft blanket. Lomi the cheerful highland wagtail skipped playfully along a flat rock beside a clear mountain stream. Far across the sunlit ridge, a gentle troupe of gelada monkeys sat peacefully munching green grass and grooming one another in the warm air. A park guide waved from the safe viewing trail and offered a shiny pair of binoculars plus a small nature sketchbook. Lomi bobbed its tail happily in the crisp breeze. How would you like to enjoy this mountain morning?",
+        "choices": [
+          "Sketch the peaceful gelada monkeys in your nature book",
+          "Spot colourful mountain birds soaring over the meadow"
+        ],
+        "endsWith": "choice"
+      },
+      {
+        "chapter": 2,
+        "needs_translation": true,
+        "text": "Page by page and glance by glance, the mountain meadow revealed tiny purple wildflowers, soaring hawks, and gentle families of geladas soaking up the sun. You shared your discoveries with the guide, who praised your sharp eyes and calm patience on the trail. Back at the warm family lodge, a steaming cup of spiced tea and warm bread waited on the wooden table. Lomi tapped twice on the sunny windowsill as if cheering for a wonderful day well spent outdoors. With happy feet and a calm heart, it was the perfect moment to put away your sketchbook and celebrate with your family.",
+        "choices": [],
+        "endsWith": "rest"
+      }
+    ]
+  }
+}
