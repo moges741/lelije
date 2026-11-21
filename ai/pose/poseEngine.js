@@ -25,6 +25,9 @@ import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
  * @property {(landmarks: Landmark[] | null, timestampMs: number) => void} onFrame
  *   Called once per processed frame. `landmarks` is the first detected pose
  *   (33 landmarks) or null when nobody is detected.
+ * @property {(poses: Landmark[][], timestampMs: number) => void} [onMultiFrame]
+ *   Optional callback receiving every detected pose (used for coop mode with numPoses: 2).
+ * @property {number} [numPoses]  Number of poses to detect (1 or 2). Defaults to 1.
  * @property {(error: PoseError) => void} [onError]
  */
 
@@ -116,7 +119,16 @@ function closeLandmarker(landmarker) {
  * @param {PoseEngineOptions} options
  * @returns {PoseEngine}
  */
-export function createPoseEngine({ videoEl, modelPath, wasmPath, onFrame, onError }) {
+export function createPoseEngine({
+  videoEl,
+  modelPath,
+  wasmPath,
+  onFrame,
+  onMultiFrame,
+  numPoses = 1,
+  onError,
+}) {
+  const maxPoses = numPoses === 2 ? 2 : 1;
   /** @type {"idle" | "starting" | "running"} */
   let state = "idle";
   /** Bumped by every stop(), so a start() that is still loading knows it was cancelled. */
@@ -165,7 +177,7 @@ export function createPoseEngine({ videoEl, modelPath, wasmPath, onFrame, onErro
     return PoseLandmarker.createFromOptions(fileset, {
       baseOptions: { modelAssetPath: modelPath, delegate: useDelegate },
       runningMode: "VIDEO",
-      numPoses: 1,
+      numPoses: maxPoses,
     });
   }
 
@@ -319,8 +331,9 @@ export function createPoseEngine({ videoEl, modelPath, wasmPath, onFrame, onErro
     }
     recordDetection(now, performance.now() - detectStart);
 
-    // numPoses is 1, so only the first pose is ever used.
-    onFrame(result.landmarks.length > 0 ? result.landmarks[0] : null, now);
+    const poses = Array.isArray(result.landmarks) ? result.landmarks : [];
+    if (onMultiFrame) onMultiFrame(poses, now);
+    onFrame(poses.length > 0 ? poses[0] : null, now);
   }
 
   function onVisibilityChange() {

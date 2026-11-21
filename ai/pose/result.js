@@ -1,122 +1,156 @@
 // @ts-check
-// The result payload every activity gives to onFinish. One shape for all games,
-// so the frontend can send it to the backend without knowing which game ran.
-//
-// PRIVACY: the payload holds only counts, times and a random session id.
-// No picture, no landmarks, nothing about who the child is.
+// Canonical result payload and error codes for every pose activity (P5, F3).
+// Pure logic: no DOM, no camera, no network.
+
+/** @typedef {"camera_denied" | "no_camera" | "model_load_failed" | "unsupported"} PoseErrorCode */
 
 /** @typedef {"camera" | "keyboard"} InputMode */
 
 /**
- * @typedef {object} ActivityResult
- * @property {string} client_session_id  Random id made for this one play session. Lets the backend ignore a result that is sent twice.
- * @property {string | number | null} mission_id  Exactly what the host passed as missionId, or null for free play.
- * @property {string} game  Activity id, for example "catch_the_stars".
- * @property {string} started_at  When play began (after loading and calibration), ISO 8601 in UTC.
- * @property {number} duration_sec  Seconds actually played. Paused time (hidden tab) is not counted.
- * @property {number} reps  What the activity counts. For catch_the_stars: objects caught.
- * @property {number} target  Reps needed to complete the mission.
- * @property {boolean} completed  True when reps reached the target.
- * @property {number} points
- * @property {InputMode} input_mode  "keyboard" if the keyboard or a tap was used at any moment, otherwise "camera".
- * @property {number} [jumps]  Every detected jump (games that use jumps).
- * @property {number} [arm_raises]  Every detected arms-up (games that use it).
- * @property {object} [performance]  Extra detail for adaptive difficulty (added by a later step).
+ * Standard error codes emitted via onStatus({ state: "error", code, message }).
+ */
+export const POSE_ERROR_CODES = Object.freeze({
+  CAMERA_DENIED: /** @type {PoseErrorCode} */ ("camera_denied"),
+  NO_CAMERA: /** @type {PoseErrorCode} */ ("no_camera"),
+  MODEL_LOAD_FAILED: /** @type {PoseErrorCode} */ ("model_load_failed"),
+  UNSUPPORTED: /** @type {PoseErrorCode} */ ("unsupported"),
+});
+
+/**
+ * @typedef {object} ActivityPerformance
+ * @property {number} accuracy  0..1 ratio of successful attempts.
+ * @property {number} avg_rep_sec  Average seconds per repetition (0 if no reps).
+ * @property {number} max_combo  Highest consecutive combo achieved.
+ * @property {number} difficulty_level  Final adaptive difficulty level (1..5).
  */
 
 /**
- * @typedef {object} ActivityResultInput
- * @property {string} clientSessionId
- * @property {string | number | null | undefined} missionId
+ * @typedef {object} CoopSummary
+ * @property {boolean} enabled
+ * @property {number} players_detected
+ * @property {number} player1_score
+ * @property {number} player2_score
+ * @property {number} team_score
+ */
+
+/**
+ * Result payload delivered to onFinish for every activity (P5 + F3).
+ * @typedef {object} ActivityResult
+ * @property {string} client_session_id
+ * @property {string | null} mission_id
  * @property {string} game
- * @property {number | Date} startedAt  Wall-clock time when play began (ms since 1970 or a Date).
- * @property {number} durationSec
+ * @property {string} started_at  ISO 8601 UTC timestamp.
+ * @property {number} duration_sec  Elapsed active play time in seconds (rounded to 1 decimal).
  * @property {number} reps
  * @property {number} target
- * @property {number} points
- * @property {InputMode} inputMode
+ * @property {boolean} completed
+ * @property {number} points  Reward points (integer, 0..30).
+ * @property {InputMode} input_mode  MUST be "keyboard" if any keyboard/tap event occurred.
  * @property {number} [jumps]
- * @property {number} [armRaises]
- * @property {object} [performance]
+ * @property {number} [arm_raises]
+ * @property {ActivityPerformance} [performance]
+ * @property {CoopSummary} [coop]
  */
 
-const MAX_MISSION_ID_LENGTH = 200;
+let fallbackCounter = 0;
 
 /**
- * A whole number that is never negative, whatever comes in.
- * @param {unknown} value
- */
-function count(value) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? Math.round(number) : 0;
-}
-
-/**
- * Random id for one play session (UUID v4 format). It is not stored anywhere
- * and is not derived from the device or the child.
+ * Generates a unique client_session_id without external libraries.
  * @returns {string}
  */
-export function createSessionId() {
-  const cryptoApi = globalThis.crypto;
-  // randomUUID only exists on secure pages (https or localhost).
-  if (cryptoApi && typeof cryptoApi.randomUUID === "function") return cryptoApi.randomUUID();
-
-  const bytes = new Uint8Array(16);
-  if (cryptoApi && typeof cryptoApi.getRandomValues === "function") {
-    cryptoApi.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+export function generateSessionId() {
+  if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
   }
-  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
-  let hex = "";
-  for (const byte of bytes) hex += byte.toString(16).padStart(2, "0");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  fallbackCounter += 1;
+  return `sess_${Date.now().toString(36)}_${fallbackCounter.toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
- * The target to use: the host's value when it is a whole number of at least 1,
- * otherwise the activity's default.
- * @param {unknown} requested
- * @param {number} fallback
+ * Computes fair child-friendly points (10..30 on completion, partial encouragement points otherwise, max 30).
+ * @param {{ reps: number, target: number, rawScore?: number, completed: boolean }} input
+ * @returns {number}
  */
-export function resolveTarget(requested, fallback) {
-  const number = Number(requested);
-  if (requested === null || requested === undefined || !Number.isFinite(number) || number < 1) return fallback;
-  return Math.round(number);
+export function computeActivityPoints({ reps, target, rawScore, completed }) {
+  if (reps <= 0 && (!rawScore || rawScore <= 0)) return 0;
+  const safeTarget = Math.max(1, target);
+  const progress = Math.min(1, reps / safeTarget);
+  if (completed) {
+    const bonus = rawScore && rawScore > 0 ? Math.min(10, Math.floor(rawScore / 40)) : 0;
+    return Math.min(30, 20 + bonus);
+  }
+  return Math.max(5, Math.min(19, Math.round(progress * 18)));
 }
 
 /**
- * Builds the payload for onFinish. Always returns the same keys in the same order.
- * @param {ActivityResultInput} input
+ * Builds the canonical result payload for onFinish.
+ * Guarantees `input_mode === "keyboard"` whenever any keyboard or tap event occurred.
+ *
+ * @param {object} input
+ * @param {string} [input.clientSessionId]
+ * @param {string | null} [input.missionId]
+ * @param {string} input.game
+ * @param {string} input.startedAtIso
+ * @param {number} input.elapsedMs
+ * @param {number} input.reps
+ * @param {number} input.target
+ * @param {boolean} [input.completed]
+ * @param {number} [input.rawScore]
+ * @param {number} [input.points]
+ * @param {InputMode} input.mode
+ * @param {boolean} input.usedKeyboardOrTap
+ * @param {number} [input.jumps]
+ * @param {number} [input.armRaises]
+ * @param {ActivityPerformance} [input.performance]
+ * @param {CoopSummary} [input.coop]
  * @returns {ActivityResult}
  */
 export function buildActivityResult(input) {
-  const missionId = input.missionId;
-  const validMissionId =
-    (typeof missionId === "string" && missionId.length > 0 && missionId.length <= MAX_MISSION_ID_LENGTH) ||
-    (typeof missionId === "number" && Number.isFinite(missionId));
-
-  const startedAt = input.startedAt instanceof Date ? input.startedAt : new Date(input.startedAt);
-  const reps = count(input.reps);
-  const target = count(input.target);
+  const durationSec = Math.max(0, Math.round((input.elapsedMs / 1000) * 10) / 10);
+  const reps = Math.max(0, Math.round(input.reps));
+  const target = Math.max(1, Math.round(input.target));
+  const completed = input.completed !== undefined ? Boolean(input.completed) : reps >= target;
+  /** @type {InputMode} */
+  const inputMode = input.mode === "keyboard" || input.usedKeyboardOrTap ? "keyboard" : "camera";
+  const points =
+    typeof input.points === "number" && Number.isFinite(input.points)
+      ? Math.max(0, Math.min(30, Math.round(input.points)))
+      : computeActivityPoints({ reps, target, rawScore: input.rawScore, completed });
 
   /** @type {ActivityResult} */
   const result = {
-    client_session_id: input.clientSessionId,
-    mission_id: validMissionId ? /** @type {string | number} */ (missionId) : null,
+    client_session_id: input.clientSessionId || generateSessionId(),
+    mission_id: input.missionId ?? null,
     game: input.game,
-    started_at: Number.isNaN(startedAt.getTime()) ? new Date().toISOString() : startedAt.toISOString(),
-    duration_sec: count(input.durationSec),
+    started_at: input.startedAtIso,
+    duration_sec: durationSec,
     reps,
     target,
-    completed: target > 0 && reps >= target,
-    points: count(input.points),
-    // Anything that is not clearly "camera" is reported as "keyboard", never the other way round.
-    input_mode: input.inputMode === "camera" ? "camera" : "keyboard",
+    completed,
+    points,
+    input_mode: inputMode,
   };
-  if (input.jumps !== undefined) result.jumps = count(input.jumps);
-  if (input.armRaises !== undefined) result.arm_raises = count(input.armRaises);
-  if (input.performance !== undefined && input.performance !== null) result.performance = input.performance;
+
+  if (typeof input.jumps === "number") result.jumps = Math.max(0, Math.round(input.jumps));
+  if (typeof input.armRaises === "number") result.arm_raises = Math.max(0, Math.round(input.armRaises));
+
+  if (input.performance) {
+    result.performance = {
+      accuracy: Math.max(0, Math.min(1, Math.round(input.performance.accuracy * 1000) / 1000)),
+      avg_rep_sec:
+        reps > 0 && Number.isFinite(input.performance.avg_rep_sec)
+          ? Math.round(input.performance.avg_rep_sec * 100) / 100
+          : reps > 0
+            ? Math.round((durationSec / reps) * 100) / 100
+            : 0,
+      max_combo: Math.max(0, Math.round(input.performance.max_combo)),
+      difficulty_level: Math.max(1, Math.min(5, Math.round(input.performance.difficulty_level))),
+    };
+  }
+
+  if (input.coop) {
+    result.coop = { ...input.coop };
+  }
+
   return result;
 }
