@@ -1,0 +1,1541 @@
+{
+  "en": [
+    {
+      "title": "Story Time Reader",
+      "description": "Read a book or a story page for 15 minutes, then tell someone at home your favourite part.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads quietly, then shares the best part of the story",
+        "parent": ""
+      },
+      "steps": [
+        "Pick a book or a story you like",
+        "Read quietly for 15 minutes",
+        "Tell a family member your favourite part"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Draw My Family",
+      "description": "Draw a picture of your family doing something happy together and show it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Draws the picture and explains it",
+        "parent": ""
+      },
+      "steps": [
+        "Find paper and a pencil or colours",
+        "Draw your family doing something you all enjoy",
+        "Show your drawing and explain who is who"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Tidy Room Hero",
+      "description": "Make your sleeping area neat. Fold your clothes and put everything back where it belongs.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Folds, sorts and puts things back in their place",
+        "parent": ""
+      },
+      "steps": [
+        "Fold your blanket and your clothes",
+        "Put books, shoes and toys back in their place",
+        "Ask a family member to come and see your tidy space"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Animal Moves",
+      "description": "Move like five different animals inside your home. Hop like a frog, stretch like a cat and stand tall like a giraffe.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Clears a little space and copies each animal",
+        "parent": ""
+      },
+      "steps": [
+        "Clear a little space on the floor",
+        "Move like five animals, ten moves each",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Counting Collector",
+      "description": "Collect 20 small things at home, like bottle caps or beans, and sort them by colour or size.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Collects, counts and sorts the items, then puts them back",
+        "parent": ""
+      },
+      "steps": [
+        "Collect 20 small things from around the house",
+        "Sort them into groups by colour or size",
+        "Count each group out loud",
+        "Put everything back where you found it"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10
+    },
+    {
+      "title": "Thank You Note",
+      "description": "Write or draw a short thank you note for someone in your family and give it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Writes or draws the note and hands it over",
+        "parent": ""
+      },
+      "steps": [
+        "Choose someone in your family to thank",
+        "Write or draw why you are thankful for them",
+        "Give them the note with a smile"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Balance Champion",
+      "description": "Stand on one leg like a stork and count how long you can stay still. Try both legs three times.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Balances, counts and tries to beat their own best count",
+        "parent": ""
+      },
+      "steps": [
+        "Stand in a clear space away from furniture",
+        "Balance on one leg and count out loud",
+        "Switch legs and try three times each"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10
+    },
+    {
+      "title": "Word Explorer",
+      "description": "Learn three new words in Amharic, Afaan Oromoo or English and use each one in a sentence.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Finds three new words and makes a sentence with each",
+        "parent": ""
+      },
+      "steps": [
+        "Ask a family member or look in a book for three new words",
+        "Say each word out loud three times",
+        "Make one sentence with each word"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15
+    },
+    {
+      "title": "Shiro Helper",
+      "description": "Help your parent prepare shiro for the family. You get the bowls and powder ready, and your parent does the cooking.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, measures the shiro powder into a bowl and sets out the plates",
+        "parent": "Does all the cooking at the stove, all the cutting, and carries anything hot"
+      },
+      "steps": [
+        "Wash your hands together",
+        "Child measures the shiro powder into a bowl",
+        "Parent cooks the shiro while the child sets out the plates",
+        "Eat together and say what you liked most"
+      ],
+      "activity": null,
+      "supervision_note": "Only the parent works at the stove and does the cutting. The child stays back from hot pots.",
+      "needs_parent": true,
+      "points": 30
+    },
+    {
+      "title": "Injera Table Helper",
+      "description": "Help get the family meal ready. Roll the injera, arrange the tray and call everyone to eat.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, rolls the injera and arranges it on the tray",
+        "parent": "Prepares the food and carries every hot dish"
+      },
+      "steps": [
+        "Wash your hands well",
+        "Roll the injera and arrange it neatly on the tray",
+        "Parent brings the hot dishes to the table",
+        "Call everyone to eat together"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries all hot food. The child only handles the injera and the tray.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Coffee Ceremony Helper",
+      "description": "Help with the family coffee ceremony. Arrange the cups, spread the grass and serve the snack to everyone.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Spreads the grass, arranges the cups and serves the popcorn or kolo",
+        "parent": "Roasts, grinds and pours the coffee, and handles everything hot"
+      },
+      "steps": [
+        "Spread the grass and arrange the small cups",
+        "Parent roasts and prepares the coffee",
+        "Child serves popcorn or kolo to everyone",
+        "Help collect the cups when the ceremony ends"
+      ],
+      "activity": null,
+      "supervision_note": "Only the adult touches the stove, the jebena and the hot coffee. The child serves the snack and stays seated nearby.",
+      "needs_parent": true,
+      "points": 25
+    },
+    {
+      "title": "Compound Clean-Up Team",
+      "description": "Tidy the family compound together. Sweep the leaves and put things back in their place.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sweeps leaves into a pile and collects things that belong inside",
+        "parent": "Lifts heavy things, handles anything broken or dirty, and takes out the rubbish"
+      },
+      "steps": [
+        "Choose one part of the compound to tidy",
+        "Child sweeps the leaves into a pile",
+        "Parent removes the pile and anything heavy or broken",
+        "Wash your hands together when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent handles anything heavy, broken or dirty. The child uses only a broom.",
+      "needs_parent": true,
+      "points": 25
+    },
+    {
+      "title": "Gebeta Game Time",
+      "description": "Play gebeta with a parent or grandparent. Use a board, or small holes in the soil and pebbles.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sets up the pebbles and takes turns kindly",
+        "parent": "Explains the rules and plays along"
+      },
+      "steps": [
+        "Set up the gebeta board, or make small holes in the soil and collect pebbles",
+        "Ask your parent to explain the rules",
+        "Play two rounds and cheer for each other"
+      ],
+      "activity": null,
+      "supervision_note": "Play for fun and cheer for each other. An adult stays with the child for the whole game.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Family Story Circle",
+      "description": "Ask a parent or grandparent to tell you a story from when they were young, then tell it back in your own words.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Listens carefully, asks one question and retells the story",
+        "parent": "Tells a story from their childhood or a traditional tale"
+      },
+      "steps": [
+        "Sit together in a comfortable place",
+        "Listen to the story without interrupting",
+        "Ask one question about the story",
+        "Tell the story back in your own words"
+      ],
+      "activity": null,
+      "supervision_note": "A calm time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Laundry Folding Team",
+      "description": "Fold the clean clothes together. Pair the socks, fold the small things and carry your own pile.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Pairs the socks and folds the small clothes",
+        "parent": "Folds the big items and puts clothes on the top shelves"
+      },
+      "steps": [
+        "Sort the clean clothes into piles for each person",
+        "Child pairs the socks and folds the small clothes",
+        "Parent folds the big items",
+        "Carry your own pile to where it belongs"
+      ],
+      "activity": null,
+      "supervision_note": "The parent reaches the top shelves and carries the heavy piles.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Eskista Dance Time",
+      "description": "Dance eskista together for ten minutes. Clap or sing the rhythm yourselves, with no screens.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Picks the song to sing and copies the shoulder moves",
+        "parent": "Shows the moves and claps the rhythm"
+      },
+      "steps": [
+        "Clear a little space in the room",
+        "Clap or sing a song you both know",
+        "Dance together for ten minutes",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "Dance in a clear space away from furniture. An adult joins in.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Plant Care Team",
+      "description": "Look after the plants at home together. Give them water and remove the dry leaves.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Waters the plants with a small cup and picks off dry leaves",
+        "parent": "Carries the heavy water container and shows how much water each plant needs"
+      },
+      "steps": [
+        "Fill a small cup with water with your parent",
+        "Water each plant slowly at the roots",
+        "Pick off the dry leaves and put them in the rubbish",
+        "Wash your hands when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries the heavy water container. The child uses only a small cup.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Read Aloud Together",
+      "description": "Read a story out loud with a parent. Take turns reading one page each.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads one page out loud, then listens",
+        "parent": "Reads the next page and helps with hard words"
+      },
+      "steps": [
+        "Choose a book or story together",
+        "Take turns reading one page each",
+        "Talk about what might happen next"
+      ],
+      "activity": null,
+      "supervision_note": "A quiet time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20
+    },
+    {
+      "title": "Football With Approved Friends",
+      "description": "Play football for 30 minutes with approved friends, in a place your parent chooses.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays fairly and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Play football in the place your parent approved",
+        "Come home when the 30 minutes are over",
+        "Tell your parent about the game"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 25
+    },
+    {
+      "title": "Jump Rope With Approved Friends",
+      "description": "Jump rope for 20 minutes with approved friends, in the compound or a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, takes turns and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to play",
+        "Take turns jumping and turning the rope",
+        "Count the jumps for each other and cheer",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20
+    },
+    {
+      "title": "Segno Maksegno Hopscotch",
+      "description": "Draw the squares on the ground and play Segno Maksegno with approved friends for 20 minutes.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, draws the squares and takes turns",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Draw the squares on the ground with a stick or chalk",
+        "Take turns hopping through the squares",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20
+    },
+    {
+      "title": "Abarosh Tag Game",
+      "description": "Play abarosh, the chasing game, with approved friends for 20 minutes in a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays gently and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Agree together where the play area ends",
+        "Take turns being the chaser",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20
+    },
+    {
+      "title": "Nature Treasure Hunt",
+      "description": "With approved friends, find five things from nature in the compound: a leaf, a smooth stone, a feather, a flower and a seed.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, searches with friends and shows what they found",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to look",
+        "Look for the five nature treasures together",
+        "Show your parent what you found",
+        "Come home after 20 minutes and wash your hands"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20
+    },
+    {
+      "title": "Friendly Relay Run",
+      "description": "Run a relay with approved friends in the place your parent approves. Mix the teams and cheer for everyone.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, runs in a mixed team and cheers for everyone",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to run",
+        "Mark a start line and a turning point",
+        "Run in mixed teams and cheer for everyone",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20
+    }
+  ],
+  "am": [
+    {
+      "title": "Story Time Reader",
+      "description": "Read a book or a story page for 15 minutes, then tell someone at home your favourite part.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads quietly, then shares the best part of the story",
+        "parent": ""
+      },
+      "steps": [
+        "Pick a book or a story you like",
+        "Read quietly for 15 minutes",
+        "Tell a family member your favourite part"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Draw My Family",
+      "description": "Draw a picture of your family doing something happy together and show it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Draws the picture and explains it",
+        "parent": ""
+      },
+      "steps": [
+        "Find paper and a pencil or colours",
+        "Draw your family doing something you all enjoy",
+        "Show your drawing and explain who is who"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Tidy Room Hero",
+      "description": "Make your sleeping area neat. Fold your clothes and put everything back where it belongs.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Folds, sorts and puts things back in their place",
+        "parent": ""
+      },
+      "steps": [
+        "Fold your blanket and your clothes",
+        "Put books, shoes and toys back in their place",
+        "Ask a family member to come and see your tidy space"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Animal Moves",
+      "description": "Move like five different animals inside your home. Hop like a frog, stretch like a cat and stand tall like a giraffe.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Clears a little space and copies each animal",
+        "parent": ""
+      },
+      "steps": [
+        "Clear a little space on the floor",
+        "Move like five animals, ten moves each",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Counting Collector",
+      "description": "Collect 20 small things at home, like bottle caps or beans, and sort them by colour or size.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Collects, counts and sorts the items, then puts them back",
+        "parent": ""
+      },
+      "steps": [
+        "Collect 20 small things from around the house",
+        "Sort them into groups by colour or size",
+        "Count each group out loud",
+        "Put everything back where you found it"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10,
+      "needs_translation": true
+    },
+    {
+      "title": "Thank You Note",
+      "description": "Write or draw a short thank you note for someone in your family and give it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Writes or draws the note and hands it over",
+        "parent": ""
+      },
+      "steps": [
+        "Choose someone in your family to thank",
+        "Write or draw why you are thankful for them",
+        "Give them the note with a smile"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Balance Champion",
+      "description": "Stand on one leg like a stork and count how long you can stay still. Try both legs three times.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Balances, counts and tries to beat their own best count",
+        "parent": ""
+      },
+      "steps": [
+        "Stand in a clear space away from furniture",
+        "Balance on one leg and count out loud",
+        "Switch legs and try three times each"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10,
+      "needs_translation": true
+    },
+    {
+      "title": "Word Explorer",
+      "description": "Learn three new words in Amharic, Afaan Oromoo or English and use each one in a sentence.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Finds three new words and makes a sentence with each",
+        "parent": ""
+      },
+      "steps": [
+        "Ask a family member or look in a book for three new words",
+        "Say each word out loud three times",
+        "Make one sentence with each word"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Shiro Helper",
+      "description": "Help your parent prepare shiro for the family. You get the bowls and powder ready, and your parent does the cooking.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, measures the shiro powder into a bowl and sets out the plates",
+        "parent": "Does all the cooking at the stove, all the cutting, and carries anything hot"
+      },
+      "steps": [
+        "Wash your hands together",
+        "Child measures the shiro powder into a bowl",
+        "Parent cooks the shiro while the child sets out the plates",
+        "Eat together and say what you liked most"
+      ],
+      "activity": null,
+      "supervision_note": "Only the parent works at the stove and does the cutting. The child stays back from hot pots.",
+      "needs_parent": true,
+      "points": 30,
+      "needs_translation": true
+    },
+    {
+      "title": "Injera Table Helper",
+      "description": "Help get the family meal ready. Roll the injera, arrange the tray and call everyone to eat.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, rolls the injera and arranges it on the tray",
+        "parent": "Prepares the food and carries every hot dish"
+      },
+      "steps": [
+        "Wash your hands well",
+        "Roll the injera and arrange it neatly on the tray",
+        "Parent brings the hot dishes to the table",
+        "Call everyone to eat together"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries all hot food. The child only handles the injera and the tray.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Coffee Ceremony Helper",
+      "description": "Help with the family coffee ceremony. Arrange the cups, spread the grass and serve the snack to everyone.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Spreads the grass, arranges the cups and serves the popcorn or kolo",
+        "parent": "Roasts, grinds and pours the coffee, and handles everything hot"
+      },
+      "steps": [
+        "Spread the grass and arrange the small cups",
+        "Parent roasts and prepares the coffee",
+        "Child serves popcorn or kolo to everyone",
+        "Help collect the cups when the ceremony ends"
+      ],
+      "activity": null,
+      "supervision_note": "Only the adult touches the stove, the jebena and the hot coffee. The child serves the snack and stays seated nearby.",
+      "needs_parent": true,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Compound Clean-Up Team",
+      "description": "Tidy the family compound together. Sweep the leaves and put things back in their place.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sweeps leaves into a pile and collects things that belong inside",
+        "parent": "Lifts heavy things, handles anything broken or dirty, and takes out the rubbish"
+      },
+      "steps": [
+        "Choose one part of the compound to tidy",
+        "Child sweeps the leaves into a pile",
+        "Parent removes the pile and anything heavy or broken",
+        "Wash your hands together when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent handles anything heavy, broken or dirty. The child uses only a broom.",
+      "needs_parent": true,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Gebeta Game Time",
+      "description": "Play gebeta with a parent or grandparent. Use a board, or small holes in the soil and pebbles.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sets up the pebbles and takes turns kindly",
+        "parent": "Explains the rules and plays along"
+      },
+      "steps": [
+        "Set up the gebeta board, or make small holes in the soil and collect pebbles",
+        "Ask your parent to explain the rules",
+        "Play two rounds and cheer for each other"
+      ],
+      "activity": null,
+      "supervision_note": "Play for fun and cheer for each other. An adult stays with the child for the whole game.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Family Story Circle",
+      "description": "Ask a parent or grandparent to tell you a story from when they were young, then tell it back in your own words.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Listens carefully, asks one question and retells the story",
+        "parent": "Tells a story from their childhood or a traditional tale"
+      },
+      "steps": [
+        "Sit together in a comfortable place",
+        "Listen to the story without interrupting",
+        "Ask one question about the story",
+        "Tell the story back in your own words"
+      ],
+      "activity": null,
+      "supervision_note": "A calm time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Laundry Folding Team",
+      "description": "Fold the clean clothes together. Pair the socks, fold the small things and carry your own pile.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Pairs the socks and folds the small clothes",
+        "parent": "Folds the big items and puts clothes on the top shelves"
+      },
+      "steps": [
+        "Sort the clean clothes into piles for each person",
+        "Child pairs the socks and folds the small clothes",
+        "Parent folds the big items",
+        "Carry your own pile to where it belongs"
+      ],
+      "activity": null,
+      "supervision_note": "The parent reaches the top shelves and carries the heavy piles.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Eskista Dance Time",
+      "description": "Dance eskista together for ten minutes. Clap or sing the rhythm yourselves, with no screens.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Picks the song to sing and copies the shoulder moves",
+        "parent": "Shows the moves and claps the rhythm"
+      },
+      "steps": [
+        "Clear a little space in the room",
+        "Clap or sing a song you both know",
+        "Dance together for ten minutes",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "Dance in a clear space away from furniture. An adult joins in.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Plant Care Team",
+      "description": "Look after the plants at home together. Give them water and remove the dry leaves.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Waters the plants with a small cup and picks off dry leaves",
+        "parent": "Carries the heavy water container and shows how much water each plant needs"
+      },
+      "steps": [
+        "Fill a small cup with water with your parent",
+        "Water each plant slowly at the roots",
+        "Pick off the dry leaves and put them in the rubbish",
+        "Wash your hands when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries the heavy water container. The child uses only a small cup.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Read Aloud Together",
+      "description": "Read a story out loud with a parent. Take turns reading one page each.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads one page out loud, then listens",
+        "parent": "Reads the next page and helps with hard words"
+      },
+      "steps": [
+        "Choose a book or story together",
+        "Take turns reading one page each",
+        "Talk about what might happen next"
+      ],
+      "activity": null,
+      "supervision_note": "A quiet time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Football With Approved Friends",
+      "description": "Play football for 30 minutes with approved friends, in a place your parent chooses.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays fairly and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Play football in the place your parent approved",
+        "Come home when the 30 minutes are over",
+        "Tell your parent about the game"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Jump Rope With Approved Friends",
+      "description": "Jump rope for 20 minutes with approved friends, in the compound or a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, takes turns and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to play",
+        "Take turns jumping and turning the rope",
+        "Count the jumps for each other and cheer",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Segno Maksegno Hopscotch",
+      "description": "Draw the squares on the ground and play Segno Maksegno with approved friends for 20 minutes.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, draws the squares and takes turns",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Draw the squares on the ground with a stick or chalk",
+        "Take turns hopping through the squares",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Abarosh Tag Game",
+      "description": "Play abarosh, the chasing game, with approved friends for 20 minutes in a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays gently and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Agree together where the play area ends",
+        "Take turns being the chaser",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Nature Treasure Hunt",
+      "description": "With approved friends, find five things from nature in the compound: a leaf, a smooth stone, a feather, a flower and a seed.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, searches with friends and shows what they found",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to look",
+        "Look for the five nature treasures together",
+        "Show your parent what you found",
+        "Come home after 20 minutes and wash your hands"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Friendly Relay Run",
+      "description": "Run a relay with approved friends in the place your parent approves. Mix the teams and cheer for everyone.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, runs in a mixed team and cheers for everyone",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to run",
+        "Mark a start line and a turning point",
+        "Run in mixed teams and cheer for everyone",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    }
+  ],
+  "om": [
+    {
+      "title": "Story Time Reader",
+      "description": "Read a book or a story page for 15 minutes, then tell someone at home your favourite part.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads quietly, then shares the best part of the story",
+        "parent": ""
+      },
+      "steps": [
+        "Pick a book or a story you like",
+        "Read quietly for 15 minutes",
+        "Tell a family member your favourite part"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Draw My Family",
+      "description": "Draw a picture of your family doing something happy together and show it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Draws the picture and explains it",
+        "parent": ""
+      },
+      "steps": [
+        "Find paper and a pencil or colours",
+        "Draw your family doing something you all enjoy",
+        "Show your drawing and explain who is who"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Tidy Room Hero",
+      "description": "Make your sleeping area neat. Fold your clothes and put everything back where it belongs.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Folds, sorts and puts things back in their place",
+        "parent": ""
+      },
+      "steps": [
+        "Fold your blanket and your clothes",
+        "Put books, shoes and toys back in their place",
+        "Ask a family member to come and see your tidy space"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Animal Moves",
+      "description": "Move like five different animals inside your home. Hop like a frog, stretch like a cat and stand tall like a giraffe.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Clears a little space and copies each animal",
+        "parent": ""
+      },
+      "steps": [
+        "Clear a little space on the floor",
+        "Move like five animals, ten moves each",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Counting Collector",
+      "description": "Collect 20 small things at home, like bottle caps or beans, and sort them by colour or size.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Collects, counts and sorts the items, then puts them back",
+        "parent": ""
+      },
+      "steps": [
+        "Collect 20 small things from around the house",
+        "Sort them into groups by colour or size",
+        "Count each group out loud",
+        "Put everything back where you found it"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10,
+      "needs_translation": true
+    },
+    {
+      "title": "Thank You Note",
+      "description": "Write or draw a short thank you note for someone in your family and give it to them.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Writes or draws the note and hands it over",
+        "parent": ""
+      },
+      "steps": [
+        "Choose someone in your family to thank",
+        "Write or draw why you are thankful for them",
+        "Give them the note with a smile"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Balance Champion",
+      "description": "Stand on one leg like a stork and count how long you can stay still. Try both legs three times.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Balances, counts and tries to beat their own best count",
+        "parent": ""
+      },
+      "steps": [
+        "Stand in a clear space away from furniture",
+        "Balance on one leg and count out loud",
+        "Switch legs and try three times each"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 10,
+      "needs_translation": true
+    },
+    {
+      "title": "Word Explorer",
+      "description": "Learn three new words in Amharic, Afaan Oromoo or English and use each one in a sentence.",
+      "category": "real_world",
+      "type": "solo",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Finds three new words and makes a sentence with each",
+        "parent": ""
+      },
+      "steps": [
+        "Ask a family member or look in a book for three new words",
+        "Say each word out loud three times",
+        "Make one sentence with each word"
+      ],
+      "activity": null,
+      "supervision_note": "",
+      "needs_parent": false,
+      "points": 15,
+      "needs_translation": true
+    },
+    {
+      "title": "Shiro Helper",
+      "description": "Help your parent prepare shiro for the family. You get the bowls and powder ready, and your parent does the cooking.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, measures the shiro powder into a bowl and sets out the plates",
+        "parent": "Does all the cooking at the stove, all the cutting, and carries anything hot"
+      },
+      "steps": [
+        "Wash your hands together",
+        "Child measures the shiro powder into a bowl",
+        "Parent cooks the shiro while the child sets out the plates",
+        "Eat together and say what you liked most"
+      ],
+      "activity": null,
+      "supervision_note": "Only the parent works at the stove and does the cutting. The child stays back from hot pots.",
+      "needs_parent": true,
+      "points": 30,
+      "needs_translation": true
+    },
+    {
+      "title": "Injera Table Helper",
+      "description": "Help get the family meal ready. Roll the injera, arrange the tray and call everyone to eat.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Washes hands, rolls the injera and arranges it on the tray",
+        "parent": "Prepares the food and carries every hot dish"
+      },
+      "steps": [
+        "Wash your hands well",
+        "Roll the injera and arrange it neatly on the tray",
+        "Parent brings the hot dishes to the table",
+        "Call everyone to eat together"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries all hot food. The child only handles the injera and the tray.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Coffee Ceremony Helper",
+      "description": "Help with the family coffee ceremony. Arrange the cups, spread the grass and serve the snack to everyone.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Spreads the grass, arranges the cups and serves the popcorn or kolo",
+        "parent": "Roasts, grinds and pours the coffee, and handles everything hot"
+      },
+      "steps": [
+        "Spread the grass and arrange the small cups",
+        "Parent roasts and prepares the coffee",
+        "Child serves popcorn or kolo to everyone",
+        "Help collect the cups when the ceremony ends"
+      ],
+      "activity": null,
+      "supervision_note": "Only the adult touches the stove, the jebena and the hot coffee. The child serves the snack and stays seated nearby.",
+      "needs_parent": true,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Compound Clean-Up Team",
+      "description": "Tidy the family compound together. Sweep the leaves and put things back in their place.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sweeps leaves into a pile and collects things that belong inside",
+        "parent": "Lifts heavy things, handles anything broken or dirty, and takes out the rubbish"
+      },
+      "steps": [
+        "Choose one part of the compound to tidy",
+        "Child sweeps the leaves into a pile",
+        "Parent removes the pile and anything heavy or broken",
+        "Wash your hands together when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent handles anything heavy, broken or dirty. The child uses only a broom.",
+      "needs_parent": true,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Gebeta Game Time",
+      "description": "Play gebeta with a parent or grandparent. Use a board, or small holes in the soil and pebbles.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Sets up the pebbles and takes turns kindly",
+        "parent": "Explains the rules and plays along"
+      },
+      "steps": [
+        "Set up the gebeta board, or make small holes in the soil and collect pebbles",
+        "Ask your parent to explain the rules",
+        "Play two rounds and cheer for each other"
+      ],
+      "activity": null,
+      "supervision_note": "Play for fun and cheer for each other. An adult stays with the child for the whole game.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Family Story Circle",
+      "description": "Ask a parent or grandparent to tell you a story from when they were young, then tell it back in your own words.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Listens carefully, asks one question and retells the story",
+        "parent": "Tells a story from their childhood or a traditional tale"
+      },
+      "steps": [
+        "Sit together in a comfortable place",
+        "Listen to the story without interrupting",
+        "Ask one question about the story",
+        "Tell the story back in your own words"
+      ],
+      "activity": null,
+      "supervision_note": "A calm time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Laundry Folding Team",
+      "description": "Fold the clean clothes together. Pair the socks, fold the small things and carry your own pile.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Pairs the socks and folds the small clothes",
+        "parent": "Folds the big items and puts clothes on the top shelves"
+      },
+      "steps": [
+        "Sort the clean clothes into piles for each person",
+        "Child pairs the socks and folds the small clothes",
+        "Parent folds the big items",
+        "Carry your own pile to where it belongs"
+      ],
+      "activity": null,
+      "supervision_note": "The parent reaches the top shelves and carries the heavy piles.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Eskista Dance Time",
+      "description": "Dance eskista together for ten minutes. Clap or sing the rhythm yourselves, with no screens.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Picks the song to sing and copies the shoulder moves",
+        "parent": "Shows the moves and claps the rhythm"
+      },
+      "steps": [
+        "Clear a little space in the room",
+        "Clap or sing a song you both know",
+        "Dance together for ten minutes",
+        "Drink some water and rest"
+      ],
+      "activity": null,
+      "supervision_note": "Dance in a clear space away from furniture. An adult joins in.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Plant Care Team",
+      "description": "Look after the plants at home together. Give them water and remove the dry leaves.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Waters the plants with a small cup and picks off dry leaves",
+        "parent": "Carries the heavy water container and shows how much water each plant needs"
+      },
+      "steps": [
+        "Fill a small cup with water with your parent",
+        "Water each plant slowly at the roots",
+        "Pick off the dry leaves and put them in the rubbish",
+        "Wash your hands when you finish"
+      ],
+      "activity": null,
+      "supervision_note": "The parent carries the heavy water container. The child uses only a small cup.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Read Aloud Together",
+      "description": "Read a story out loud with a parent. Take turns reading one page each.",
+      "category": "real_world",
+      "type": "family",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Reads one page out loud, then listens",
+        "parent": "Reads the next page and helps with hard words"
+      },
+      "steps": [
+        "Choose a book or story together",
+        "Take turns reading one page each",
+        "Talk about what might happen next"
+      ],
+      "activity": null,
+      "supervision_note": "A quiet time together with no screens nearby.",
+      "needs_parent": true,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Football With Approved Friends",
+      "description": "Play football for 30 minutes with approved friends, in a place your parent chooses.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays fairly and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Play football in the place your parent approved",
+        "Come home when the 30 minutes are over",
+        "Tell your parent about the game"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 30 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 25,
+      "needs_translation": true
+    },
+    {
+      "title": "Jump Rope With Approved Friends",
+      "description": "Jump rope for 20 minutes with approved friends, in the compound or a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, takes turns and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to play",
+        "Take turns jumping and turning the rope",
+        "Count the jumps for each other and cheer",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Segno Maksegno Hopscotch",
+      "description": "Draw the squares on the ground and play Segno Maksegno with approved friends for 20 minutes.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, draws the squares and takes turns",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Draw the squares on the ground with a stick or chalk",
+        "Take turns hopping through the squares",
+        "Come home after 20 minutes"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Abarosh Tag Game",
+      "description": "Play abarosh, the chasing game, with approved friends for 20 minutes in a place your parent approves.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, plays gently and comes home on time",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can play and where",
+        "Agree together where the play area ends",
+        "Take turns being the chaser",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Nature Treasure Hunt",
+      "description": "With approved friends, find five things from nature in the compound: a leaf, a smooth stone, a feather, a flower and a seed.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, searches with friends and shows what they found",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to look",
+        "Look for the five nature treasures together",
+        "Show your parent what you found",
+        "Come home after 20 minutes and wash your hands"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    },
+    {
+      "title": "Friendly Relay Run",
+      "description": "Run a relay with approved friends in the place your parent approves. Mix the teams and cheer for everyone.",
+      "category": "real_world",
+      "type": "outdoor",
+      "interaction": "checklist",
+      "roles": {
+        "child": "Asks permission, runs in a mixed team and cheers for everyone",
+        "parent": "Approves the friends, the place and the time limit"
+      },
+      "steps": [
+        "Ask your parent which approved friends can join and where to run",
+        "Mark a start line and a turning point",
+        "Run in mixed teams and cheer for everyone",
+        "Come home after 20 minutes and drink some water"
+      ],
+      "activity": null,
+      "supervision_note": "Parent approves the friends, the place and the 20 minute limit. Stay together in the approved place and come home on time.",
+      "needs_parent": false,
+      "points": 20,
+      "needs_translation": true
+    }
+  ]
+}
