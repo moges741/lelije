@@ -47,6 +47,7 @@ The app needs the Nest API from `../backend` (see its README). In development, V
 
 | Variable | Default | Effect |
 | --- | --- | --- |
+| `VITE_API` | empty (on) | `off` uses the on-phone store without Postgres |
 | `VITE_POSE_MOCK` | `true` | `false` passes `mock: false` to the pose engine (real camera) |
 | `VITE_API_PROXY` | `http://localhost:3000` | Dev proxy target for `/api` |
 | `VITE_API_BASE` | empty | Prefix for API calls when the API is on another origin |
