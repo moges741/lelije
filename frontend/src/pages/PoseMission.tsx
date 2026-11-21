@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { ActivityHud, CameraIntro, CameraProblem } from '../components/Activity'
 import { CameraStage } from '../components/CameraStage'
-import { Icon } from '../components/Icon'
 import { MockControls } from '../components/MockControls'
-import { SafetyBanner } from '../components/SafetyBanner'
 import { StarProgress } from '../components/StarProgress'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
@@ -44,6 +43,9 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   const [count, setCount] = useState(0)
   const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
+  // The child chose to tap or use the keyboard instead of the camera.
+  const [withButtons, setWithButtons] = useState(false)
+  const mock = POSE_MOCK || withButtons
   const tally = useRef({ count: 0, startedAt: 0 })
 
   const finish = async (
@@ -65,7 +67,7 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   }
 
   const session = usePoseSession({
-    mock: POSE_MOCK,
+    mock,
     onReady() {
       tally.current = { count: 0, startedAt: performance.now() }
       setCount(0)
@@ -77,7 +79,8 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
       setCount(current.count)
       if (current.count === goal.count) {
         engine.stop()
-        void finish('pose', {
+        // Counted by button taps, not the camera, so it is not recorded as camera-verified.
+        void finish(withButtons && !POSE_MOCK ? 'self' : 'pose', {
           count: current.count,
           durationMs: Math.round(performance.now() - current.startedAt),
         })
@@ -89,36 +92,21 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   if (alreadyDone) return <Navigate to={backTo} replace />
 
   const { phase } = session
+  const useButtons = () => {
+    setWithButtons(true)
+    session.begin()
+  }
 
   if (phase === 'unavailable') {
     return (
       <main className="screen">
         <TopBar backTo={backTo} />
-        <div className="detail-head rise">
-          <span className="mission-icon is-big">
-            <Icon name="hand" size={40} />
-          </span>
-          <h1 className="title">{t('selfConfirmTitle')}</h1>
-          <p className="lead">{t('selfConfirmBody')}</p>
-        </div>
-        <div className="actions">
-          <button
-            type="button"
-            className="btn btn-sun btn-block"
-            disabled={saving}
-            onClick={() => void finish('self')}
-          >
-            {saving ? t('saving') : t('grownUpConfirm')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-plain btn-block"
-            disabled={saving}
-            onClick={session.begin}
-          >
-            {t('tryAgainCamera')}
-          </button>
-        </div>
+        <CameraProblem
+          saving={saving}
+          onRetry={session.begin}
+          onButtons={useButtons}
+          onGrownUp={() => void finish('self')}
+        />
       </main>
     )
   }
@@ -137,36 +125,28 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
         <span className="topbar-title">{mission.title}</span>
       </TopBar>
 
-      <CameraStage videoRef={session.videoRef} mock={POSE_MOCK} message={message} />
+      <CameraStage
+        videoRef={session.videoRef}
+        mock={mock}
+        message={message}
+        instruction={`${goal.count} × ${goalLabel}`}
+        instructionIcon={goal.detector === 'jump' ? 'jump' : 'arms'}
+        compact={phase === 'setup'}
+      />
 
       {phase === 'setup' ? (
-        <>
-          <SafetyBanner />
-          <div className="actions">
-            <button type="button" className="btn btn-sun btn-block" onClick={session.begin}>
-              <Icon name="camera" />
-              {t(POSE_MOCK ? 'startDemo' : 'allowCamera')}
-            </button>
-          </div>
-        </>
+        <CameraIntro mock={mock} onStart={session.begin} onFallback={useButtons} />
       ) : (
         <>
-          <p className="counter" aria-live="polite">
-            <strong key={count}>{count}</strong>
-            <span>
-              / {goal.count} {goalLabel}
-            </span>
-          </p>
-          <StarProgress count={count} goal={goal.count} />
-          <button
-            type="button"
-            className="btn btn-plain btn-block"
+          <ActivityHud
+            main={{ value: count, label: goalLabel }}
+            side={{ value: Math.max(goal.count - count, 0), label: t('toGo') }}
+            paused={paused}
             disabled={saving || phase !== 'running'}
-            onClick={() => setPaused((value) => !value)}
-          >
-            {t(paused ? 'resume' : 'pause')}
-          </button>
-          {POSE_MOCK && phase === 'running' && !saving && !paused && (
+            onPause={() => setPaused((value) => !value)}
+          />
+          <StarProgress count={count} goal={goal.count} />
+          {mock && phase === 'running' && !saving && !paused && (
             <MockControls actions={[goal.detector]} />
           )}
         </>

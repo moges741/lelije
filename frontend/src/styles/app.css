@@ -1,17 +1,30 @@
 :root {
-  --sky-deep: #114595;
-  --sky: #2a74d0;
-  --sky-low: #9fd6ff;
+  /* Action colour: deep teal. Older rules still call it --sky-deep / --sky. */
+  --teal: #0b6b66;
+  --teal-deep: #084f4b;
+  --sky-deep: var(--teal);
+  --sky: #1c8a82;
+  /* Scenery blue, used only for the landing sky and the account header. */
+  --scene-deep: #114595;
+  --scene: #2a74d0;
+  --scene-low: #9fd6ff;
   --grass: #46b562;
   --grass-deep: #23824a;
   --sun: #ffcf3f;
   --sun-deep: #d99a00;
   --coral: #ff6a4d;
+  /* Reject and other destructive actions: text-safe coral. */
+  --coral-deep: #c63d25;
+  --coral-soft: #fff0ec;
   --ink: #10284b;
   --ink-soft: #4a5f80;
   --card: #ffffff;
-  --line: #cfe0f3;
-  --tint: #e3f1ff;
+  --offwhite: #fbf7ef;
+  --mint: #e2f3ee;
+  --line: #d3e4de;
+  --tint: var(--mint);
+  --disabled: #e4e8e6;
+  --disabled-ink: #7b8a86;
 
   --font-display: 'Fredoka', 'Noto Sans Ethiopic', sans-serif;
   --font-body: 'Figtree', 'Noto Sans Ethiopic', sans-serif;
@@ -38,10 +51,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at 1px 1px, rgba(17, 69, 149, 0.07) 1px, transparent 1.5px) 0 0 / 22px
-      22px,
-    linear-gradient(180deg, #cde8ff 0%, #eef7ff 34%, #f5fbf1 100%) fixed;
+  background: var(--offwhite);
 }
 
 h1,
@@ -155,50 +165,109 @@ a {
   gap: 10px;
   min-height: var(--tap);
   padding: 0 22px;
-  border: 0;
-  border-radius: 18px;
-  font: 600 1.15rem var(--font-display);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  font: 600 1.1rem var(--font-display);
   text-align: center;
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
 }
 
 .btn:active {
-  transform: translateY(3px);
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: default;
+  transform: translateY(1px);
 }
 
 .btn-block {
   width: 100%;
 }
 
-.btn-sun {
-  background: var(--sun);
-  color: var(--ink);
-  box-shadow: 0 4px 0 var(--sun-deep);
+/* Primary: filled teal. (.btn-sun is the older class name for the same button.) */
+.btn-sun,
+.btn-primary {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
 }
 
-.btn-sun:active {
-  box-shadow: 0 1px 0 var(--sun-deep);
+.btn-sun:active,
+.btn-primary:active {
+  background: var(--teal-deep);
+  border-color: var(--teal-deep);
 }
 
+/* Secondary: light surface, teal border and text. */
 .btn-plain {
   background: var(--card);
-  color: var(--ink);
-  box-shadow:
-    inset 0 0 0 2px var(--line),
-    0 4px 0 var(--line);
+  border-color: var(--teal);
+  color: var(--teal);
 }
 
 .btn-plain:active {
-  box-shadow:
-    inset 0 0 0 2px var(--line),
-    0 1px 0 var(--line);
+  background: var(--mint);
+}
+
+/* Reject and other destructive actions; nothing else uses coral on a button. */
+.btn-danger {
+  background: var(--coral-soft);
+  border-color: var(--coral-deep);
+  color: var(--coral-deep);
+}
+
+.btn-danger:active {
+  background: #ffd9d1;
+}
+
+/* Disabled and loading look flat and grey, never just faded. */
+.btn:disabled {
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--disabled-ink);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+.btn[aria-busy='true']::before {
+  content: '';
+  width: 1em;
+  height: 1em;
+  border: 3px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+/* On the blue landing sky the primary button is yellow so it stands out. */
+.hero .btn-sun {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: var(--ink);
+}
+
+@media (hover: hover) {
+  .btn-sun:hover:not(:disabled),
+  .btn-primary:hover:not(:disabled) {
+    background: var(--teal-deep);
+    border-color: var(--teal-deep);
+  }
+
+  .btn-plain:hover:not(:disabled) {
+    background: var(--mint);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #ffd9d1;
+  }
+
+  .hero .btn-sun:hover:not(:disabled) {
+    background: #ffd966;
+    border-color: #ffd966;
+  }
 }
 
 .icon-btn {
@@ -246,11 +315,12 @@ a {
   overflow: hidden;
   min-height: 100dvh;
   padding: max(14px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.6vh, 26px);
   color: #fff;
-  background: linear-gradient(180deg, var(--sky-deep) 0%, var(--sky) 52%, var(--sky-low) 100%);
+  background: linear-gradient(180deg, var(--scene-deep) 0%, var(--scene) 52%, var(--scene-low) 100%);
 }
 
 .hero-scene {
@@ -294,47 +364,87 @@ a {
   fill: var(--grass-deep);
 }
 
-.hero-kid {
+.hero-cloud {
   position: absolute;
-  left: 50%;
-  bottom: 15%;
-  height: min(32vh, 300px);
-  translate: -50% 0;
-  animation: kid-hop 2.6s ease-in-out infinite;
+  width: 120px;
+  height: 36px;
+  border-radius: 36px;
+  background: rgb(255 255 255 / 0.88);
+}
+
+.hero-cloud::before,
+.hero-cloud::after {
+  content: '';
+  position: absolute;
+  bottom: 16px;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.hero-cloud::before {
+  left: 22px;
+  width: 50px;
+  height: 50px;
+}
+
+.hero-cloud::after {
+  left: 58px;
+  width: 38px;
+  height: 38px;
+}
+
+.hero-cloud-left {
+  top: 46%;
+  left: 3%;
+}
+
+.hero-cloud-right {
+  top: 58%;
+  right: 3%;
+  scale: 0.8;
 }
 
 .hero-top {
-  justify-self: end;
+  align-self: flex-end;
 }
 
 .hero-copy {
-  align-self: start;
-  max-width: 30rem;
-  margin-top: clamp(8px, 4vh, 48px);
+  width: min(40rem, 100%);
   text-align: center;
   animation: rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .hero-brand {
-  font: 700 clamp(4.6rem, 24vw, 9rem) / 0.95 var(--font-display);
-  letter-spacing: -0.03em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 0.4em;
+  font: 700 clamp(2.4rem, 11vw, 3.6rem) / 1 var(--font-display);
+  letter-spacing: -0.02em;
 }
 
-.hero-tagline {
-  margin-top: 10px;
-  font: 600 clamp(1.3rem, 5.4vw, 1.8rem) / 1.2 var(--font-display);
+.hero-brand-am {
+  font-size: 0.75em;
+  color: var(--sun);
+  letter-spacing: 0;
+}
+
+.hero-headline {
+  margin-top: 14px;
+  font: 700 clamp(1.9rem, 7.4vw, 3.1rem) / 1.1 var(--font-display);
   text-wrap: balance;
 }
 
 .hero-support {
-  margin-top: 10px;
-  font-size: 1.05rem;
+  margin-top: 12px;
+  font-size: 1.1rem;
   font-weight: 600;
   text-wrap: balance;
 }
 
 .hero-actions {
-  width: min(360px, 100%);
+  width: min(440px, 100%);
   display: grid;
   gap: 12px;
 }
@@ -342,6 +452,44 @@ a {
 .hero-cta {
   width: 100%;
   animation: rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 160ms both;
+}
+
+.hero-login {
+  margin-top: -4px;
+  text-align: center;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* The art stays centred and never overlaps the copy; sky, clouds and hills show on both sides. */
+.hero-art {
+  width: min(720px, 100%);
+  margin-top: auto;
+  animation: rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) 240ms both;
+}
+
+.hero-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 46dvh;
+  margin-inline: auto;
+}
+
+.art-kid-bob {
+  animation: kid-hop 2.4s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .hero-actions {
+    width: min(620px, 100%);
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-login,
+  .hero-resume {
+    grid-column: 1 / -1;
+  }
 }
 
 .screen-wide {
@@ -400,8 +548,257 @@ a {
 }
 
 .field-error {
-  color: var(--coral);
+  color: var(--coral-deep);
   font-weight: 700;
+}
+
+.text-field input:focus {
+  box-shadow: inset 0 0 0 2px var(--teal);
+}
+
+.text-field input[aria-invalid='true'],
+.text-field input[aria-invalid='true']:focus {
+  box-shadow: inset 0 0 0 2px var(--coral-deep);
+}
+
+.text-field input:focus-visible {
+  outline-offset: 0;
+}
+
+/* ---------- account screens ---------- */
+
+.auth-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 18px 18px 22px;
+  border-radius: 24px;
+  color: #fff;
+  background: linear-gradient(160deg, var(--scene-deep) 0%, var(--scene) 100%);
+}
+
+.auth-hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -34px;
+  right: -34px;
+  width: 120px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe38a 0 46%, var(--sun) 47% 100%);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font: 700 1.3rem / 1 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.auth-brand [lang] {
+  color: var(--sun);
+  font-size: 0.85em;
+  letter-spacing: 0;
+}
+
+.auth-badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.2);
+  font: 600 0.85rem var(--font-body);
+}
+
+.auth-title {
+  margin-top: 8px;
+  max-width: 86%;
+  font: 700 clamp(1.7rem, 6.6vw, 2.1rem) / 1.1 var(--font-display);
+  text-wrap: balance;
+}
+
+.auth-lead {
+  margin-top: 6px;
+  max-width: 92%;
+  font-weight: 600;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.85);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.auth-tab {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  padding: 0 8px;
+  border-radius: 14px;
+  color: var(--ink-soft);
+  font: 600 1.05rem var(--font-display);
+  text-align: center;
+}
+
+.auth-tab[aria-current='page'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.auth-body {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--card);
+  box-shadow:
+    inset 0 0 0 2px var(--line),
+    0 6px 0 var(--line);
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-profiles {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 2px solid var(--line);
+}
+
+.join-family {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--tint);
+  color: var(--ink-soft);
+}
+
+.join-family strong {
+  color: var(--ink);
+  font: 700 1.3rem var(--font-display);
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font: 600 0.95rem var(--font-display);
+}
+
+.steps li > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--sky-deep);
+  font: 700 0.9rem var(--font-display);
+}
+
+.steps li.is-on {
+  color: var(--ink);
+}
+
+.steps li.is-on > span {
+  background: var(--ink);
+  color: #fff;
+}
+
+.steps li.is-done > span {
+  background: var(--grass);
+  color: #fff;
+}
+
+.steps li + li::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  background: var(--line);
+}
+
+.secret-wrap {
+  position: relative;
+  display: block;
+}
+
+.secret-wrap input {
+  width: 100%;
+  padding-inline-end: 60px;
+}
+
+.secret-toggle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: var(--ink-soft);
+}
+
+.path-card.has-icon {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.path-card .path-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: var(--tint);
+  color: var(--sky-deep);
+}
+
+.path-card .path-text {
+  display: grid;
+  gap: 4px;
+}
+
+.path-card .path-text strong {
+  color: var(--ink);
+}
+
+.path-card .path-badge {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--sky-deep);
+  font: 700 0.8rem var(--font-body);
+  font-style: normal;
+}
+
+.path-card.is-child .path-icon {
+  background: #fff4cc;
+  color: var(--sun-deep);
 }
 
 .check {
@@ -477,12 +874,6 @@ a {
 
 .mission-card {
   text-align: start;
-}
-
-@media (max-height: 600px) {
-  .hero-kid {
-    display: none;
-  }
 }
 
 /* ---------- setup ---------- */
@@ -645,11 +1036,64 @@ a {
   font-size: 0.95rem;
 }
 
-.mission-points {
-  padding: 6px 10px;
-  border-radius: 12px;
+.mission-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+}
+
+.mission-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mission-body .mission-points {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.mission-points .icon {
+  color: var(--sun-deep);
+}
+
+.mission-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--sky-deep);
+  font: 600 0.82rem var(--font-body);
+}
+
+.mission-body .mission-badge {
+  color: var(--sky-deep);
+  font-size: 0.82rem;
+}
+
+.mission-body .mission-badge.is-grownup {
+  background: #fff4cc;
+  color: #7a5400;
+}
+
+.mission-go {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   background: var(--sun);
-  font: 700 1.05rem var(--font-display);
+  color: var(--ink);
+}
+
+.mission-card.is-done .mission-go {
+  background: #dcf5e3;
+  color: var(--grass-deep);
 }
 
 .empty {
@@ -669,7 +1113,7 @@ a {
   margin-top: auto;
   padding: 18px;
   border-radius: 24px;
-  background: linear-gradient(135deg, var(--sky-deep), var(--sky));
+  background: linear-gradient(135deg, var(--scene-deep), var(--scene));
   color: #fff;
 }
 
@@ -751,6 +1195,51 @@ a {
 
 .facts .icon {
   color: var(--sky);
+}
+
+.how {
+  display: grid;
+  gap: 10px;
+}
+
+.how-title {
+  margin: 0;
+  font: 600 1.15rem var(--font-display);
+}
+
+.how-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.how-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 2px var(--line);
+  font-weight: 600;
+  counter-increment: step;
+}
+
+.how-steps li::before {
+  content: counter(step);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sky-deep);
+  color: #fff;
+  font: 700 1rem var(--font-display);
 }
 
 .done-note {
@@ -874,6 +1363,103 @@ a {
   gap: 12px;
 }
 
+.hud .counter {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 64px;
+  font-size: 0.95rem;
+}
+
+.hud .counter strong {
+  font-size: 2.3rem;
+}
+
+.hud-pause {
+  min-width: 112px;
+}
+
+.stage.is-compact {
+  flex: none;
+  min-height: 0;
+  height: clamp(150px, 26dvh, 240px);
+}
+
+.stage-instruction {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgb(16 40 75 / 0.85);
+  color: #fff;
+  font: 600 1.05rem var(--font-display);
+  pointer-events: none;
+}
+
+.stage-instruction .icon {
+  color: var(--sun);
+}
+
+.stage-instruction.is-fading {
+  animation: fade-away 500ms ease 6s forwards;
+}
+
+.time-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #c3d5ea;
+  overflow: hidden;
+}
+
+.time-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f2b100;
+  transition: width 200ms linear;
+}
+
+.camera-intro {
+  display: grid;
+  gap: 10px;
+}
+
+.why-list {
+  display: grid;
+  gap: 8px;
+}
+
+.why-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 2px var(--line);
+  font-weight: 600;
+}
+
+.why-list .icon {
+  color: var(--sky);
+}
+
+.mock-buttons kbd {
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: rgb(16 40 75 / 0.12);
+  font: 700 0.85rem var(--font-body);
+}
+
 .mock-controls {
   display: grid;
   gap: 8px;
@@ -893,6 +1479,40 @@ a {
 .mock-buttons .btn {
   flex: 1;
   padding: 0 12px;
+}
+
+/* ---------- status labels ---------- */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: 3px 12px 3px 8px;
+  border-radius: 999px;
+  font: 700 0.85rem var(--font-body);
+  white-space: nowrap;
+}
+
+.status-done {
+  background: var(--mint);
+  color: var(--teal-deep);
+}
+
+.status-waiting {
+  background: #fff4cc;
+  color: #7a5400;
+}
+
+.status-redo,
+.status-problem {
+  background: var(--coral-soft);
+  color: var(--coral-deep);
+}
+
+.status-info {
+  background: #edf1f0;
+  color: var(--ink-soft);
 }
 
 /* ---------- success ---------- */
@@ -930,17 +1550,70 @@ a {
   animation: spark-out 900ms ease-out 200ms both;
 }
 
-.success-points {
+.burst.is-calm {
+  height: 120px;
+}
+
+.calm-badge {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--teal);
+}
+
+.calm-badge.is-problem {
+  background: var(--coral-soft);
+  color: var(--coral-deep);
+}
+
+.outcome {
   display: grid;
   justify-items: center;
+  gap: 6px;
   color: var(--ink-soft);
   font-weight: 600;
 }
 
-.success-points strong {
-  color: var(--ink);
+.outcome .status {
+  justify-self: center;
+  font-size: 1rem;
+}
+
+.points-earned,
+.points-held {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.points-earned strong {
+  color: var(--teal);
   font: 700 4rem / 1 var(--font-display);
   animation: pop 420ms ease-out 260ms both;
+}
+
+/* Points that are not confirmed yet look quieter and are never shown with a plus sign. */
+.points-held {
+  padding: 12px 16px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+.points-held strong {
+  color: var(--ink);
+  font: 700 2.4rem / 1 var(--font-display);
+}
+
+.success-home {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  font-size: 1.05rem;
 }
 
 .success-total {
@@ -990,6 +1663,19 @@ a {
 @keyframes star-fall {
   to {
     transform: translateY(115vh) rotate(260deg);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-away {
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 

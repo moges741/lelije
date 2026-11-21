@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { missionIcon } from '../components/MissionCard'
 import { SafetyBanner } from '../components/SafetyBanner'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
@@ -27,6 +28,9 @@ export function MissionDetail() {
   const done = progress.todayCompleted.includes(mission.id)
   const pending = progress.pendingIds.includes(mission.id)
   const goal = mission.verification === 'pose' ? mission.goal : undefined
+  const steps = goal
+    ? (['stepPose1', 'stepPose2', 'stepPose3'] as const)
+    : (['stepSelf1', 'stepSelf2', 'stepSelf3'] as const)
 
   const confirmSelf = async () => {
     setSaving(true)
@@ -49,7 +53,7 @@ export function MissionDetail() {
 
       <div className="detail-head rise">
         <span className="mission-icon is-big">
-          <Icon name={goal ? 'camera' : 'hand'} size={40} />
+          <Icon name={missionIcon(mission)} size={40} />
         </span>
         <h1 className="title">{mission.title}</h1>
         <p className="lead">{mission.description}</p>
@@ -64,14 +68,23 @@ export function MissionDetail() {
           <Icon name="star" />+{mission.points} {t('points')}
         </li>
         <li>
-          <Icon name={goal ? (goal.detector === 'jump' ? 'jump' : 'arms') : 'hand'} />
+          <Icon name={goal ? 'camera' : 'family'} />
           {goal
-            ? `${goal.count} × ${t(goal.detector === 'jump' ? 'goalJump' : 'goalArmsUp')}`
-            : t('selfMission')}
+            ? `${t('cameraMission')} · ${goal.count} × ${t(goal.detector === 'jump' ? 'goalJump' : 'goalArmsUp')}`
+            : t('grownUpConfirm')}
         </li>
       </ul>
 
-      <SafetyBanner />
+      <section className="how">
+        <h2 className="how-title">{t('howItWorks')}</h2>
+        <ol className="how-steps">
+          {steps.map((key) => (
+            <li key={key}>{t(key)}</li>
+          ))}
+        </ol>
+      </section>
+
+      <SafetyBanner privacy={Boolean(goal)} />
 
       <div className="actions">
         {done || pending ? (
@@ -89,20 +102,19 @@ export function MissionDetail() {
             className="btn btn-sun btn-block"
             to={`/missions/${encodeURIComponent(mission.id)}/play`}
           >
+            <Icon name="play" />
             {t('start')}
           </Link>
         ) : (
-          <>
-            <p className="hint">{t('selfDoneHint')}</p>
-            <button
-              type="button"
-              className="btn btn-sun btn-block"
-              disabled={saving}
-              onClick={() => void confirmSelf()}
-            >
-              {saving ? t('saving') : t('selfDone')}
-            </button>
-          </>
+          <button
+            type="button"
+            className="btn btn-sun btn-block"
+            disabled={saving}
+            onClick={() => void confirmSelf()}
+          >
+            <Icon name="check" />
+            {saving ? t('saving') : t('selfDone')}
+          </button>
         )}
       </div>
     </main>

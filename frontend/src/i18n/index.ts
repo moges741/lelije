@@ -10,6 +10,8 @@ export type Translate = (key: TranslationKey) => string
 
 /** The product name and each language's own name are not translated. */
 export const BRAND = 'LeLije'
+/** Shown beside the brand on the home page, in every language. */
+export const BRAND_AM = 'ለልጄ'
 
 export const LANGUAGES: { code: AppLanguage; name: string; short: string }[] = [
   { code: 'en', name: 'English', short: 'EN' },

@@ -1,4 +1,5 @@
 import { useApp } from '../context/app-context'
+import { POSE_MOCK } from '../lib/pose/load'
 import type { ActionType } from '../lib/pose/types'
 import { Icon } from './Icon'
 
@@ -14,12 +15,15 @@ function press(action: ActionType) {
   )
 }
 
-/** Only rendered in mock mode, and always labelled as a demo. */
+/**
+ * The tap and keyboard way to play. Shown in the demo build (labelled as a demo)
+ * and whenever the child chose to play with buttons instead of the camera.
+ */
 export function MockControls({ actions }: { actions: ActionType[] }) {
   const { t } = useApp()
   return (
     <div className="mock-controls">
-      <p className="demo-note">{t('demoMode')}</p>
+      <p className="demo-note">{t(POSE_MOCK ? 'demoMode' : 'buttonsMode')}</p>
       <div className="mock-buttons">
         {actions.map((action) => (
           <button
@@ -30,6 +34,7 @@ export function MockControls({ actions }: { actions: ActionType[] }) {
           >
             <Icon name={action === 'jump' ? 'jump' : 'arms'} />
             {t(action === 'jump' ? 'actionJump' : 'actionArmsUp')}
+            <kbd>{KEYS[action].key.toUpperCase()}</kbd>
           </button>
         ))}
       </div>

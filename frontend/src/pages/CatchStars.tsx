@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { ActivityHud, CameraIntro, CameraProblem, TimeBar } from '../components/Activity'
 import { CameraStage } from '../components/CameraStage'
-import { Icon } from '../components/Icon'
 import { MockControls } from '../components/MockControls'
-import { SafetyBanner } from '../components/SafetyBanner'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
 import { POSE_MOCK } from '../lib/pose/load'
@@ -81,35 +80,16 @@ export function CatchStars() {
     return () => window.clearInterval(timer)
   }, [phase, paused, saving])
 
+  const useButtons = () => {
+    setWithButtons(true)
+    session.begin()
+  }
+
   if (phase === 'unavailable') {
     return (
       <main className="screen">
         <TopBar backTo="/missions" />
-        <div className="detail-head rise">
-          <span className="mission-icon is-big">
-            <Icon name="camera" size={40} />
-          </span>
-          <h1 className="title">{t('playCatchStars')}</h1>
-          <p className="lead">{t('cameraUnavailable')}</p>
-        </div>
-        <div className="actions">
-          <button type="button" className="btn btn-sun btn-block" onClick={session.begin}>
-            {t('tryAgainCamera')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-plain btn-block"
-            onClick={() => {
-              setWithButtons(true)
-              session.begin()
-            }}
-          >
-            {t('playWithButtons')}
-          </button>
-          <Link className="btn btn-plain btn-block" to="/missions">
-            {t('home')}
-          </Link>
-        </div>
+        <CameraProblem onRetry={session.begin} onButtons={useButtons} />
       </main>
     )
   }
@@ -132,41 +112,30 @@ export function CatchStars() {
         <span className="topbar-title">{t('playCatchStars')}</span>
       </TopBar>
 
-      <CameraStage videoRef={session.videoRef} mock={mock} message={message}>
+      <CameraStage
+        videoRef={session.videoRef}
+        mock={mock}
+        message={message}
+        instruction={t('catchStarsHint')}
+        instructionIcon="star"
+        instructionFades={phase === 'running'}
+        compact={phase === 'setup'}
+      >
         <canvas ref={canvasRef} className="stage-canvas" />
       </CameraStage>
 
       {phase === 'setup' ? (
-        <>
-          <p className="lead">{t('catchStarsHint')}</p>
-          <SafetyBanner />
-          <div className="actions">
-            <button type="button" className="btn btn-sun btn-block" onClick={session.begin}>
-              <Icon name={mock ? 'play' : 'camera'} />
-              {t(mock ? 'startDemo' : 'allowCamera')}
-            </button>
-          </div>
-        </>
+        <CameraIntro mock={mock} onStart={session.begin} onFallback={useButtons} />
       ) : (
         <>
-          <div className="hud">
-            <p className="counter" aria-live="polite">
-              <strong key={score}>{score}</strong>
-              <span>{t('gameScore')}</span>
-            </p>
-            <p className="counter">
-              <strong>{formatTime(timeLeft)}</strong>
-              <span>{t('timeLeft')}</span>
-            </p>
-            <button
-              type="button"
-              className="btn btn-plain"
-              disabled={phase !== 'running' || saving}
-              onClick={togglePause}
-            >
-              {t(paused ? 'resume' : 'pause')}
-            </button>
-          </div>
+          <ActivityHud
+            main={{ value: score, label: t('gameScore') }}
+            side={{ value: formatTime(timeLeft), label: t('timeLeft') }}
+            paused={paused}
+            disabled={phase !== 'running' || saving}
+            onPause={togglePause}
+          />
+          <TimeBar value={timeLeft} max={GAME_MS} label={t('timeLeft')} />
           {mock && phase === 'running' && !saving && !paused && (
             <MockControls actions={['armsUp', 'jump']} />
           )}

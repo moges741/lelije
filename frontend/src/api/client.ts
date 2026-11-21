@@ -16,6 +16,7 @@
  *
  * The grown-up PIN is never sent: see ./pin.ts.
  */
+import { normalizeFamilyCode } from '../lib/familyCode'
 import { pickMissions, scoreToPoints } from '../mocks/fallbackMissions'
 import type { AccountFailure, AccountResult, ChildRecord, FamilyRecord } from '../types/account'
 import type {
@@ -166,7 +167,7 @@ export async function createFamily(
 export async function lookupFamily(
   code: string,
 ): Promise<AccountResult<{ family: FamilyRecord; children: ChildRecord[] }> | AccountFailure> {
-  const normalized = code.trim().toUpperCase()
+  const normalized = normalizeFamilyCode(code)
   if (normalized === 'DEMO-EXPIRED') return { ok: false, error: 'expired_demo' }
   if (normalized === 'DEMO-USED') return { ok: false, error: 'used_demo' }
   if (!normalized) return { ok: false, error: 'invalid' }
