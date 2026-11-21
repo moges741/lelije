@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { addisDay } from '../common/day';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PointsService } from '../points/points.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MissionsService } from './missions.service';
@@ -37,6 +38,7 @@ export class CompletionsService {
     private readonly prisma: PrismaService,
     private readonly points: PointsService,
     private readonly missions: MissionsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -121,6 +123,14 @@ export class CompletionsService {
         : await tx.completion.create({
             data: { childId, missionId, day, ...data },
           });
+      if (status === 'pending') {
+        await this.notifications.record(tx, {
+          familyId: child.familyId,
+          childId,
+          audience: 'parent',
+          kind: 'mission_pending',
+        });
+      }
 
       return {
         completionId: saved.id,

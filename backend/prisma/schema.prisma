@@ -20,7 +20,8 @@ model Family {
   pinLockedUntil DateTime?
   createdAt      DateTime  @default(now())
 
-  children Child[]
+  children      Child[]
+  notifications Notification[]
 }
 
 model Child {
@@ -36,6 +37,7 @@ model Child {
   completions   Completion[]
   gameResults   GameResult[]
   playRequests  PlayRequest[]
+  notifications Notification[]
 }
 
 model DailyMission {
@@ -99,4 +101,22 @@ model PlayRequest {
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   @@index([childId, status])
+}
+
+// Written by the server when something happens. `audience` is "parent" or
+// "child"; `kind` is mission_pending, mission_approved, mission_rejected,
+// play_sent or play_answered.
+model Notification {
+  id        String   @id @default(uuid())
+  familyId  String
+  childId   String
+  audience  String
+  kind      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([familyId, audience, createdAt])
 }
