@@ -46,6 +46,7 @@ Every route starts with `/api`. Bodies are JSON. Errors look like `{ "message": 
 | `POST /families` | Creates a family with a parent PIN and returns its code |
 | `GET /families/:code` | Returns a family and its children |
 | `POST /families/:code/pin` | Sets or changes the parent PIN |
+| `POST /families/:code/pin/check` | Checks the parent PIN |
 | `POST /children` | Adds a child to a family |
 | `POST /missions` | Returns the child's missions for today |
 | `POST /missions/complete` | Marks a mission done: camera missions pay at once, tap-to-confirm ones wait for a parent |
@@ -103,6 +104,14 @@ Returns `{ "hasPin": true }`.
 
 - To change a PIN, send the current one as `currentPin`. A wrong `currentPin` returns `403` and counts toward the lock.
 - Families created before PINs existed have `hasPin: false`. They can set a first PIN once by sending only `pin`.
+
+### Check the parent PIN
+
+```bash
+curl -s -X POST $API/families/$CODE/pin/check -H "$JSON" -d '{"pin":"0123"}'
+```
+
+Returns `{ "ok": true }`. A wrong PIN returns `403`. Five wrong PINs return `429` and lock parent actions for 15 minutes. The PIN is exactly 4 digits, sent as a string.
 
 ### Add a child
 

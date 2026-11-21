@@ -1,48 +1,62 @@
 import { useState } from 'react'
-import { checkPin, hasPin, isValidPin, PIN_LENGTH, savePin } from '../api/pin'
+import * as api from '../api/client'
+import type { Result } from '../api/http'
 import { useApp } from '../context/app-context'
+import type { TranslationKey } from '../i18n'
+import { isPinFailure, pinFailureKey } from '../lib/failure'
+import { isValidPin, PIN_LENGTH, pinDigits } from '../lib/pin'
+import type { FamilyRecord } from '../types/account'
 import { SecretField } from './TextField'
 
 /**
- * Asks for the grown-up PIN before an action. If this device has no PIN for the
- * family yet (for example a grown-up who signed in with the code on a new phone),
- * the same prompt sets one instead.
+ * Asks for the grown-up PIN and runs a parent action with it; the server checks
+ * the PIN. PIN problems stay in the dialog, any other result goes to onDone.
+ * A family that has no PIN yet chooses one here first.
  */
-export function PinPrompt({
-  familyCode,
-  onSuccess,
+export function PinPrompt<T>({
+  family,
+  action,
+  onDone,
   onCancel,
 }: {
-  familyCode: string
-  onSuccess: () => void
+  family: FamilyRecord
+  action: (pin: string) => Promise<Result<T>>
+  onDone: (result: Result<T>) => void
   onCancel: () => void
 }) {
-  const { t } = useApp()
-  const [setting] = useState(() => !hasPin(familyCode))
+  const { t, session, setSession } = useApp()
+  const [setting, setSetting] = useState(!family.hasPin)
   const [pin, setPin] = useState('')
-  const [error, setError] = useState<'invalid' | 'wrong' | null>(null)
+  const [error, setError] = useState<TranslationKey | null>(null)
   const [busy, setBusy] = useState(false)
 
   const submit = async () => {
     if (!isValidPin(pin)) {
-      setError('invalid')
+      setError('pinInvalid')
       return
     }
     setBusy(true)
+    setError(null)
     if (setting) {
-      await savePin(familyCode, pin)
-      setBusy(false)
-      onSuccess()
-      return
+      const saved = await api.setFamilyPin(family.code, pin)
+      if (!saved.ok) {
+        setBusy(false)
+        setError(pinFailureKey(saved.error))
+        return
+      }
+      setSetting(false)
+      if (session?.family.code === family.code) {
+        setSession({ ...session, family: { ...session.family, hasPin: true } })
+      }
     }
-    const ok = await checkPin(familyCode, pin)
+    const result = await action(pin)
     setBusy(false)
-    if (!ok) {
+    if (!result.ok && isPinFailure(result.error)) {
       setPin('')
-      setError('wrong')
+      setError(pinFailureKey(result.error))
       return
     }
-    onSuccess()
+    onDone(result)
   }
 
   return (
@@ -69,12 +83,12 @@ export function PinPrompt({
           autoFocus
           onChange={(event) => {
             setError(null)
-            setPin(event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))
+            setPin(pinDigits(event.target.value))
           }}
-          error={error === 'invalid' ? t('pinInvalid') : error === 'wrong' ? t('pinWrong') : undefined}
+          error={error ? t(error) : undefined}
         />
         <div className="row-actions">
-          <button type="submit" className="btn btn-sun" disabled={busy}>
+          <button type="submit" className="btn btn-sun" disabled={busy} aria-busy={busy}>
             {t('pinContinue')}
           </button>
           <button type="button" className="btn btn-plain" onClick={onCancel}>

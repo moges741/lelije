@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { missionIcon } from '../components/MissionCard'
 import { SafetyBanner } from '../components/SafetyBanner'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
-import type { SuccessState } from '../types/navigation'
+import { missionIcon } from '../lib/missionIcon'
+import { missionSuccess } from '../lib/outcome'
+import { missionState } from '../lib/progress'
 
 export function MissionDetail() {
   const { id } = useParams()
-  const { t, missions, missionsReady, progress, completeMission } = useApp()
+  const { t, missions, missionsStatus, progress, completeMission } = useApp()
   const navigate = useNavigate()
   const [saving, setSaving] = useState(false)
 
-  if (!missionsReady) {
+  if (missionsStatus === 'loading') {
     return (
       <main className="screen">
         <TopBar backTo="/missions" />
@@ -25,8 +26,7 @@ export function MissionDetail() {
   const mission = missions.find((item) => item.id === id)
   if (!mission) return <Navigate to="/missions" replace />
 
-  const done = progress.todayCompleted.includes(mission.id)
-  const pending = progress.pendingIds.includes(mission.id)
+  const state = missionState(progress, mission.id)
   const goal = mission.verification === 'pose' ? mission.goal : undefined
   const steps = goal
     ? (['stepPose1', 'stepPose2', 'stepPose3'] as const)
@@ -34,17 +34,8 @@ export function MissionDetail() {
 
   const confirmSelf = async () => {
     setSaving(true)
-    const outcome = await completeMission(mission, 'self')
-    const state: SuccessState = {
-      kind: 'mission',
-      awarded: outcome.awarded,
-      title: mission.title,
-      missionId: mission.id,
-      status: outcome.status,
-      origin: outcome.origin,
-      verifiedBy: 'self',
-    }
-    navigate('/success', { replace: true, state })
+    const saved = await completeMission(mission, 'self')
+    navigate('/success', { replace: true, state: missionSuccess(mission, 'self', undefined, saved) })
   }
 
   return (
@@ -87,34 +78,37 @@ export function MissionDetail() {
       <SafetyBanner privacy={Boolean(goal)} />
 
       <div className="actions">
-        {done || pending ? (
+        {state === 'done' || state === 'pending' ? (
           <>
             <p className="done-note">
-              <Icon name="check" />
-              {pending ? t('waitingApprovalDemo') : t('alreadyDone')}
+              <Icon name={state === 'pending' ? 'clock' : 'check'} />
+              {state === 'pending' ? t('statusWaiting') : t('alreadyDone')}
             </p>
             <Link className="btn btn-plain btn-block" to="/missions">
               {t('home')}
             </Link>
           </>
-        ) : goal ? (
-          <Link
-            className="btn btn-sun btn-block"
-            to={`/missions/${encodeURIComponent(mission.id)}/play`}
-          >
-            <Icon name="play" />
-            {t('start')}
-          </Link>
         ) : (
-          <button
-            type="button"
-            className="btn btn-sun btn-block"
-            disabled={saving}
-            onClick={() => void confirmSelf()}
-          >
-            <Icon name="check" />
-            {saving ? t('saving') : t('selfDone')}
-          </button>
+          <>
+            {state === 'redo' && <p className="banner banner-warn">{t('redoNote')}</p>}
+            {goal ? (
+              <Link className="btn btn-sun btn-block" to={`/missions/${encodeURIComponent(mission.id)}/play`}>
+                <Icon name="play" />
+                {t('start')}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-sun btn-block"
+                disabled={saving}
+                aria-busy={saving}
+                onClick={() => void confirmSelf()}
+              >
+                <Icon name="check" />
+                {saving ? t('saving') : t('selfDone')}
+              </button>
+            )}
+          </>
         )}
       </div>
     </main>

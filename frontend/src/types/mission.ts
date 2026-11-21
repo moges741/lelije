@@ -45,15 +45,3 @@ export interface GenerateMissionsResult {
   source: MissionSource
   warnings: string[]
 }
-
-export interface Progress {
-  totalPoints: number
-  /** Points the server (or the demo) has confirmed for today. */
-  pointsToday: number
-  todayCompleted: string[]
-  /** Demo-only ids waiting for a grown-up. The live API awards points immediately. */
-  pendingIds: string[]
-  streak: number | null
-  dailyCap: number | null
-  origin: 'server' | 'demo' | 'unknown'
-}

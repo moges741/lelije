@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import * as api from '../../api/client'
-import type { DemoPlay } from '../../api/client'
+import type { Failure } from '../../api/http'
+import { Icon } from '../../components/Icon'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
 import { TopBar } from '../../components/TopBar'
 import { useApp } from '../../context/app-context'
-import { Notifications } from '../parent/ParentScreens'
+import { failureKey } from '../../lib/failure'
+import { PLAY_TEXT } from '../../lib/progress'
+import { useAutoRefresh } from '../../lib/useRemote'
+import { Notifications } from '../Notifications'
 
 export function ChildSettings() {
   const { t, session, signOut } = useApp()
-  if (!session || session.role !== 'child' || !session.child) return <Navigate to="/login" replace />
+  const child = session?.child
+  if (!child) return null
   return (
     <main className="screen">
       <TopBar backTo="/missions">
@@ -17,9 +22,8 @@ export function ChildSettings() {
       </TopBar>
       <h1 className="title">{t('settingsTitle')}</h1>
       <p className="lead">
-        {session.child.nickname || t('childProfile')} · {t('age')} {session.child.age}
+        {child.nickname || t('childProfile')} · {t('age')} {child.age}
       </p>
-      <p className="hint">{t('editUnavailable')}</p>
       <p className="hint">{t('privacyNote')}</p>
       <Link className="btn btn-plain btn-block" to="/child/play">
         {t('playTime')}
@@ -31,48 +35,59 @@ export function ChildSettings() {
   )
 }
 
+/** The child asks; a grown-up answers with the PIN on their side. */
 export function ChildPlay() {
-  const { t, session } = useApp()
-  const [rows, setRows] = useState<DemoPlay[]>([])
-  useEffect(() => {
-    if (session) setRows(api.playRequests(session.family.code).filter((row) => row.childId === session.child?.id))
-  }, [session])
-  const child = session?.role === 'child' ? session.child : null
-  if (!session || !child) return <Navigate to="/login" replace />
+  const { t, session, progress, refreshProgress } = useApp()
+  const [asking, setAsking] = useState(false)
+  const [error, setError] = useState<Failure | null>(null)
+  const request = progress?.today.playRequest ?? null
 
-  const reply = (id: string, status: 'allowed' | 'declined') => {
-    api.answerPlay(id, status)
-    setRows(api.playRequests(session.family.code).filter((row) => row.childId === child.id))
+  useEffect(() => {
+    void refreshProgress()
+  }, [refreshProgress])
+  useAutoRefresh(request?.status === 'sent' ? refreshProgress : null, 10_000)
+
+  const child = session?.child
+  if (!child) return null
+
+  const ask = async () => {
+    setAsking(true)
+    setError(null)
+    const result = await api.askForPlay(child.id)
+    if (result.ok) await refreshProgress()
+    else setError(result.error)
+    setAsking(false)
   }
 
-  const latest = rows[0]
   return (
     <main className="screen">
       <TopBar backTo="/missions" />
-      <h1 className="title">{t('playTime')}</h1>
-      <p className="banner banner-demo">{t('demoBanner')}</p>
-      {!latest ? (
-        <p className="lead">{t('noPlay')}</p>
-      ) : latest.status === 'sent' ? (
-        <>
-          <p className="lead">{t('playInvite')}</p>
-          <button type="button" className="btn btn-sun btn-block" onClick={() => reply(latest.id, 'allowed')}>
-            {t('acceptPlay')}
-          </button>
-          <button type="button" className="btn btn-plain btn-block" onClick={() => reply(latest.id, 'declined')}>
-            {t('notNow')}
-          </button>
-        </>
-      ) : (
+      <div className="detail-head rise">
+        <span className="mission-icon is-big">
+          <Icon name={request?.status === 'allowed' ? 'check' : 'clock'} size={40} />
+        </span>
+        <h1 className="title">{t('playTime')}</h1>
         <p className="lead">
-          {t(
-            latest.status === 'allowed'
-              ? 'playAllowed'
-              : latest.status === 'later'
-                ? 'playLater'
-                : 'playDeclined',
-          )}
+          {progress === null ? t('loading') : t(request ? PLAY_TEXT[request.status] : 'playIntro')}
         </p>
+      </div>
+      {error && (
+        <p className="banner banner-warn" role="alert">
+          {t(failureKey(error))}
+        </p>
+      )}
+      {progress !== null && request?.status !== 'sent' && (
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-sun btn-block"
+            disabled={asking}
+            aria-busy={asking}
+            onClick={() => void ask()}
+          >
+            {asking ? t('saving') : t(request ? 'askAgain' : 'requestPlay')}
+          </button>
+        </div>
       )}
     </main>
   )

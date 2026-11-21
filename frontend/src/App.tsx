@@ -2,25 +2,17 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AppProvider } from './context/AppProvider'
 import { useApp } from './context/app-context'
-import {
-  ChildJoin,
-  CodeHelp,
-  FamilyRegister,
-  FamilySetup,
-  Login,
-  Start,
-} from './pages/account/AccountScreens'
+import { ChildJoin, CodeHelp, FamilyRegister, FamilySetup, Login } from './pages/account/AccountScreens'
 import { ChildNotifications, ChildPlay, ChildSettings } from './pages/child/ChildScreens'
 import { MissionDetail } from './pages/MissionDetail'
 import { Missions } from './pages/Missions'
 import {
   Activity,
   MissionReview,
-  Notifications,
   ParentHome,
+  ParentNotifications,
   ParentSettings,
   PlayReview,
-  Routines,
 } from './pages/parent/ParentScreens'
 import { Success } from './pages/Success'
 import { Welcome } from './pages/Welcome'
@@ -34,12 +26,16 @@ const CatchStars = lazy(() =>
 
 function RequireChild() {
   const { session } = useApp()
-  return session?.role === 'child' && session.child ? <Outlet /> : <Navigate to="/login" replace />
+  if (session?.role === 'child' && session.child) return <Outlet />
+  if (session?.role === 'parent') return <Navigate to="/parent" replace />
+  return <Navigate to="/login" replace />
 }
 
 function RequireParent() {
   const { session } = useApp()
-  return session?.role === 'parent' ? <Outlet /> : <Navigate to="/login" replace />
+  if (session?.role === 'parent') return <Outlet />
+  if (session?.role === 'child' && session.child) return <Navigate to="/missions" replace />
+  return <Navigate to="/login" replace />
 }
 
 function ScreenFallback() {
@@ -58,7 +54,6 @@ export default function App() {
         <Suspense fallback={<ScreenFallback />}>
           <Routes>
             <Route path="/" element={<Welcome />} />
-            <Route path="/start" element={<Start />} />
             <Route path="/register/family" element={<FamilyRegister />} />
             <Route path="/register/child" element={<ChildJoin />} />
             <Route path="/login" element={<Login />} />
@@ -71,8 +66,7 @@ export default function App() {
               <Route path="/parent/review/:id" element={<MissionReview />} />
               <Route path="/parent/play" element={<PlayReview />} />
               <Route path="/parent/activity" element={<Activity />} />
-              <Route path="/parent/routines" element={<Routines />} />
-              <Route path="/parent/notifications" element={<Notifications audience="parent" />} />
+              <Route path="/parent/notifications" element={<ParentNotifications />} />
               <Route path="/parent/settings" element={<ParentSettings />} />
             </Route>
 

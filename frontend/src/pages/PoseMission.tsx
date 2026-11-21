@@ -6,17 +6,19 @@ import { MockControls } from '../components/MockControls'
 import { StarProgress } from '../components/StarProgress'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
+import { missionSuccess } from '../lib/outcome'
 import { POSE_MOCK } from '../lib/pose/load'
 import { stageMessage, usePoseSession } from '../lib/pose/usePoseSession'
+import { missionState } from '../lib/progress'
+import type { PoseResult, Verified } from '../types/api'
 import type { Mission, MissionGoal } from '../types/mission'
-import type { SuccessState } from '../types/navigation'
 
 /** Screens 4 and 5: camera setup, then the mission in progress (Build Contract 8.2). */
 export function PoseMission() {
   const { id } = useParams()
-  const { t, missions, missionsReady } = useApp()
+  const { t, missions, missionsStatus } = useApp()
 
-  if (!missionsReady) {
+  if (missionsStatus === 'loading') {
     return (
       <main className="screen">
         <TopBar backTo="/missions" />
@@ -36,10 +38,10 @@ export function PoseMission() {
 function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   const { t, progress, completeMission } = useApp()
   const navigate = useNavigate()
-  const [alreadyDone] = useState(
-    () =>
-      progress.todayCompleted.includes(mission.id) || progress.pendingIds.includes(mission.id),
-  )
+  const [alreadyDone] = useState(() => {
+    const state = missionState(progress, mission.id)
+    return state === 'done' || state === 'pending'
+  })
   const [count, setCount] = useState(0)
   const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -48,22 +50,10 @@ function Play({ mission, goal }: { mission: Mission; goal: MissionGoal }) {
   const mock = POSE_MOCK || withButtons
   const tally = useRef({ count: 0, startedAt: 0 })
 
-  const finish = async (
-    verifiedBy: 'pose' | 'self',
-    result?: { count: number; durationMs: number },
-  ) => {
+  const finish = async (verifiedBy: Verified, result?: PoseResult) => {
     setSaving(true)
-    const outcome = await completeMission(mission, verifiedBy, result)
-    const state: SuccessState = {
-      kind: 'mission',
-      awarded: outcome.awarded,
-      title: mission.title,
-      missionId: mission.id,
-      status: outcome.status,
-      origin: outcome.origin,
-      verifiedBy,
-    }
-    navigate('/success', { replace: true, state })
+    const saved = await completeMission(mission, verifiedBy, result)
+    navigate('/success', { replace: true, state: missionSuccess(mission, verifiedBy, result, saved) })
   }
 
   const session = usePoseSession({

@@ -4,87 +4,67 @@ import { Icon } from '../components/Icon'
 import { StatusPill, type StatusTone } from '../components/Status'
 import { useApp } from '../context/app-context'
 import type { TranslationKey } from '../i18n'
-import { isSuccessState, type SaveStatus } from '../types/navigation'
+import { gameSuccess, missionSuccess } from '../lib/outcome'
+import { missionState } from '../lib/progress'
+import { isSuccessState, type SuccessState } from '../types/navigation'
 
 const SPARKS = [0, 1, 2, 3, 4, 5]
 
-type Outcome = 'saved' | 'waiting' | 'demo' | 'already' | 'failed'
-
-function outcomeOf(status: SaveStatus): Outcome {
-  if (status === 'server_awarded') return 'saved'
-  if (status === 'demo_pending') return 'waiting'
-  if (status === 'demo_only') return 'demo'
-  if (status === 'already') return 'already'
-  return 'failed'
+interface Copy {
+  tone: StatusTone
+  label: TranslationKey
+  body: TranslationKey | null
 }
 
-const LABEL: Record<Outcome, { tone: StatusTone; label: TranslationKey; body: TranslationKey }> = {
-  saved: { tone: 'done', label: 'statusSaved', body: 'serverSaved' },
-  waiting: { tone: 'waiting', label: 'statusWaiting', body: 'outcomeWaitingBody' },
-  demo: { tone: 'info', label: 'statusDemo', body: 'outcomeDemoBody' },
-  already: { tone: 'done', label: 'alreadyDone', body: 'alreadyDone' },
-  failed: { tone: 'problem', label: 'statusNotSaved', body: 'saveFailed' },
+function copyFor(state: SuccessState): Copy {
+  const { status } = state.outcome
+  if (status === 'failed') return { tone: 'problem', label: 'statusNotSaved', body: 'saveFailed' }
+  if (status === 'pending') return { tone: 'waiting', label: 'statusWaiting', body: 'outcomeWaitingBody' }
+  if (status === 'already') {
+    return { tone: 'done', label: 'alreadyDone', body: state.kind === 'game' ? 'gameAlreadyToday' : null }
+  }
+  return { tone: 'done', label: 'statusSaved', body: 'outcomeSavedBody' }
 }
 
 /**
- * Screen 7: the result. It says what happened (saved, waiting for a grown-up,
- * demo only, not saved) and only calls points "earned" once they are saved.
+ * Screen 7: the result, as the server decided it: points earned, waiting for a
+ * grown-up, already done today, or not saved (with a retry).
  */
 export function Success() {
   const { t, missions, progress, completeMission, submitGame } = useApp()
   const location = useLocation()
   const navigate = useNavigate()
-  const state = isSuccessState(location.state) ? location.state : null
   const [saving, setSaving] = useState(false)
-
+  const state = isSuccessState(location.state) ? location.state : null
   if (!state) return <Navigate to="/missions" replace />
 
   const retry = async () => {
     setSaving(true)
+    let next: SuccessState
     if (state.kind === 'mission') {
       const mission = missions.find((item) => item.id === state.missionId)
       if (!mission) {
-        setSaving(false)
+        navigate('/missions', { replace: true })
         return
       }
-      const verifiedBy = state.verifiedBy ?? 'self'
-      const outcome = await completeMission(mission, verifiedBy)
-      navigate('/success', {
-        replace: true,
-        state: {
-          kind: 'mission',
-          awarded: outcome.awarded,
-          title: mission.title,
-          missionId: mission.id,
-          status: outcome.status,
-          origin: outcome.origin,
-          verifiedBy,
-        },
-      })
-      return
+      const saved = await completeMission(mission, state.verifiedBy, state.result)
+      next = missionSuccess(mission, state.verifiedBy, state.result, saved)
+    } else {
+      next = gameSuccess(state.result, await submitGame(state.result))
     }
-    const outcome = await submitGame(state.result)
-    navigate('/success', {
-      replace: true,
-      state: {
-        kind: 'game',
-        awarded: outcome.awarded,
-        result: state.result,
-        status: outcome.status,
-        origin: outcome.origin,
-      },
-    })
+    setSaving(false)
+    navigate('/success', { replace: true, state: next })
   }
 
-  const outcome = outcomeOf(state.status)
-  const copy = LABEL[outcome]
-  const celebrate = outcome === 'saved' || outcome === 'waiting' || outcome === 'demo'
-  const waitingPoints =
-    state.kind === 'mission'
-      ? (missions.find((item) => item.id === state.missionId)?.points ?? 0)
-      : 0
-  const next = missions.find((mission) => !progress.todayCompleted.includes(mission.id))
-  const heading = outcome === 'already' ? t('alreadyDone') : t('successTitle')
+  const { outcome } = state
+  const copy = copyFor(state)
+  const celebrate = outcome.status !== 'failed' && outcome.status !== 'already'
+  const awarded = outcome.status === 'approved' || outcome.status === 'saved' ? outcome.awarded : 0
+  const capReached = progress !== null && progress.pointsToday >= progress.dailyCap
+  const next = missions.find((mission) => {
+    const status = missionState(progress, mission.id)
+    return status === 'todo' || status === 'redo'
+  })
 
   return (
     <main className="screen success">
@@ -101,39 +81,36 @@ export function Success() {
         </div>
       ) : (
         <div className="burst is-calm" aria-hidden="true">
-          <span className={outcome === 'failed' ? 'calm-badge is-problem' : 'calm-badge'}>
-            <Icon name={outcome === 'failed' ? 'alert' : 'check'} size={64} />
+          <span className={outcome.status === 'failed' ? 'calm-badge is-problem' : 'calm-badge'}>
+            <Icon name={outcome.status === 'failed' ? 'alert' : 'check'} size={64} />
           </span>
         </div>
       )}
 
       <div>
-        <h1 className="title">{heading}</h1>
+        <h1 className="title">{outcome.status === 'already' ? t('alreadyDone') : t('successTitle')}</h1>
         <p className="lead">{state.kind === 'mission' ? state.title : t('playCatchStars')}</p>
       </div>
 
       <div className="outcome" role="status">
         <StatusPill tone={copy.tone}>{t(copy.label)}</StatusPill>
-        {outcome !== 'already' && <p>{t(copy.body)}</p>}
+        {copy.body && <p>{t(copy.body)}</p>}
       </div>
 
-      {outcome === 'saved' && state.awarded > 0 && (
+      {awarded > 0 && (
         <p className="points-earned">
-          <strong>+{state.awarded}</strong>
+          <strong>+{awarded}</strong>
           <span>{t('successPoints')}</span>
         </p>
       )}
-      {outcome === 'waiting' && waitingPoints > 0 && (
+      {outcome.status === 'pending' && state.kind === 'mission' && (
         <p className="points-held">
-          <strong>{waitingPoints}</strong>
+          <strong>{state.points}</strong>
           <span>{t('pointsWaiting')}</span>
         </p>
       )}
-      {outcome === 'demo' && state.awarded > 0 && (
-        <p className="points-held">
-          <strong>{state.awarded}</strong>
-          <span>{t('pointsDemoLabel')}</span>
-        </p>
+      {capReached && (outcome.status === 'approved' || outcome.status === 'saved') && (
+        <p className="banner banner-ok">{t('capReached')}</p>
       )}
 
       {state.kind === 'game' && (
@@ -150,13 +127,15 @@ export function Success() {
         </ul>
       )}
 
-      <p className="success-total">
-        <Icon name="star" />
-        {t('totalPoints')}: <strong>{progress.totalPoints}</strong>
-      </p>
+      {progress && (
+        <p className="success-total">
+          <Icon name="star" />
+          {t('totalPoints')}: <strong>{progress.totalPoints}</strong>
+        </p>
+      )}
 
       <div className="actions">
-        {state.status === 'save_failed' ? (
+        {outcome.status === 'failed' ? (
           <button
             type="button"
             className="btn btn-sun btn-block"
@@ -170,13 +149,9 @@ export function Success() {
           <Link className="btn btn-sun btn-block" to={`/missions/${encodeURIComponent(next.id)}`}>
             {t('nextMission')}
           </Link>
-        ) : state.kind === 'game' ? (
-          <Link className="btn btn-sun btn-block" to="/stars">
-            {t('playAgain')}
-          </Link>
         ) : (
           <Link className="btn btn-sun btn-block" to="/stars">
-            {t('playCatchStars')}
+            {state.kind === 'game' ? t('playAgain') : t('playCatchStars')}
           </Link>
         )}
         <Link className="text-link success-home" to="/missions">

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import * as api from '../api/client'
 import { Icon } from '../components/Icon'
@@ -7,17 +7,47 @@ import { MissionCard } from '../components/MissionCard'
 import { PinPrompt } from '../components/PinPrompt'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
+import { failureKey } from '../lib/failure'
+import { missionState, PLAY_TEXT } from '../lib/progress'
+import { useAutoRefresh, useRemote } from '../lib/useRemote'
 
+/** Screen 2: the child's home. Today's missions, points, play time and the game. */
 export function Missions() {
-  const { t, missions, missionsReady, missionsOrigin, reloadMissions, progress, session, setSession } =
-    useApp()
+  const {
+    t,
+    session,
+    setSession,
+    missions,
+    missionsStatus,
+    missionsError,
+    missionsOffline,
+    reloadMissions,
+    progress,
+    refreshProgress,
+  } = useApp()
   const navigate = useNavigate()
   const [askingPin, setAskingPin] = useState(false)
-  const invite =
-    session?.child &&
-    api
-      .playRequests(session.family.code)
-      .find((item) => item.childId === session.child?.id && item.status === 'sent')
+  const code = session?.family.code ?? ''
+  const childId = session?.child?.id ?? ''
+  const notes = useRemote(
+    childId ? `child-notes:${childId}` : null,
+    () => api.notifications(code, { audience: 'child', childId }),
+    20_000,
+  )
+
+  useEffect(() => {
+    void refreshProgress()
+  }, [refreshProgress])
+
+  const waiting =
+    progress !== null &&
+    (progress.today.missionsPending.length > 0 || progress.today.playRequest?.status === 'sent')
+  useAutoRefresh(waiting ? refreshProgress : null, 15_000)
+
+  if (!session) return null
+  const play = progress?.today.playRequest
+  const unread = notes.data?.unread ?? 0
+  const capReached = progress !== null && progress.pointsToday >= progress.dailyCap
 
   return (
     <main className="screen">
@@ -25,29 +55,38 @@ export function Missions() {
         <LanguageSwitcher />
         <Link className="icon-btn" to="/child/notifications" aria-label={t('notifications')}>
           <Icon name="bell" />
+          {unread > 0 && <span className="dot">{unread}</span>}
         </Link>
         <Link className="icon-btn" to="/child/settings" aria-label={t('settings')}>
           <Icon name="settings" />
         </Link>
       </TopBar>
 
-      {(session?.origin === 'demo' || missionsOrigin === 'demo') && (
-        <p className="banner banner-demo">{t('demoBanner')}</p>
+      {missionsOffline && (
+        <p className="banner banner-warn" role="status">
+          {t('offlineBanner')}
+        </p>
       )}
-
-      {invite && (
-        <Link className="banner" to="/child/play">
-          {t('playInvite')}
+      {play && play.status !== 'declined' && (
+        <Link className={play.status === 'allowed' ? 'banner banner-ok' : 'banner'} to="/child/play">
+          {t(PLAY_TEXT[play.status])}
         </Link>
       )}
 
       <div className="tally">
         <p className="tally-points">
           <Icon name="star" size={30} />
-          <strong>{progress.origin === 'unknown' ? '—' : progress.totalPoints}</strong>
+          <strong>{progress ? progress.pointsToday : '—'}</strong>
+          <span>
+            {t('pointsToday')}
+            {progress && ` / ${progress.dailyCap}`}
+          </span>
+        </p>
+        <p>
+          <strong>{progress ? progress.totalPoints : '—'}</strong>
           <span>{t('totalPoints')}</span>
         </p>
-        {progress.streak != null && (
+        {progress && (
           <p>
             <Icon name="flame" />
             <strong>{progress.streak}</strong>
@@ -55,51 +94,56 @@ export function Missions() {
           </p>
         )}
       </div>
+      {capReached && (
+        <p className="banner banner-ok" role="status">
+          {t('capReached')}
+        </p>
+      )}
 
       <div>
         <h1 className="title">{t('todayTitle')}</h1>
         <p className="lead">{t('todaySubtitle')}</p>
       </div>
 
-      {!missionsReady ? (
+      {missionsStatus === 'loading' ? (
         <ul className="mission-list" aria-busy="true" aria-label={t('loading')}>
           <li className="mission-card is-skeleton" />
           <li className="mission-card is-skeleton" />
           <li className="mission-card is-skeleton" />
         </ul>
-      ) : missions.length === 0 ? (
-        <div className="empty">
-          <p className="lead">{t('noMissions')}</p>
+      ) : missionsStatus === 'error' ? (
+        <div className="empty" role="alert">
+          <p className="lead">{missionsError ? t(failureKey(missionsError)) : t('noMissions')}</p>
           <button type="button" className="btn btn-plain" onClick={reloadMissions}>
             {t('retry')}
           </button>
         </div>
       ) : (
         <ul className="mission-list">
-          {missions.map((mission, index) => {
-            const done = progress.todayCompleted.includes(mission.id)
-            const pending = progress.pendingIds.includes(mission.id)
-            return (
-              <li key={mission.id} className="rise" style={{ animationDelay: `${index * 70}ms` }}>
-                <MissionCard mission={mission} state={done ? 'done' : pending ? 'pending' : 'todo'} />
-              </li>
-            )
-          })}
+          {missions.map((mission, index) => (
+            <li key={mission.id} className="rise" style={{ animationDelay: `${index * 70}ms` }}>
+              <MissionCard mission={mission} state={missionState(progress, mission.id)} />
+            </li>
+          ))}
         </ul>
       )}
 
-      {session && (
-        <button type="button" className="text-link" onClick={() => setAskingPin(true)}>
-          {t('openParent')}
-        </button>
-      )}
-      {session && askingPin && (
+      <Link className="btn btn-plain btn-block" to="/child/play">
+        <Icon name="clock" />
+        {t('requestPlay')}
+      </Link>
+      <button type="button" className="text-link" onClick={() => setAskingPin(true)}>
+        {t('openParent')}
+      </button>
+      {askingPin && (
         <PinPrompt
-          familyCode={session.family.code}
+          family={session.family}
+          action={(pin) => api.checkFamilyPin(code, pin)}
           onCancel={() => setAskingPin(false)}
-          onSuccess={() => {
+          onDone={(result) => {
             setAskingPin(false)
-            setSession({ ...session, role: 'parent' })
+            if (!result.ok) return
+            setSession({ ...session, role: 'parent', family: { ...session.family, hasPin: true } })
             navigate('/parent')
           }}
         />
@@ -113,7 +157,7 @@ export function Missions() {
         </span>
         <span className="mission-body">
           <strong>{t('playCatchStars')}</strong>
-          <span>{t('catchStarsHint')}</span>
+          <span>{progress?.today.game ? t('gameDoneToday') : t('catchStarsHint')}</span>
         </span>
         <span className="stars-card-play">
           <Icon name="play" size={26} />

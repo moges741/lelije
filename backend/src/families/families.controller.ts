@@ -15,6 +15,12 @@ export class FamiliesController {
     return this.families.findByCode(code);
   }
 
+  @Post(':code/pin/check')
+  @HttpCode(200)
+  checkPin(@Param('code') code: string, @Body() body: unknown) {
+    return this.families.checkPin(code, body);
+  }
+
   @Post(':code/pin')
   @HttpCode(200)
   setPin(@Param('code') code: string, @Body() body: unknown) {

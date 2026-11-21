@@ -86,11 +86,12 @@ const POOL: Omit<Mission, 'id'>[] = [
 export async function generateMissions(
   input: MissionsInput,
 ): Promise<MissionsResult> {
-  const preferred = input.cameraAvailable ? 'pose' : 'self';
-  const ordered = [
-    ...POOL.filter((mission) => mission.verification === preferred),
-    ...POOL.filter((mission) => mission.verification !== preferred),
-  ];
+  const pose = POOL.filter((mission) => mission.verification === 'pose');
+  const self = POOL.filter((mission) => mission.verification === 'self');
+  // With a camera: two camera missions, then a tap-to-confirm one, so a parent still has something to approve.
+  const ordered = input.cameraAvailable
+    ? [...pose.slice(0, 2), ...self, ...pose.slice(2)]
+    : [...self, ...pose];
 
   const datePart = addisDay().replaceAll('-', '');
   const missions = ordered
