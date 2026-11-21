@@ -1,31 +1,22 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import * as api from '../api/client'
+import type { Result } from '../api/http'
 import { isLanguage, tFactory } from '../i18n'
 import { hasCamera } from '../lib/pose/load'
 import type { Session } from '../types/account'
-import type { AppLanguage, Mission, Progress } from '../types/mission'
+import type { PoseResult, Progress, Verified } from '../types/api'
+import type { AppLanguage, CatchStarsResult, Mission } from '../types/mission'
 import { AppContext, type AppContextValue } from './app-context'
 
-const SESSION_KEY = 'lelije.session.v2'
+const SESSION_KEY = 'lelije.session.v3'
 const LANGUAGE_KEY = 'lelije.language'
-
-const NO_PROGRESS: Progress = {
-  totalPoints: 0,
-  pointsToday: 0,
-  todayCompleted: [],
-  pendingIds: [],
-  streak: null,
-  dailyCap: null,
-  origin: 'unknown',
-}
 
 function readSession(): Session | null {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null')
-    if (typeof value !== 'object' || value === null) return null
-    if (!('role' in value) || !('family' in value) || !('origin' in value)) return null
-    if (value.role !== 'parent' && value.role !== 'child') return null
-    if (value.origin !== 'server' && value.origin !== 'demo') return null
+    const value = JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null') as Partial<Session> | null
+    if (!value || (value.role !== 'parent' && value.role !== 'child')) return null
+    if (typeof value.family?.code !== 'string') return null
+    if (value.role === 'child' && typeof value.child?.id !== 'string') return null
     return value as Session
   } catch {
     return null
@@ -43,58 +34,90 @@ function readLanguage(): AppLanguage {
   return isLanguage(fromBrowser) ? fromBrowser : 'en'
 }
 
-function store(key: string, value: string) {
+function store(key: string, value: string | null) {
   try {
-    localStorage.setItem(key, value)
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
   } catch {
-    // Blocked storage: settings last for this session only.
+    // Blocked storage: the setting lasts until the page is closed.
   }
+}
+
+interface LoadedMissions {
+  childId: string
+  attempt: number
+  result: Result<api.TodaysMissions>
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState(readLanguage)
   const [session, setSessionState] = useState(readSession)
-  const [reload, setReload] = useState(0)
-  const [tick, setTick] = useState(0)
-  const [loaded, setLoaded] = useState<{ key: string; missions: Mission[]; origin: 'server' | 'demo' } | null>(
-    null,
-  )
-  const [progress, setProgress] = useState(NO_PROGRESS)
+  const [attempt, setAttempt] = useState(0)
+  const [loaded, setLoaded] = useState<LoadedMissions | null>(null)
+  const [progress, setProgress] = useState<Progress | null>(null)
 
-  const child = session?.role === 'child' ? session.child : null
-  const missionsKey = child ? `${child.id}|${child.age}|${language}|${session?.origin}|${reload}` : ''
-  const missionsReady = missionsKey !== '' && loaded?.key === missionsKey
+  const childId = session?.role === 'child' ? (session.child?.id ?? null) : null
+
+  const setSession = useCallback((next: Session | null) => {
+    setSessionState(next)
+    store(SESSION_KEY, next && JSON.stringify(next))
+  }, [])
+
+  const signOut = useCallback(() => setSession(null), [setSession])
 
   useEffect(() => {
     document.documentElement.lang = language
   }, [language])
 
   useEffect(() => {
-    if (!child || !session) return
+    if (!childId) return
     let ignore = false
-    api
-      .fetchTodaysMissions({
-        childId: child.id,
-        age: child.age,
-        language,
-        cameraAvailable: hasCamera(),
-        origin: session.origin,
-        force: reload > 0,
-      })
-      .then(
-        async (result) => {
-          if (ignore) return
-          setLoaded({ key: missionsKey, missions: result.missions, origin: result.origin })
-          setProgress(await api.loadProgress(child.id, session.origin))
-        },
-        () => {
-          if (!ignore) setLoaded({ key: missionsKey, missions: [], origin: 'demo' })
-        },
-      )
+    void Promise.all([api.todaysMissions(childId, hasCamera()), api.childProgress(childId)]).then(
+      ([missions, latest]) => {
+        if (ignore) return
+        // The profile was removed on the server; this device cannot use it any more.
+        if (!missions.ok && missions.error === 'not_found') {
+          signOut()
+          return
+        }
+        setLoaded({ childId, attempt, result: missions })
+        if (latest.ok) setProgress(latest.data)
+      },
+    )
     return () => {
       ignore = true
     }
-  }, [child, language, missionsKey, reload, session, tick])
+  }, [childId, attempt, signOut])
+
+  const refreshProgress = useCallback(async () => {
+    if (!childId) return
+    const latest = await api.childProgress(childId)
+    if (latest.ok) setProgress(latest.data)
+  }, [childId])
+
+  const completeMission = useCallback(
+    async (mission: Mission, verifiedBy: Verified, result?: PoseResult) => {
+      if (!childId) return { ok: false, error: 'not_found' } as const
+      const saved = await api.completeMission({ childId, missionId: mission.id, verifiedBy, result })
+      if (saved.ok) await refreshProgress()
+      return saved
+    },
+    [childId, refreshProgress],
+  )
+
+  const submitGame = useCallback(
+    async (result: CatchStarsResult) => {
+      if (!childId) return { ok: false, error: 'not_found' } as const
+      const saved = await api.saveGame(childId, result)
+      if (saved.ok) await refreshProgress()
+      return saved
+    },
+    [childId, refreshProgress],
+  )
+
+  const reloadMissions = useCallback(() => setAttempt((n) => n + 1), [])
+
+  const current = loaded?.childId === childId && loaded.attempt === attempt ? loaded.result : null
 
   const value: AppContextValue = {
     t: tFactory(language),
@@ -102,70 +125,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLanguage(next) {
       setLanguageState(next)
       store(LANGUAGE_KEY, next)
-      if (session?.child) {
-        const nextSession = { ...session, child: { ...session.child, language: next } }
-        setSessionState(nextSession)
-        store(SESSION_KEY, JSON.stringify(nextSession))
-      }
+      if (session?.child) setSession({ ...session, child: { ...session.child, language: next } })
     },
     session,
-    setSession(next) {
-      setSessionState(next)
-      if (next) store(SESSION_KEY, JSON.stringify(next))
-      else localStorage.removeItem(SESSION_KEY)
-    },
-    signOut() {
-      setSessionState(null)
-      setLoaded(null)
-      setProgress(NO_PROGRESS)
-      try {
-        localStorage.removeItem(SESSION_KEY)
-      } catch {
-        // Already signed out in memory.
-      }
-    },
-    missions: missionsReady && loaded ? loaded.missions : [],
-    missionsReady,
-    missionsOrigin: missionsReady && loaded ? loaded.origin : null,
-    reloadMissions() {
-      setReload((n) => n + 1)
-    },
-    progress,
-    refreshProgress() {
-      setTick((n) => n + 1)
-      if (child && session) {
-        void api.loadProgress(child.id, session.origin).then(setProgress)
-      }
-    },
-    async completeMission(mission, verifiedBy, result) {
-      if (!child || !session) {
-        return { awarded: 0, status: 'save_failed', origin: 'demo', pointsToday: 0 }
-      }
-      const outcome = await api.completeMission({
-        childId: child.id,
-        familyCode: session.family.code,
-        mission,
-        verifiedBy,
-        result,
-        origin: session.origin,
-      })
-      setProgress(await api.loadProgress(child.id, session.origin))
-      return outcome
-    },
-    async submitGame(result) {
-      if (!child || !session) {
-        return { awarded: 0, status: 'save_failed', origin: 'demo', pointsToday: 0 }
-      }
-      const outcome = await api.postGameResult({
-        childId: child.id,
-        result,
-        origin: session.origin,
-      })
-      if (outcome.status === 'server_awarded' || outcome.status === 'already') {
-        setProgress(await api.loadProgress(child.id, session.origin))
-      }
-      return outcome
-    },
+    setSession,
+    signOut,
+    missions: current?.ok ? current.data.missions : [],
+    missionsStatus: current === null ? 'loading' : current.ok ? 'ready' : 'error',
+    missionsError: current && !current.ok ? current.error : null,
+    missionsOffline: current?.ok === true && current.data.offline,
+    reloadMissions,
+    progress: progress?.childId === childId ? progress : null,
+    refreshProgress,
+    completeMission,
+    submitGame,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

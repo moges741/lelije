@@ -5,10 +5,10 @@ import { CameraStage } from '../components/CameraStage'
 import { MockControls } from '../components/MockControls'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
+import { gameSuccess } from '../lib/outcome'
 import { POSE_MOCK } from '../lib/pose/load'
 import type { CatchTheStarsGame } from '../lib/pose/types'
 import { stageMessage, usePoseSession } from '../lib/pose/usePoseSession'
-import type { SuccessState } from '../types/navigation'
 
 /** Contract A 5.3 default. VITE_GAME_MS shortens it for rehearsals. */
 const GAME_MS = Number(import.meta.env.VITE_GAME_MS) || 60_000
@@ -45,15 +45,8 @@ export function CatchStars() {
       const offEnd = game.on('end', (result) => {
         engine.stop()
         setSaving(true)
-        void submitGame(result).then((outcome) => {
-          const state: SuccessState = {
-            kind: 'game',
-            awarded: outcome.awarded,
-            result,
-            status: outcome.status,
-            origin: outcome.origin,
-          }
-          navigate('/success', { replace: true, state })
+        void submitGame(result).then((saved) => {
+          navigate('/success', { replace: true, state: gameSuccess(result, saved) })
         })
       })
       return () => {

@@ -1,6 +1,6 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import { useApp } from '../context/app-context'
-import { Icon, type IconName } from './Icon'
+import { Icon } from './Icon'
 
 export function TextField({
   label,
@@ -69,38 +69,6 @@ export function SecretField({
         </small>
       )}
     </div>
-  )
-}
-
-export function ChoiceCard({
-  title,
-  body,
-  icon,
-  badge,
-  tone,
-  onClick,
-}: {
-  title: string
-  body: string
-  icon?: IconName
-  badge?: string
-  tone?: 'child'
-  onClick: () => void
-}) {
-  const className = ['path-card', icon && 'has-icon', tone === 'child' && 'is-child'].filter(Boolean).join(' ')
-  return (
-    <button type="button" className={className} onClick={onClick}>
-      {icon && (
-        <span className="path-icon">
-          <Icon name={icon} size={30} />
-        </span>
-      )}
-      <span className="path-text">
-        {badge && <em className="path-badge">{badge}</em>}
-        <strong>{title}</strong>
-        <span>{body}</span>
-      </span>
-    </button>
   )
 }
 

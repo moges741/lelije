@@ -126,6 +126,13 @@ export class FamiliesService {
     return { hasPin: true };
   }
 
+  /** Checks the parent PIN and returns when it matches. Wrong guesses use the same lock as other parent actions. */
+  async checkPin(code: string, body: unknown) {
+    const input = (body ?? {}) as Record<string, unknown>;
+    await this.verifyParent(code, input.pin);
+    return { ok: true as const };
+  }
+
   /**
    * Checks the parent PIN for a family and returns the family's id.
    * Five wrong PINs lock parent actions for 15 minutes.

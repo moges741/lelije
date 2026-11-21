@@ -1,13 +1,9 @@
 import { createContext, useContext } from 'react'
-import type { CompletionOutcome, GameOutcome } from '../api/client'
+import type { Failure, Result } from '../api/http'
 import type { Translate } from '../i18n'
 import type { Session } from '../types/account'
-import type {
-  AppLanguage,
-  CatchStarsResult,
-  Mission,
-  Progress,
-} from '../types/mission'
+import type { CompletionSaved, GameSaved, PoseResult, Progress, Verified } from '../types/api'
+import type { AppLanguage, CatchStarsResult, Mission } from '../types/mission'
 
 export interface AppContextValue {
   t: Translate
@@ -16,19 +12,22 @@ export interface AppContextValue {
   session: Session | null
   setSession: (session: Session | null) => void
   signOut: () => void
+  /** Today's missions for the signed-in child. */
   missions: Mission[]
-  missionsReady: boolean
-  /** 'demo' when the list did not come from POST /api/missions. */
-  missionsOrigin: 'server' | 'demo' | null
+  missionsStatus: 'loading' | 'ready' | 'error'
+  missionsError: Failure | null
+  /** The list is this device's copy from earlier today because the server could not be reached. */
+  missionsOffline: boolean
   reloadMissions: () => void
-  progress: Progress
-  refreshProgress: () => void
+  /** The signed-in child's progress; null until it loads. */
+  progress: Progress | null
+  refreshProgress: () => Promise<void>
   completeMission: (
     mission: Mission,
-    verifiedBy: 'pose' | 'self',
-    result?: { count: number; durationMs: number },
-  ) => Promise<CompletionOutcome>
-  submitGame: (result: CatchStarsResult) => Promise<GameOutcome>
+    verifiedBy: Verified,
+    result?: PoseResult,
+  ) => Promise<Result<CompletionSaved>>
+  submitGame: (result: CatchStarsResult) => Promise<Result<GameSaved>>
 }
 
 export const AppContext = createContext<AppContextValue | null>(null)

@@ -1,36 +1,32 @@
+import type { PoseResult, Verified } from './api'
 import type { CatchStarsResult } from './mission'
 
-export type SaveStatus =
-  | 'server_awarded'
-  | 'already'
-  | 'demo_pending'
-  | 'save_failed'
-  | 'not_saved'
-  | 'demo_only'
+export type MissionOutcome =
+  | { status: 'approved'; awarded: number }
+  | { status: 'pending' }
+  | { status: 'already' }
+  | { status: 'failed' }
+
+export type GameOutcome =
+  | { status: 'saved'; awarded: number }
+  | { status: 'already' }
+  | { status: 'failed' }
 
 /** Router state handed to the success screen. */
 export type SuccessState =
   | {
       kind: 'mission'
-      awarded: number
-      title: string
       missionId: string
-      status: SaveStatus
-      origin: 'server' | 'demo'
-      verifiedBy?: 'pose' | 'self'
+      title: string
+      points: number
+      verifiedBy: Verified
+      result?: PoseResult
+      outcome: MissionOutcome
     }
-  | {
-      kind: 'game'
-      awarded: number
-      result: CatchStarsResult
-      status: SaveStatus
-      origin: 'server' | 'demo'
-    }
+  | { kind: 'game'; result: CatchStarsResult; outcome: GameOutcome }
 
 export function isSuccessState(value: unknown): value is SuccessState {
   if (typeof value !== 'object' || value === null) return false
-  if (!('kind' in value) || !('awarded' in value) || !('status' in value)) return false
-  if (typeof value.awarded !== 'number' || typeof value.status !== 'string') return false
-  if (value.kind === 'mission') return 'title' in value && typeof value.title === 'string'
-  return value.kind === 'game' && 'result' in value && typeof value.result === 'object'
+  if (!('kind' in value) || !('outcome' in value)) return false
+  return value.kind === 'mission' || value.kind === 'game'
 }
