@@ -10,6 +10,7 @@ const SESSION_KEY = 'lelije.session.v2'
 const LANGUAGE_KEY = 'lelije.language'
 
 const NO_PROGRESS: Progress = {
+  totalPoints: 0,
   pointsToday: 0,
   todayCompleted: [],
   pendingIds: [],
@@ -81,10 +82,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         force: reload > 0,
       })
       .then(
-        (result) => {
+        async (result) => {
           if (ignore) return
           setLoaded({ key: missionsKey, missions: result.missions, origin: result.origin })
-          setProgress(api.progressFor(child.id, session.origin))
+          setProgress(await api.loadProgress(child.id, session.origin))
         },
         () => {
           if (!ignore) setLoaded({ key: missionsKey, missions: [], origin: 'demo' })
@@ -132,7 +133,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     progress,
     refreshProgress() {
       setTick((n) => n + 1)
-      if (child && session) setProgress(api.progressFor(child.id, session.origin))
+      if (child && session) {
+        void api.loadProgress(child.id, session.origin).then(setProgress)
+      }
     },
     async completeMission(mission, verifiedBy, result) {
       if (!child || !session) {
@@ -146,18 +149,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         result,
         origin: session.origin,
       })
-      setProgress(api.progressFor(child.id, session.origin))
+      setProgress(await api.loadProgress(child.id, session.origin))
       return outcome
     },
     async submitGame(result) {
       if (!child || !session) {
         return { awarded: 0, status: 'save_failed', origin: 'demo', pointsToday: 0 }
       }
-      return api.postGameResult({
+      const outcome = await api.postGameResult({
         childId: child.id,
         result,
         origin: session.origin,
       })
+      if (outcome.status === 'server_awarded' || outcome.status === 'already') {
+        setProgress(await api.loadProgress(child.id, session.origin))
+      }
+      return outcome
     },
   }
 

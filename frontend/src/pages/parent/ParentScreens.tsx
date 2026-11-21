@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import * as api from '../../api/client'
-import type { DemoCompletion, DemoNote, DemoPlay } from '../../api/client'
+import type { DemoCompletion, DemoNote, DemoPlay, FamilyChildProgress } from '../../api/client'
+import { Icon } from '../../components/Icon'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
+import { PinPrompt } from '../../components/PinPrompt'
 import { Panel } from '../../components/TextField'
 import { TopBar } from '../../components/TopBar'
 import { useApp } from '../../context/app-context'
@@ -16,8 +18,9 @@ function useParent() {
 }
 
 export function ParentHome() {
-  const { t, parent, signOut } = useParent()
+  const { t, parent, signOut, setSession } = useParent()
   const [children, setChildren] = useState<ChildRecord[]>([])
+  const [report, setReport] = useState<FamilyChildProgress[] | null>(null)
   const [pending, setPending] = useState<DemoCompletion[]>([])
   const [notes, setNotes] = useState<DemoNote[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'offline'>('loading')
@@ -25,15 +28,20 @@ export function ParentHome() {
   useEffect(() => {
     if (!parent) return
     let ignore = false
-    api.lookupFamily(parent.family.code).then((result) => {
+    void (async () => {
+      const [family, progress] = await Promise.all([
+        api.lookupFamily(parent.family.code),
+        parent.origin === 'server' ? api.loadFamilyProgress(parent.family.code) : Promise.resolve(null),
+      ])
       if (ignore) return
-      if (result.ok) {
-        setChildren(result.data.children)
+      if (family.ok) {
+        setChildren(family.data.children)
         setStatus('ready')
-      } else setStatus(result.error === 'network' ? 'offline' : 'ready')
-      setPending(api.listPending(parent.family.code))
+      } else setStatus(family.error === 'network' ? 'offline' : 'ready')
+      setReport(progress)
+      setPending(parent.origin === 'demo' ? api.listPending(parent.family.code) : [])
       setNotes(api.notesFor(parent.family.code, 'parent'))
-    })
+    })()
     return () => {
       ignore = true
     }
@@ -46,8 +54,12 @@ export function ParentHome() {
     <main className="screen screen-wide">
       <TopBar>
         <LanguageSwitcher />
-        <Link className="icon-btn" to="/parent/settings">
-          {t('settings')}
+        <Link className="icon-btn" to="/parent/notifications" aria-label={t('notifications')}>
+          <Icon name="bell" />
+          {unread > 0 && <span className="dot">{unread}</span>}
+        </Link>
+        <Link className="icon-btn" to="/parent/settings" aria-label={t('settings')}>
+          <Icon name="settings" />
         </Link>
       </TopBar>
       {parent.origin === 'demo' && <p className="banner banner-demo">{t('demoBanner')}</p>}
@@ -62,7 +74,16 @@ export function ParentHome() {
       <div className="parent-grid">
         <Panel>
           <h2 className="panel-title">{t('children')}</h2>
-          {children.length === 0 ? (
+          {report && report.length > 0 ? (
+            <ul className="facts">
+              {report.map((child) => (
+                <li key={child.childId}>
+                  <strong>{child.nickname || t('childProfile')}</strong>
+                  {` · ${child.totalPoints} ${t('points')}`}
+                </li>
+              ))}
+            </ul>
+          ) : children.length === 0 ? (
             <p className="lead">{t('noChildrenYet')}</p>
           ) : (
             <ul className="facts">
@@ -103,6 +124,40 @@ export function ParentHome() {
 
         <Panel>
           <h2 className="panel-title">{t('playTime')}</h2>
+          <p className="hint">{t('demoBanner')}</p>
+          {children[0] ? (
+            <button
+              type="button"
+              className="btn btn-sun"
+              onClick={() =>
+                api.sendPlayRequest({
+                  familyCode: parent.family.code,
+                  childId: children[0].id,
+                  childName: children[0].nickname || t('childProfile'),
+                })
+              }
+            >
+              {t('sendPlayNudge')}
+            </button>
+          ) : (
+            <p className="lead">{t('noChildrenYet')}</p>
+          )}
+          {children[0] && (
+            <button
+              type="button"
+              className="btn btn-plain"
+              onClick={() =>
+                setSession({
+                  role: 'child',
+                  origin: parent.origin,
+                  family: parent.family,
+                  child: children[0],
+                })
+              }
+            >
+              {t('openChild')}
+            </button>
+          )}
           <Link className="btn btn-plain" to="/parent/play">
             {t('reviewPlay')}
           </Link>
@@ -134,6 +189,7 @@ export function MissionReview() {
   const { t, parent } = useParent()
   const id = window.location.pathname.split('/').pop()
   const [item, setItem] = useState<DemoCompletion | null>(null)
+  const [asking, setAsking] = useState<'approved' | 'rejected' | null>(null)
 
   useEffect(() => {
     if (!parent || !id) return
@@ -146,6 +202,7 @@ export function MissionReview() {
     if (!item) return
     api.reviewDemoMission(item.id, decision)
     setItem(null)
+    setAsking(null)
   }
 
   return (
@@ -163,14 +220,21 @@ export function MissionReview() {
           </p>
           <p className="hint">{t('reviewLead')}</p>
           <div className="row-actions">
-            <button type="button" className="btn btn-sun" onClick={() => decide('approved')}>
+            <button type="button" className="btn btn-sun" onClick={() => setAsking('approved')}>
               {t('approve')}
             </button>
-            <button type="button" className="btn btn-plain" onClick={() => decide('rejected')}>
+            <button type="button" className="btn btn-plain" onClick={() => setAsking('rejected')}>
               {t('reject')}
             </button>
           </div>
         </Panel>
+      )}
+      {item && asking && (
+        <PinPrompt
+          familyCode={parent.family.code}
+          onSuccess={() => decide(asking)}
+          onCancel={() => setAsking(null)}
+        />
       )}
     </main>
   )
@@ -179,6 +243,7 @@ export function MissionReview() {
 export function PlayReview() {
   const { t, parent } = useParent()
   const [rows, setRows] = useState<DemoPlay[]>([])
+  const [asking, setAsking] = useState<{ id: string; status: 'allowed' | 'later' | 'declined' } | null>(null)
   useEffect(() => {
     if (parent) setRows(api.playRequests(parent.family.code))
   }, [parent])
@@ -187,6 +252,7 @@ export function PlayReview() {
   const answer = (id: string, status: 'allowed' | 'later' | 'declined') => {
     api.answerPlay(id, status)
     setRows(api.playRequests(parent.family.code))
+    setAsking(null)
   }
 
   return (
@@ -204,13 +270,13 @@ export function PlayReview() {
               <p className="lead">{t(playKey(row.status))}</p>
               {row.status === 'sent' && (
                 <div className="row-actions">
-                  <button type="button" className="btn btn-sun" onClick={() => answer(row.id, 'allowed')}>
+                  <button type="button" className="btn btn-sun" onClick={() => setAsking({ id: row.id, status: 'allowed' })}>
                     {t('allowPlay')}
                   </button>
-                  <button type="button" className="btn btn-plain" onClick={() => answer(row.id, 'later')}>
+                  <button type="button" className="btn btn-plain" onClick={() => setAsking({ id: row.id, status: 'later' })}>
                     {t('laterPlay')}
                   </button>
-                  <button type="button" className="btn btn-plain" onClick={() => answer(row.id, 'declined')}>
+                  <button type="button" className="btn btn-plain" onClick={() => setAsking({ id: row.id, status: 'declined' })}>
                     {t('declinePlay')}
                   </button>
                 </div>
@@ -218,6 +284,13 @@ export function PlayReview() {
             </li>
           ))}
         </ul>
+      )}
+      {asking && (
+        <PinPrompt
+          familyCode={parent.family.code}
+          onSuccess={() => answer(asking.id, asking.status)}
+          onCancel={() => setAsking(null)}
+        />
       )}
     </main>
   )

@@ -162,6 +162,28 @@ export const en = {
   settingsTitle: 'Settings',
   editUnavailable: 'Age is set when the profile is created. The server has no edit-profile endpoint yet.',
   requestPlay: 'Ask for play time',
+  noNotifications: 'No notifications yet.',
+  tryDemoFamily: 'Practice with a demo family',
+  tryDemoLead: 'Stays on this device. This is not a real family account.',
+  openParent: 'Demo: grown-up view',
+  openChild: 'Demo: child view',
+  sendPlayNudge: 'Send play-time nudge',
+  playInvite: 'A grown-up invited you to play.',
+  acceptPlay: 'Yes, let’s play',
+  notNow: 'Not now',
+  timeLeft: 'Time left',
+  retrySave: 'Try saving again',
+
+  pinLabel: 'Grown-up PIN',
+  pinHint: '4 digits. Needed to approve missions and answer play time. Kept on this device only.',
+  pinInvalid: 'The PIN must be 4 digits.',
+  pinEnterTitle: 'Enter your PIN',
+  pinEnterLead: 'A grown-up needs to enter the PIN to do this.',
+  pinSetTitle: 'Make a grown-up PIN',
+  pinSetLead: 'This device has no PIN for this family yet. Choose 4 digits.',
+  pinWrong: 'That PIN is not right.',
+  pinContinue: 'Continue',
+  pinCancel: 'Cancel',
 } as const
 
 export type TranslationKey = keyof typeof en

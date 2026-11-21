@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CameraStage } from '../components/CameraStage'
 import { Icon } from '../components/Icon'
@@ -14,6 +14,11 @@ import type { SuccessState } from '../types/navigation'
 /** Contract A 5.3 default. VITE_GAME_MS shortens it for rehearsals. */
 const GAME_MS = Number(import.meta.env.VITE_GAME_MS) || 60_000
 
+function formatTime(ms: number) {
+  const total = Math.ceil(ms / 1000)
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
 /** Screen 6: Frontend owns the video and layout; ai/pose draws the stars. */
 export function CatchStars() {
   const { t, submitGame } = useApp()
@@ -24,6 +29,8 @@ export function CatchStars() {
   const [score, setScore] = useState(0)
   const [paused, setPaused] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(GAME_MS)
+  const remain = useRef(GAME_MS)
   const mock = POSE_MOCK || withButtons
 
   const session = usePoseSession({
@@ -61,6 +68,18 @@ export function CatchStars() {
   })
 
   const { phase } = session
+
+  useEffect(() => {
+    if (phase !== 'running' || paused || saving) return
+    const started = performance.now()
+    const from = remain.current
+    const timer = window.setInterval(() => {
+      const next = Math.max(0, from - (performance.now() - started))
+      remain.current = next
+      setTimeLeft(next)
+    }, 200)
+    return () => window.clearInterval(timer)
+  }, [phase, paused, saving])
 
   if (phase === 'unavailable') {
     return (
@@ -134,6 +153,10 @@ export function CatchStars() {
             <p className="counter" aria-live="polite">
               <strong key={score}>{score}</strong>
               <span>{t('gameScore')}</span>
+            </p>
+            <p className="counter">
+              <strong>{formatTime(timeLeft)}</strong>
+              <span>{t('timeLeft')}</span>
             </p>
             <button
               type="button"

@@ -1,18 +1,25 @@
 import { Link } from 'react-router-dom'
+import * as api from '../api/client'
 import { Icon } from '../components/Icon'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
 
 export function Missions() {
-  const { t, missions, missionsReady, missionsOrigin, reloadMissions, progress, session } = useApp()
+  const { t, missions, missionsReady, missionsOrigin, reloadMissions, progress, session, setSession } =
+    useApp()
+  const invite =
+    session?.child &&
+    api
+      .playRequests(session.family.code)
+      .find((item) => item.childId === session.child?.id && item.status === 'sent')
 
   return (
     <main className="screen">
       <TopBar>
         <LanguageSwitcher />
         <Link className="icon-btn" to="/child/notifications" aria-label={t('notifications')}>
-          <Icon name="star" />
+          <Icon name="bell" />
         </Link>
         <Link className="icon-btn" to="/child/settings" aria-label={t('settings')}>
           <Icon name="settings" />
@@ -23,11 +30,17 @@ export function Missions() {
         <p className="banner banner-demo">{t('demoBanner')}</p>
       )}
 
+      {invite && (
+        <Link className="banner" to="/child/play">
+          {t('playInvite')}
+        </Link>
+      )}
+
       <div className="tally">
         <p className="tally-points">
           <Icon name="star" size={30} />
-          <strong>{progress.origin === 'unknown' ? '—' : progress.pointsToday}</strong>
-          <span>{t('pointsToday')}</span>
+          <strong>{progress.origin === 'unknown' ? '—' : progress.totalPoints}</strong>
+          <span>{t('totalPoints')}</span>
         </p>
         {progress.streak != null && (
           <p>
@@ -84,6 +97,16 @@ export function Missions() {
             )
           })}
         </ul>
+      )}
+
+      {session && (
+        <button
+          type="button"
+          className="text-link"
+          onClick={() => setSession({ ...session, role: 'parent' })}
+        >
+          {t('openParent')}
+        </button>
       )}
 
       <Link className="stars-card" to="/stars">

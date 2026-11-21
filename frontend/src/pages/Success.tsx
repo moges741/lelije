@@ -1,4 +1,5 @@
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { useApp } from '../context/app-context'
 import { isSuccessState } from '../types/navigation'
@@ -7,11 +8,50 @@ const SPARKS = [0, 1, 2, 3, 4, 5]
 
 /** Screen 7: celebration, points and the next mission. */
 export function Success() {
-  const { t, missions, progress } = useApp()
+  const { t, missions, progress, completeMission, submitGame } = useApp()
   const location = useLocation()
+  const navigate = useNavigate()
   const state = isSuccessState(location.state) ? location.state : null
+  const [saving, setSaving] = useState(false)
 
   if (!state) return <Navigate to="/missions" replace />
+
+  const retry = async () => {
+    setSaving(true)
+    if (state.kind === 'mission') {
+      const mission = missions.find((item) => item.id === state.missionId)
+      if (!mission) {
+        setSaving(false)
+        return
+      }
+      const verifiedBy = state.verifiedBy ?? 'self'
+      const outcome = await completeMission(mission, verifiedBy)
+      navigate('/success', {
+        replace: true,
+        state: {
+          kind: 'mission',
+          awarded: outcome.awarded,
+          title: mission.title,
+          missionId: mission.id,
+          status: outcome.status,
+          origin: outcome.origin,
+          verifiedBy,
+        },
+      })
+      return
+    }
+    const outcome = await submitGame(state.result)
+    navigate('/success', {
+      replace: true,
+      state: {
+        kind: 'game',
+        awarded: outcome.awarded,
+        result: state.result,
+        status: outcome.status,
+        origin: outcome.origin,
+      },
+    })
+  }
 
   const next = missions.find((mission) => !progress.todayCompleted.includes(mission.id))
 
@@ -69,7 +109,7 @@ export function Success() {
 
       <p className="success-total">
         <Icon name="star" />
-        {t('pointsToday')}: <strong>{progress.pointsToday}</strong>
+        {t('totalPoints')}: <strong>{progress.totalPoints}</strong>
       </p>
 
       <div className="actions">
@@ -80,6 +120,11 @@ export function Success() {
           >
             {t('nextMission')}
           </Link>
+        )}
+        {state.status === 'save_failed' && (
+          <button type="button" className="btn btn-sun btn-block" disabled={saving} onClick={() => void retry()}>
+            {saving ? t('saving') : t('retrySave')}
+          </button>
         )}
         {state.kind === 'game' && (
           <Link className={next ? 'btn btn-plain btn-block' : 'btn btn-sun btn-block'} to="/stars">

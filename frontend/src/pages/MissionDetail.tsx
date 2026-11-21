@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { SafetyBanner } from '../components/SafetyBanner'
 import { TopBar } from '../components/TopBar'
 import { useApp } from '../context/app-context'
 import type { SuccessState } from '../types/navigation'
@@ -37,6 +38,7 @@ export function MissionDetail() {
       missionId: mission.id,
       status: outcome.status,
       origin: outcome.origin,
+      verifiedBy: 'self',
     }
     navigate('/success', { replace: true, state })
   }
@@ -68,6 +70,8 @@ export function MissionDetail() {
             : t('selfMission')}
         </li>
       </ul>
+
+      <SafetyBanner />
 
       <div className="actions">
         {done || pending ? (
