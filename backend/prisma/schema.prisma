@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// `day` is always the Africa/Addis_Ababa calendar date as "YYYY-MM-DD".
+
+// `code` is what the phone stores to get back to the family; anyone with it can
+// read the family's data. `pinHash` guards parent-only actions. Never log either.
+model Family {
+  id             String    @id @default(uuid())
+  name           String
+  code           String    @unique
+  pinHash        String?
+  pinFailures    Int       @default(0)
+  pinLockedUntil DateTime?
+  createdAt      DateTime  @default(now())
+
+  children Child[]
+}
+
+model Child {
+  id        String   @id @default(uuid())
+  familyId  String
+  age       Int
+  language  String
+  nickname  String?
+  createdAt DateTime @default(now())
+
+  family        Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  dailyMissions DailyMission[]
+  completions   Completion[]
+  gameResults   GameResult[]
+  playRequests  PlayRequest[]
+}
+
+model DailyMission {
+  id        String   @id @default(uuid())
+  childId   String
+  day       String
+  missions  Json
+  source    String
+  createdAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, day])
+}
+
+// `status` is "approved" (points awarded), "pending" (waiting for a parent) or
+// "rejected" (the child may redo it). Only approved rows carry points.
+model Completion {
+  id          String    @id @default(uuid())
+  childId     String
+  missionId   String
+  day         String
+  status      String
+  points      Int
+  verifiedBy  String
+  result      Json?
+  completedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, missionId, day])
+  @@index([childId, day])
+}
+
+model GameResult {
+  id        String   @id @default(uuid())
+  childId   String
+  day       String
+  game      String
+  score     Int
+  points    Int
+  result    Json
+  createdAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, day, game])
+}
+
+// A child's request for play time. `status` is "sent" until a parent answers
+// "allowed", "later" or "declined". A child has at most one "sent" request.
+model PlayRequest {
+  id          String    @id @default(uuid())
+  childId     String
+  day         String
+  status      String
+  requestedAt DateTime  @default(now())
+  answeredAt  DateTime?
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, status])
+}
